@@ -1,0 +1,233 @@
+agentName: postgresql
+agentType: integration
+title: 'PostgreSQL monitoring integration'
+metaDescription: 'Install the postgresql integration'
+introFilePath: 'src/install/postgresql/intro.mdx'
+redirects:
+    - /docs/infrastructure/host-integrations/host-integrations-list/postgresql/postgresql-config
+    - /docs/infrastructure/host-integrations/host-integrations-list/postgresql/postgresql-integration
+    - /docs/integrations/host-integrations/host-integrations-list/postgresql-monitoring-integration
+appInfo: 
+  - optionType: environment # Select your environment
+    label: ''
+    placeholder: 'Select your environment'
+    options: 
+      - value: 'linux'
+        displayName: 'Linux'
+      - value: 'windows'
+        displayName: 'Windows'
+      - value: 'k8'
+        displayName: 'Kubernetes'
+      - value: 'ecs'
+        displayName: 'Amazon ECS'
+
+  - optionType: linux  # Select the installation method for linux
+    label: "Select the installation method"
+    placeholder: "Choose one:"
+    options:
+      - value: "guided"    
+        displayName: "Guided"  
+      - value: "manual"    
+        displayName: "Manual"
+      - value: "aurora"    
+        displayName: "Aurora/RDS"  
+#  - optionType: yum_deployment  # Select the OS for query monitoring
+#    label: "Choose your OS"
+#    placeholder: "Choose one:"
+#    options:  
+#      - value: "apt"    
+#        displayName: "(Debian, Ubuntu)"       
+#      - value: "yum"  
+#        displayName: "(Amazon Linux, CentOS, RHEL, Oracle Linux)"
+
+steps:
+  - filePath: 'src/install/postgresql/appInfo_env.mdx'
+  - filePath: 'src/install/postgresql/appInfo_linux.mdx' 
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: environment
+            options:
+              - value: 'linux'
+  - filePath: 'src/install/postgresql/linux/requirements.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: linux
+            options:
+              - value: 'guided' 
+  - filePath: 'src/install/postgresql/linux/guided.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: linux
+            options:
+              - value: 'guided' 
+  - filePath: 'src/install/postgresql/find-data.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: linux
+            options:
+              - value: 'guided'  
+
+
+  - filePath: 'src/install/postgresql/aurora/aurora-requirements.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: linux
+            options:
+              - value: 'aurora'  
+  - filePath: 'src/install/postgresql/aurora/install-aurora-linux.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: linux
+            options:
+              - value: 'aurora'  
+  - filePath: 'src/install/postgresql/aurora/install-aurora-query-monitoring.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: linux
+            options:
+              - value: 'aurora'                                        
+  - filePath: 'src/install/postgresql/find-data.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: linux
+            options:
+              - value: 'aurora'  
+
+
+  - filePath: 'src/install/postgresql/linux/requirements.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: linux
+            options:
+              - value: 'manual' 
+  - filePath: 'src/install/postgresql/linux/default-install-linux.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: linux
+            options:
+              - value: 'manual' 
+  - filePath: 'src/install/postgresql/linux/install-query-monitoring.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: linux
+            options:
+              - value: 'manual' 
+  - filePath: 'src/install/postgresql/find-data.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: linux
+            options:
+              - value: 'manual' 
+
+
+  - filePath: 'src/install/postgresql/windows/requirements-win.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: environment
+            options:
+              - value: 'windows'
+  - filePath: 'src/install/postgresql/windows/install-windows.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: environment
+            options:
+              - value: 'windows'
+  - filePath: 'src/install/postgresql/windows/install-windows-query-monitoring.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: environment
+            options:
+              - value: 'windows'
+  - filePath: 'src/install/postgresql/find-data.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: environment
+            options:
+              - value: 'windows'
+
+  - filePath: 'src/install/postgresql/k8/requirements-k8.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: environment
+            options: 
+              - value: 'k8'
+  - filePath: 'src/install/postgresql/k8/install-k8.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: environment
+            options: 
+              - value: 'k8'
+
+  - filePath: 'src/install/postgresql/amazonECS/requirements-amazonECS.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: environment
+            options:
+              - value: 'ecs' 
+  - filePath: 'src/install/postgresql/amazonECS/install-amazonECS.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: environment
+            options:
+              - value: 'ecs' 
+
+
+  - filePath: 'src/install/postgresql/k8/guided.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: kubernetes
+            options:
+              - value: 'guided' 
+  - filePath: 'src/install/postgresql/find-data.mdx'
+    overrides:
+      - isConditionalStep: true
+        selectedOptions:
+          - optionType: kubernetes
+            options:
+              - value: 'guided'
+
+#  - filePath: 'src/install/postgresql/appInfo_yum.mdx'
+#    overrides:
+#      - isConditionalStep: true
+#        selectedOptions:
+#          - optionType: linux
+#            options:
+#              - value: 'manual'
+#  - filePath: 'src/install/postgresql/linux/install-apt-query-monitoring.mdx'
+#    overrides:
+#      - isConditionalStep: true
+#        selectedOptions:
+#          - optionType: yum_deployment
+#            options:
+#              - value: 'apt' 
+#  - filePath: 'src/install/postgresql/linux/install-yum-query-monitoring.mdx'
+#    overrides:
+#      - isConditionalStep: true
+#        selectedOptions:
+#          - optionType: yum_deployment
+#            options:
+#              - value: 'yum' 
+
+
+whatsNextFilePath: 'src/install/postgresql/whatsNext.mdx'

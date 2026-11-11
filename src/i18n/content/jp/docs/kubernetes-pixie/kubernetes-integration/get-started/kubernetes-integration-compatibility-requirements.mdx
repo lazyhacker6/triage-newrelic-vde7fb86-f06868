@@ -1,0 +1,401 @@
+---
+title: Kubernetesの統合：互換性と要件
+tags:
+  - Integrations
+  - Kubernetes integration
+  - Get started
+metaDescription: Compatibility and requirements of the New Relic Kubernetes integration.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+[Kubernetes インテグレーション](/docs/integrations/kubernetes-integration/get-started/introduction-kubernetes-integration)は、GKE、EKS、AKS、OKE、OpenShift などのさまざまなプラットフォームと互換性があります。それぞれのインテグレーションとの互換性は異なります。 このページにはさらに詳しい情報が掲載されています。
+
+## 要件 [#reqs]
+
+New Relic Kubernetes 統合には、New Relic アカウントが必要です。まだお持ちでない場合は、以下で無料の New Relic アカウントを作成して、今すぐデータの監視を開始してください。
+
+また[、 New Relic Infrastructureと互換性のある](/docs/infrastructure/new-relic-infrastructure/getting-started/compatibility-requirements-new-relic-infrastructure#operating-systems)Linux ディストリビューションも必要です。
+
+<Callout variant="important">
+* `kube-state-metrics` インテグレーションバージョン3.6.0以降ではv2以上がサポートされています 以上。
+
+* Kubernetesインテグレーションをバージョン3.5.0までインストールします `kube-state-metrics` 1.9.8 以下を使用している場合。
+
+* `kube-state-metrics`を v1.9.8 から v2 以上に更新する場合は、いくつかの変数が変更されている可能性があるため、 `values.yaml`ファイルを確認してください。
+</Callout>
+
+### Helm の互換性と要件 [#req-helm]
+
+* [Helm](https://github.com/helm/helm?tab=readme-ov-file#install)がインストールされており、サポートされている最小バージョンが v3 であることを確認してください。 Kubernetesインテグレーションのバージョン 3 には、Helm バージョン 3 が必要です。
+
+* クラスターの表示名を選択します。 たとえば、次の出力を使用できます。
+
+  ```shell
+  kubectl config current-context
+  ```
+
+### マニフェストの互換性と要件 [#req-manifest]
+
+カスタムマニフェストがHelmの代わりに使用されている場合、まず`kubectl delete -f previous-manifest-file.yml`を使用して古いインストレーションを削除してから、ガイド付きインストーラを再度実行する必要があります。これにより、`kubectl apply -f manifest-file.yml`を使用してデプロイできる一連のマニフェストが更新されます。
+
+### Windowsの互換性と要件 [#req-windows]
+
+WindowsNew RelicKubernetesインテグレーションを使用して ノードを監視するには、環境が次の要件を満たしている必要があります。
+
+Windows監視は2つのモードをサポートしています：
+
+* **特権モード**、Windows HostProcessコンテナを使用して完全なノードレベルのメトリクスを収集します特権モードはデフォルトで有効化されています。
+* **非特権モード**は、ホストの可視性が制限された状態で標準のコンテナユーザーとして実行されます。
+
+これらのモードの仕組みの詳細と安全な設定に関するガイダンスについては、[特権モードと非特権モード](/docs/kubernetes-pixie/kubernetes-integration/advanced-configuration/k8s-privileged-mode)を参照してください。完全なセットアップ手順については、[Windowsノードのモニター](/docs/kubernetes-pixie/kubernetes-integration/installation/windows)を参照してください。
+
+## 特権モードの要件
+
+デフォルトでは、 New Relic Kubernetesインテグレーション チャートはインフラストラクチャエージェント サイドカーを**特権モード**(`privileged: true`) で実行するように設定します。 このレベルのアクセスは、基盤となるホストの`/proc`および`/sys`ファイルシステムからディープ システム メトリック (ストレージI/O 、物理ネットワーク インターフェース、システム プロセスなど) を収集するために必要です。
+
+クラスタのセキュリティ ポリシー (Pod Security Standards や OpenShift 標準的契約条項など) が特権コンテナを許可していない場合は、この設定を無効にする必要がある場合があります。
+
+特権モードを無効にする方法の詳細な手順と、使用できなくなるメトリックの完全なリストについては、 [「特権モードと非特権モード」](/docs/kubernetes-pixie/kubernetes-integration/advanced-configuration/k8s-privileged-mode)を参照してください。
+
+## ノード要件
+
+* Linux ノードの場合: Kubernetesクラスタには少なくとも 1 つの Linux ノードが含まれている必要があります。 統合のコア コンポーネントは Linux ノード上に展開され、クラスタ全体にわたる監視を可能にします。
+
+* Windows ノードの場合: Windows Server LTSC バージョン 2019 および 2022 を実行しているノードの監視をサポートしています。
+
+  <Callout variant="important">
+  プロバイダーは、クラスターが実行している cloudのバージョンに応じて、異なるWindows バージョンをサポートする場合があります。Kubernetesノードの OS バージョンがcloudプロバイダーでサポートされていることを常に確認してください。
+  </Callout>
+
+cloudプロバイダーの提供内容とKubernetes自体の制限により、 Windowsノードでは、次のようないくつかの主要なインストレーション シナリオがサポートされていません。
+
+* Red Hat OpenShift クラスターで実行されている Windows ノード。
+* Amazon EKS Fargate クラスター (Fargate は Linux ノードのみをサポート)。
+* Google GKE Autopilot クラスタ。Autopilot は Linux ノードのみをサポートします。
+* GKEはWindows`HostProcess`コンテナをサポートしていないため、Google GKEクラスタ上のWindows特権モード。GKE上のWindowsノードは、引き続き[非特権モード](/docs/kubernetes-pixie/kubernetes-integration/advanced-configuration/k8s-privileged-mode/#windows-nodes)でモニターできます。
+
+## コンテナ ランタイム [#containers]
+
+Kubernetes の統合は [CRI](https://kubernetes.io/docs/concepts/architecture/cri)に依存しません。Containerd との互換性が特にテストされています。Dockershim はリリース 1.24 の時点で Kubernetes プロジェクトから削除されていることに注意してください。詳細については [、Dockershim の削除に関する FAQ を](https://kubernetes.io/blog/2022/02/17/dockershim-faq/) 参照してください。
+
+## 互換性 [#compatibility]
+
+<Callout variant="important">
+Openshiftを使用している場合は、ほとんどの場合`kubectl`を使用することもできますが、 `kubectl`には`oc login`や`oc adm`などのコマンドがないことに注意してください。 `kubectl`の代わりに`oc`を使用する必要があるかもしれません。
+</Callout>
+
+私たちの統合には互換性があり、次の Kubernetes バージョンで継続的にテストされています。
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "300px" }} />
+
+<th>
+バージョン
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+Kubernetesクラスタ
+</td>
+
+<td>
+1.32～1.36
+</td>
+</tr>
+</tbody>
+</table>
+
+<Callout variant="important">
+Kubernetes バージョン 1.26 以降では、 `@autoscaling/v2beta2` API が`@autoscaling/v2`に置き換えられました。 引き続き `HorizontalPodAutoscaling` メトリックス レポートを実行するには、 Kubernetesバージョン 1.26 以降のクラスタに `kube-state-metrics` バージョン 2.7 以降をインストールする必要があります。これは、`kube-state-metrics` v2.7 以降のみが `@autoscaling/v2` APIをサポートできるためです。
+</Callout>
+
+### Kubernetesフレーバー
+
+Kubernetes 統合は、さまざまなフレーバーと互換性があります。次のものとの統合をテストしました。
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "300px" }}>
+フレーバー
+</th>
+
+<th>
+メモ
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+ミニクベ
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+親切
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+K3s
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+クベアドム
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+Amazon Elastic Kubernetes Service（EKS）
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+Amazon Elastic Kubernetes Service Anywhere（EKS-Anywhere）
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+Fargate上のAmazonElasticKubernetesサービス（EKS-Fargate）
+</td>
+
+<td>
+[Fargateインストールドキュメント](/docs/kubernetes-pixie/kubernetes-integration/installation/kubernetes-eks-fargate)
+</td>
+</tr>
+
+<tr>
+<td>
+Rancher Kubernetesエンジン（RKE1）
+</td>
+
+<td>
+コントロール プレーン コンポーネントをインストルメント化するには、 [追加の構成](/docs/integrations/kubernetes-integration/installation/configure-control-plane-monitoring#rancher)が必要です
+</td>
+</tr>
+
+<tr>
+<td>
+Azure Kubernetes Service（AKS）
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+Google Kubernetes Engine（GKE）
+</td>
+
+<td>
+[標準および自動操縦モード](https://cloud.google.com/kubernetes-engine/docs/concepts/choose-cluster-mode)と互換性があります。
+</td>
+</tr>
+
+<tr>
+<td>
+Oracle Kubernetes Engine (OKE)
+</td>
+
+<td>
+OKEはデフォルトのコンテナランタイムとしてCRI-Oを使用します。APMの自動アタッチを設定する際は、エージェントイメージのパスの先頭に`docker.io/`を追加してください。例えば： `image: docker.io/newrelic/newrelic-java-init:latest` 。
+</td>
+</tr>
+
+<tr>
+<td>
+OpenShift
+</td>
+
+<td>
+バージョン4.20でテスト済み
+</td>
+</tr>
+
+<tr>
+<td>
+VMwareタンズ
+</td>
+
+<td>
+VMware Tanzu（Pivotal Platform）のバージョン2.5～2.11、Ops Managerのバージョン2.5～2.10に対応
+</td>
+</tr>
+
+<tr>
+<td>
+VMware vSphere Kubernetes Service（VKS）
+</td>
+
+<td>
+vSphere Supervisor 9.0～9.1（vSphere 8.xおよび9.x）で実行されるVKSバージョン3.xと互換性があります
+</td>
+</tr>
+</tbody>
+</table>
+
+インストール方法によっては、[コントロールプレーンの監視](/docs/integrations/kubernetes-integration/installation/configure-control-plane-monitoring)が利用できないか、追加の構成が必要になる場合があります。
+
+例えば：
+
+* etcd、スケジューラー、およびコントローラー マネージャーに必要なメトリックを公開するエンドポイントがないため、API サーバー メトリックのみがスクレイピング可能であり、マネージド クラスター (GKE、EKS、AKS) コントロール プレーンをインストルメント化するために使用できます。
+* ランチャーコントロールプレーンをインストルメント化するには、コンポーネント`/metrics`がデフォルトで常に到達可能であるとは限らず、自動検出できないため、 [追加の構成](/docs/integrations/kubernetes-integration/installation/configure-control-plane-monitoring#rancher)が必要です。
+
+## リソース要件
+
+New Relic Kubernetesインテグレーションを導入する場合、監視コンポーネントが効率的に動作するように適切なリソースを割り当てることが重要です。
+
+以下は、 [インフラストラクチャ](https://github.com/newrelic/nri-kubernetes/blob/main/charts/newrelic-infrastructure/values.yaml)チャートによる各コンポーネントのデプロイに対する推奨される最小リソース要求と制限です。
+
+### [Kubeletコンポーネント](/docs/kubernetes-pixie/kubernetes-integration/get-started/kubernetes-components/#nrk8s-kubelet)
+
+各 Linux ノードにデプロイされた Kubelet コンポーネント ポッドには、次のコンテナが含まれています。
+
+**Kubelet コンテナ**
+
+* **CPU** ：
+  * **リクエスト**： `100m`
+
+* **メモリ**：
+
+  * **リクエスト**： `150M`
+  * **制限**: `300M`
+
+**エージェントコンテナ**
+
+* **CPU** ：
+  * **リクエスト**： `100m`
+
+* **メモリ**：
+
+  * **リクエスト**： `150M`
+  * **制限**: `300M`
+
+### [Kubelet コンポーネント - Windows](/docs/kubernetes-pixie/kubernetes-integration/get-started/kubernetes-components/#nrk8s-kubelet-windows)
+
+Windows が有効な場合、各 Windows ノードにデプロイされた Kubelet コンポーネント ポッドには次のコンテナーが含まれます。
+
+**Kubelet コンテナ**
+
+* **CPU** ：
+  * **リクエスト**： `100m`
+
+* **メモリ**：
+
+  * **リクエスト**： `150M`
+  * **制限**: `300M`
+
+**エージェントコンテナ**
+
+* **CPU** ：
+  * **リクエスト**： `100m`
+
+* **メモリ**：
+
+  * **リクエスト**： `150M`
+  * **制限**: `300M`
+
+### [Kube State メトリクス コンポーネント](https://docs.newrelic.com/docs/kubernetes-pixie/kubernetes-integration/get-started/kubernetes-components/#nrk8s-ksm)
+
+**KSM コンテナ**
+
+* **CPU** ：
+  * **リクエスト**： `100m`
+
+* **メモリ**：
+
+  * **リクエスト**： `150M`
+  * **制限**: `850M`
+
+**フォワーダーコンテナ**
+
+* **CPU** ：
+  * **リクエスト**： `100m`
+
+* **メモリ**：
+
+  * **リクエスト**： `150M`
+  * **制限**: `850M`
+
+### [コントロールプレーンコンポーネント](https://docs.newrelic.com/docs/kubernetes-pixie/kubernetes-integration/get-started/kubernetes-components/#nrk8s-kubelet)
+
+* **CPU** ：
+  * **リクエスト**： `100m`
+
+* **メモリ**：
+
+  * **リクエスト**： `150M`
+  * **制限**: `300M`
+
+**エージェントコンテナ**
+
+* **CPU** ：
+  * **リクエスト**： `100m`
+
+* **メモリ**：
+
+  * **リクエスト**： `150M`
+  * **制限**: `300M`
+
+以下は、 [nri-bundle](https://docs.newrelic.com/docs/kubernetes-pixie/kubernetes-integration/get-started/kubernetes-components/#components)の一部としてデプロイされる他のコンポーネントに必要な推奨リソース要求と制限です。
+
+### [メタデータインジェクション](https://github.com/newrelic/k8s-metadata-injection/tree/main/charts/nri-metadata-injection)
+
+* **CPU** ：
+  * **リクエスト**： `100m`
+
+* **メモリ**：
+
+  * **リクエスト**： `30M`
+  * **制限**: `80M`
+
+### [ロギング](https://github.com/newrelic/helm-charts/tree/master/charts/newrelic-logging)
+
+各ノードにデプロイされた New Relic ログ ポッドには、次のコンテナが含まれます。
+
+* **CPU** ：
+
+  * **リクエスト**： `250m`
+  * **制限**: `500m`
+
+* **メモリ**：
+
+  * **リクエスト**： `64M`
+  * **制限**: `128M`
+
+### 考察
+
+* **クラスタ サイズ**: これらのリソースの推奨事項は、一般的なクラスタ サイズに対するものです。 より多くのノードとポッドを持つ大規模なクラスターでは、追加のデータ量を処理するためにリソースの割り当てを増やす必要がある場合があります。
+
+* **カスタム設定**: 追加機能またはカスタム設定を有効にする場合は、それに応じてリソースを調整することを検討してください。
+
+* **監視と調整**: デプロイメント後、これらのポッドのリソース使用状況を監視し、実際の使用量に基づいてリクエストと制限を調整して、パフォーマンスとコストを最適化します。
+
+これらのリソース仕様は、New Relic Kubernetesインテグレーションのデプロイに使用される Helm チャートの `values.yaml` ファイルで調整できます。 これらのリソース要件が満たされていることを確認することで、New Relic を使用してKubernetesクラスタの効率的かつ効果的な監視を維持できます。

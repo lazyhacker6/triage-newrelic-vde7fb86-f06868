@@ -1,0 +1,82 @@
+---
+title: Filtrar entidades com a barra de filtro de entidade
+tags:
+  - New Relic
+  - Use New Relic
+  - Core concepts
+metaDescription: How to use the New Relic entity filter bar to filter your entities and save useful filtered views.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+A barra de filtro de entidades ajuda você a encontrar e filtrar as [entidades](/docs/new-relic-solutions/new-relic-one/core-concepts/what-entity-new-relic) monitoradas que deseja examinar na interface do New Relic.
+
+<img title="Entity filter bar in Catalogs" alt="Current entity filter bar interface showing search and filter options" src="/images/Catalogs.webp" />
+
+## Localize a barra de filtro [#find]
+
+A barra de filtro de entidades é exibida na parte superior das principais páginas New Relic, incluindo:
+
+* <DNT>**[Catalogs](/docs/service-architecture-intelligence/catalogs/catalogs/)**</DNT> página para <DNT>**Applications**</DNT>, <DNT>**Repositories**</DNT> e <DNT>**Infrastructure**</DNT>.
+* <DNT>**All Entities**</DNT> página.
+* Páginas de serviço APM.
+* <InlinePopover type="browser" />páginas.
+* Páginas de monitoramento de infraestrutura e muito mais.
+
+## Pesquisa e filtragem básicas [#basic-filtering]
+
+Comece com estes métodos de filtragem fundamentais para localizar entidades:
+
+### Pesquisar por nome da entidade
+
+Use o campo <DNT>**Search by entity name**</DNT> para encontrar a entidade:
+
+1. Clique no campo de pesquisa.
+2. Digite parte do nome de uma entidade (por exemplo, &quot;produção&quot; ou &quot;aplicativo web&quot;).
+3. Veja os resultados correspondentes que aparecem instantaneamente na lista abaixo.
+
+<Callout variant="tip">
+  A pesquisa corresponde a qualquer parte do nome da entidade; portanto, digitar &quot;prod&quot; encontrará entidades com nomes como &quot;prod-web-server&quot; e &quot;my-production-app&quot;.
+</Callout>
+
+### Filtrar por tipo de entidade
+
+Refine sua busca selecionando tipos de entidade específicos:
+
+* <DNT>**Entity Type**</DNT>Escolha entre aplicativos, serviços, hosts, contêineres e outros tipos de recursos monitorados.
+* **Resultado:** Somente as entidades que correspondem ao tipo selecionado serão exibidas, facilitando o foco em componentes específicos da infraestrutura.
+
+### Filtrar por propriedade da equipe
+
+Foque na entidade gerida pela sua equipa:
+
+* <DNT>**Team**</DNT>Selecione as equipes que detêm a propriedade da entidade na sua visualização atual.
+* **Requisito:** Você precisa habilitar [Inteligência de Arquitetura de Serviços](/docs/service-architecture-intelligence/getting-started/).
+* **Resultado:** Exibir apenas as entidades atribuídas ou pertencentes à equipe selecionada.
+
+## Filtragem avançada [#advanced-filtering]
+
+Para cenários de filtragem mais complexos, crie filtros personalizados:
+
+### Crie filtros de atributo personalizado
+
+Adicione filtros específicos com base na entidade atributo:
+
+1. Clique em **+** ao lado dos filtros existentes.
+
+2. Na dropdown <DNT>**Filter**</DNT>, selecione um atributo (como ambiente, região ou tag personalizada).
+
+3. Selecione uma operadora:
+
+   * **=** (igual a): Correspondência exata
+   * **!=** (diferente de): Excluir correspondências exatas
+   * **LIKE**: Contém o texto especificado
+   * **NOT LIKE**: Exclui o texto especificado
+
+4. Digite ou selecione um valor para concluir o filtro.
+
+5. Clique em <DNT>**Add**</DNT> para aplicar o filtro.
+
+**Exemplo:** Para encontrar todos os aplicativos web de produção, você pode filtrar onde `environment = production` E `entity_type = APPLICATION`.
+
+Para consultas e análises mais avançadas, considere usar [o NRQL criador de consulta](https://one.newrelic.com/data-exploration/query-builder). Para obter mais informações sobre NRQL consulta, consulte [Como usar NRQL](/docs/query-your-data/nrql-new-relic-query-language/get-started/introduction-nrql-how-nrql-works).

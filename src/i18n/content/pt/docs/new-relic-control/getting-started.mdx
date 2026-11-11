@@ -1,0 +1,44 @@
+---
+title: Introdução ao New Relic Control
+tags:
+  - new relic control
+  - fleet control
+  - agent control
+  - pipeline control
+  - getting started
+metaDescription: 'New Relic Control is an observability management solution that provides centralized, scalable control over agents and telemetry pipelines across your environment.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+New Relic Control é uma solução de gerenciamento de observabilidade que fornece controle centralizado e escalável sobre pipelines de agente e telemetria em todo o seu ambiente. Esta documentação abrange os componentes da solução, a funcionalidade principal e as opções de implantação.
+
+## Componentes
+
+* **[Agent Control](/docs/new-relic-control/agent-control/overview):** Um componente supervisor leve que gerencia outros agentes New Relic e da distribuição New Relic do OpenTelemetry . Ele se comunica com o Controle de Agentes para configurar, atualizar e monitorar remotamente a integridade da instrumentação em nível de infraestrutura.
+* **[Controle de Agentes](/docs/new-relic-control/fleet-control/overview):** Uma interface centralizada que fornece visibilidade e gerenciamento remoto de todos os agentes supervisionados em sua infraestrutura. Ele permite que equipes instalem, configurem, monitorem e atualizem o agente em escala.
+* **[Controle de Pipeline](/docs/new-relic-control/pipeline-control/overview):** O componente de gerenciamento de dados do New Relic Control que ajuda a filtrar e descartar dados de baixo valor antes da ingestão do banco de dados.
+
+## Escopo
+
+O Controle de Agente e o Controle de Agentes gerenciam a instrumentação em nível de infraestrutura em três ambientes: cluster do Kubernetes, hosts Linux e hosts Windows. A instrumentação que eles abrangem inclui:
+
+* **Agente New Relic :** Inclui agente baseado no agente New Relic Infrastructure e na distribuição New Relic do coletor OpenTelemetry (NRDOT).
+* **Integrações no host:** inclui Apache, Flex, Memcached, MySQL, NGINX, PostgreSQL e Redis, com suporte para mais integrações adicionado ao longo do tempo.
+* **Instrumentação baseada em padrões:** Inclui Prometheus e Fluent Bit.
+
+Nem todo agente está disponível em todos os ambientes. Para saber o que cada um suporta, consulte a [documentação de compatibilidade de tipos de agente](/docs/new-relic-control/agent-control/agent-types).
+
+O Controle de Pipeline está em disponibilidade geral (GA) e pode ser usado para gerenciar dados do agente APM descartando dados de baixo valor. Para obter detalhes sobre o agente suportado, consulte [Versões de agente suportadas](/docs/new-relic-control/pipeline-control/modify-agent-configuration/#supported-agent-versions)
+
+## Principais comportamentos
+
+* **Inicia sem agentes:** O Agent Control é instalado como um supervisor leve, sem agentes gerenciados por padrão. Você define quais agentes implantar via Fleet Control após a instalação — nada é instrumentado automaticamente.
+* **Instalação e atualização remotas no Linux:** Em hosts Linux, você pode instalar, configurar e atualizar agentes inteiramente por meio da configuração remota do Fleet Control, sem acessar hosts individuais.
+* **Sem migração automática de agente:** O Agent Control não migra automaticamente as instalações de agente existentes. Se você já tiver agentes em execução em um host ou cluster, deverá desinstalá-los primeiro e, em seguida, implantá-los por meio do Fleet Control. Veja [Gerenciar instrumentação existente](/docs/new-relic-control/agent-control/reinstrumentation) para o processo de migração.
+
+## Permissões necessárias
+
+* **Agent Control:** Requer a função Gerenciador de domínio de autenticação para configurar o Agent Control e conectá-lo ao Controle de Agentes. Para mais informações, consulte [Conceitos de gerenciamento de usuários](/docs/accounts/accounts-billing/new-relic-one-user-management/user-management-concepts/#admin-settings).
+* **Fleet Control:** criar e editar frotas e configurações requer a função de administrador de produto da organização, que os usuários no grupo de usuários padrão já possuem. A execução de implantações requer o Gerente da organização em toda a organização ou a função de gerente de frota concedida em frotas específicas. Para obter o detalhamento completo, consulte [Gerenciar o acesso ao Fleet Control](/docs/new-relic-control/fleet-control/access-management).
+* **Controle de Pipeline:** Requer a função de Gerente da organização para configurar e gerenciar o gateway do Controle de Pipeline e as regras do Controle de Pipeline .

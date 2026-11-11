@@ -1,0 +1,164 @@
+---
+title: 'Java agent configuration: Config file'
+tags:
+  - Agents
+  - Java agent
+  - Configuration
+translate:
+  - jp
+  - kr
+metaDescription: "New Relic's Java agent config settings for APM, including transaction tracer, errors, custom instrumentation, distributed tracing, system properties, etc."
+redirects:
+  - /docs/agents/java-agent/configuration/java-agent-configuration-config-file
+  - /docs/docs/java-agent-configuration
+  - /docs/java/java-agent-configuration
+  - /docs/java/java-agent-server-side-configuration
+  - /docs/agents/java-agent/configuration/java-agent-configuration-server-side-config
+  - /docs/agents/java-agent/custom-instrumentation/file-location
+  - /docs/java-agent/configuration
+  - /docs/agents/java-agent/configuration
+freshnessValidatedDate: 2026-08-05
+---
+
+The New Relic Java agent reads its configuration from the `newrelic.yml` file. By default the agent looks for this file in the [directory](/docs/agents/manage-apm-agents/troubleshooting/find-agent-root-directory#java-agent) that contains `newrelic.jar`. You can override the config file's location by setting the [`newrelic.config.file`](#newrelic-config-file) system property to a fully qualified file name.
+
+You'll be able to configure our Java agent to suit your environment after you [create a New Relic account](https://newrelic.com/signup) (it's free, forever) and [install the Java agent](/docs/apm/agents/java-agent/installation/install-java-agent/).
+
+## Configuration file structure [#Structure]
+
+The `newrelic.yml` file has separate sections for different environments:
+
+* Test
+* Development
+* Staging
+* Production (default)
+
+New Relic applies settings in the `common` section to each of these environments. You can select other environments as the default by setting the [`newrelic.environment`](#newrelic-environment) system property to the environment name.
+
+<Callout variant="tip">
+  A [`newrelic.yml` template](/docs/java/java-agent-config-file-template) is available.
+</Callout>
+
+If you edit `newrelic.yml`, be careful to conform to the [YAML format](https://en.wikipedia.org/wiki/YAML). Use a YAML validator to ensure the syntax is accurate before using the file with New Relic's Java agent, and follow these rules:
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>
+        <DNT>
+          **Java agent newrelic.yml**
+        </DNT>
+      </th>
+
+      <th>
+        <DNT>
+          **Requirements**
+        </DNT>
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        Format
+      </td>
+
+      <td>
+        YML files are case sensitive.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Indentations
+      </td>
+
+      <td>
+        All indentations must be in increments of two characters. Other indentations will result in an `Unable to parse configuration file` error upon agent startup.
+
+        * Use the same level of indentation for data in the same section of the file.
+        * Indent any sub-sections by an additional two spaces.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Changes to file
+      </td>
+
+      <td>
+        You must restart your JVM host process for changes to take effect.
+
+        <DNT>**Exception:**</DNT> Property changes to `log_level` and `audit_mode` do not require a restart. Property changes under circuit breaker don't require a restart.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Configuration settings precedence [#config-options-precedence]
+
+To override any setting in the config file, use a [system property override](#System_Properties). In certain environments, [environment variables](#Environment_Variables) can also be used to override both the config file and the system properties. The environment variables primarily exist to support Heroku. When used, [server-side configuration](/docs/agents/manage-apm-agents/configuration/server-side-agent-configuration) overrides all other configuration settings.
+
+<img
+  title="java-config-order.png"
+  alt="java-config-order.png"
+  src="/images/apm_diagram_Java-config-precedence.webp"
+/>
+
+<figcaption>
+  With the Java agent, server-side configuration overrides all other settings. Environment variables override Java system properties. Java properties override user configuration settings in your `newrelic.yml` file. User settings override the `newrelic.yml` default settings.
+</figcaption>
+
+## Configuring the Java extensions directory [#extensions-directory]
+
+The Java agent reads the configuration files on process startup. To identify the directory where the files are located, either create a new or specify an existing extensions directory:
+
+<CollapserGroup>
+  <Collapser
+    id="create-extensions-directory"
+    title="Create an extensions directory"
+  >
+    To create the extensions directory:
+
+    1. Navigate to the directory where `newrelic.jar` and `newrelic.yml` are located. Create a directory named `extensions`.
+    2. In `newrelic.yml`, check that the property [`extensions.dir`](#cfg-extensions-dir) is not set.
+  </Collapser>
+
+  <Collapser
+    id="specify-extensions-directory"
+    title="Specify an existing extensions directory"
+  >
+    To use an existing Java extensions directory:
+
+    1. In your `newrelic.yml` file, locate the `common` section.
+    2. Use the property [`extensions.dir`](#cfg-extensions-dir) to specify the location of the file.
+  </Collapser>
+</CollapserGroup>
+
+## Settings index [#settings-index]
+
+The following pages contain the full settings reference for each configuration area:
+
+| Settings page | Description |
+|---|---|
+| [General settings](/docs/apm/agents/java-agent/configuration/java-agent-configuration-general-settings) | Core settings: license key, app name, proxy, high security, extensions |
+| [Transaction tracer settings](/docs/apm/agents/java-agent/configuration/java-agent-configuration-transaction-tracer-settings) | Transaction tracing, SQL capture, transaction events, segments, message tracer |
+| [Error collector settings](/docs/apm/agents/java-agent/configuration/java-agent-configuration-error-collector-settings) | Error collection, ignore/expected classes and status codes, errors inbox |
+| [Distributed tracing settings](/docs/apm/agents/java-agent/configuration/java-agent-configuration-distributed-tracing-settings) | Distributed tracing, Infinite Tracing, span events, cross application tracer |
+| [Logs in context settings](/docs/apm/agents/java-agent/configuration/java-agent-configuration-logs-in-context-settings) | Log forwarding, log metrics, local decorating, logging configuration |
+| [Attributes settings](/docs/apm/agents/java-agent/configuration/java-agent-configuration-attributes-settings) | Attribute filtering, include/exclude lists, HTTP attribute mode |
+| [Security settings](/docs/apm/agents/java-agent/configuration/java-agent-configuration-security-settings) | IAST security agent, vulnerability detection settings |
+| [AI monitoring settings](/docs/apm/agents/java-agent/configuration/java-agent-configuration-ai-monitoring-settings) | AI monitoring and LLM content recording |
+| [Browser monitoring settings](/docs/apm/agents/java-agent/configuration/java-agent-configuration-browser-monitoring-settings) | Browser agent auto-instrumentation and attribute configuration |
+| [Async instrumentation settings](/docs/apm/agents/java-agent/configuration/java-agent-configuration-async-instrumentation-settings) | Async token and segment timeout configuration |
+| [OpenTelemetry settings](/docs/apm/agents/java-agent/configuration/java-agent-configuration-opentelemetry-settings) | OpenTelemetry traces, metrics, and logs signal configuration |
+| [JFR settings](/docs/apm/agents/java-agent/configuration/java-agent-configuration-jfr-settings) | Java Flight Recorder real-time profiling |
+| [Class transformer settings](/docs/apm/agents/java-agent/configuration/java-agent-configuration-class-transformer-settings) | Spring transaction naming, trace annotations, lambda tracing |
+| [JMX settings](/docs/apm/agents/java-agent/configuration/java-agent-configuration-jmx-settings) | JMX monitoring and linking metadata |
+| [Other settings](/docs/apm/agents/java-agent/configuration/java-agent-configuration-other-settings) | Circuit breaker, cloud config, utilization, custom events, jar collector, JVM obfuscation, thread profiler, and more |
+
+
+<Callout variant="important">
+  The two settings you **must** configure are your app name and license key — set via `app_name` and `license_key` in `newrelic.yml` (or the `NEW_RELIC_APP_NAME` and `NEW_RELIC_LICENSE_KEY` environment variables). All other settings are optional.
+</Callout>

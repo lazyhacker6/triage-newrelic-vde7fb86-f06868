@@ -1,0 +1,615 @@
+---
+title: Integración de monitoreo de Google App Engine
+tags:
+  - Integrations
+  - Google Cloud Platform integrations
+  - GCP integrations list
+metaDescription: 'New Relic''s Google App Engine integration: the data it reports and how to enable it.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+[La integración de New Relic](/docs/infrastructure/introduction-infra-monitoring) con [Google Cloud Platform (GCP)](https://cloud.google.com/) incluye una que informa datos de [Google App Engine](https://cloud.google.com/appengine/) a New Relic. Este documento explica cómo activar la integración de GCP App Engine y describe los datos que reporta.
+
+Para obtener más información sobre el monitoreo de aplicaciones que residen en un entorno de Google App Engine con <InlinePopover type="apm" />(en lugar de monitorear sus propios servicios de Google App Engine), consulte [Entorno de Google App Engine](/docs/accounts/install-new-relic/partner-based-installation/google-app-engine-environment).
+
+## Característica
+
+App Engine es un servicio de Google Cloud Platform que abstrae la infraestructura subyacente para sus aplicaciones móviles y web. La integración de App Engine de New Relic recopila métricas de solicitud, respuesta, latencia, memoria e instancia para cada servicio de App Engine. Se admiten los entornos Standard y Flexible.
+
+## Activar la integración [#activate]
+
+Para habilitar la integración, siga los procedimientos estándar para [conectar su servicio de GCP a New Relic](/docs/connect-google-cloud-platform-services-infrastructure):
+
+* [Conectar con la federación de identidades de workload (Workload Identity Federation) (recomendado)](/docs/connect-google-cloud-platform-services-infrastructure)
+* [Conectar con cuenta de servicio o cuenta de usuario](/docs/connect-google-cloud-platform-services-infrastructure)
+
+## Frecuencia de sondeo [#polling]
+
+La integración de New Relic consulta sus servicios de GCP de acuerdo con un intervalo de sondeo que varía según la integración. La frecuencia de sondeo para Google App Engine es de 5 minutos. La resolución es 1 punto de datos cada minuto.
+
+## Federación de identidades de workload (Workload Identity Federation) [#wif]
+
+### Buscar y utilizar datos [#find-data-wif]
+
+Después de habilitar la integración, sus recursos de App Engine aparecen como entidades en el explorador de entidades de New Relic. Para ver dashboards y administrar servicios, vaya a <DNT>[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Infrastructure &gt; GCP</DNT>.
+
+Todas las métricas de App Engine disponibles en el monitoreo de la nube de GCP se recopilan como métricas dimensionales en el tipo de evento `Metric`. Las métricas adicionales más allá de esta tabla se recopilan automáticamente. Consulte la [documentación de métricas de App Engine de Google](https://cloud.google.com/monitoring/api/metrics_gcp#gcp-appengine) para obtener la lista completa.
+
+#### Entidad
+
+<CollapserGroup>
+<Collapser id="entities-table" title="Entidades de App Engine">
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+Entidad
+</th>
+
+<th style={{ width: "280px" }}>
+Tipo de entidad
+</th>
+
+<th>
+Tipo de recurso
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+Servicio
+</td>
+
+<td>
+`GCPAPPENGINESERVICE`
+</td>
+
+<td>
+`gae_app`
+</td>
+</tr>
+
+<tr>
+<td>
+Cola de tareas
+</td>
+
+<td>
+`GCPCLOUDTASKSQUEUE`
+</td>
+
+<td>
+`cloud_tasks_queue`
+</td>
+</tr>
+</tbody>
+</table>
+</Collapser>
+</CollapserGroup>
+
+### Datos métricos [#metrics-wif]
+
+#### Métricas clave — servicio
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "440px" }}>
+Nombre de la métrica
+</th>
+
+<th style={{ width: "100px" }}>
+Unidad
+</th>
+
+<th>
+Descripción
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`gcp.appengine.http.server.response_count`
+</td>
+
+<td>
+Contar
+</td>
+
+<td>
+Número de respuestas HTTP atendidas por el servicio de App Engine, desglosadas por `response_code`.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.appengine.http.server.response_latencies`
+</td>
+
+<td>
+Milisegundos
+</td>
+
+<td>
+Distribución de la latencia de las solicitudes atendidas por el servicio App Engine.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.appengine.system.instance_count`
+</td>
+
+<td>
+Contar
+</td>
+
+<td>
+Número de instancias que se ejecutan actualmente para el servicio de App Engine.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.appengine.system.memory.usage`
+</td>
+
+<td>
+Bytes
+</td>
+
+<td>
+Memoria en uso por las instancias de servicio de App Engine.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.appengine.system.cpu.usage`
+</td>
+
+<td>
+Por ciento
+</td>
+
+<td>
+Utilización de CPU en las instancias de servicio de App Engine.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.appengine.system.network.received_bytes_count`
+</td>
+
+<td>
+Bytes
+</td>
+
+<td>
+Bytes de red recibidos por las instancias de servicio de App Engine.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.appengine.system.network.sent_bytes_count`
+</td>
+
+<td>
+Bytes
+</td>
+
+<td>
+Bytes de red enviados por las instancias del servicio de App Engine.
+</td>
+</tr>
+</tbody>
+</table>
+
+Para obtener la lista completa de métricas de App Engine, consulte la [documentación de métricas de App Engine de Google](https://cloud.google.com/monitoring/api/metrics_gcp#gcp-appengine).
+
+#### Métricas clave — cola de tareas
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "440px" }}>
+Nombre de la métrica
+</th>
+
+<th style={{ width: "100px" }}>
+Unidad
+</th>
+
+<th>
+Descripción
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`gcp.cloudtasks.queue.task_attempt_count`
+</td>
+
+<td>
+Contar
+</td>
+
+<td>
+Recuento de intentos de tareas desglosados por código de respuesta.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.cloudtasks.queue.task_attempt_delays`
+</td>
+
+<td>
+Milisegundos
+</td>
+
+<td>
+Retraso entre cada tiempo de intento programado y el tiempo de intento real.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.cloudtasks.queue.depth`
+</td>
+
+<td>
+Contar
+</td>
+
+<td>
+Número de tareas en la cola.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.cloudtasks.api.request_count`
+</td>
+
+<td>
+Contar
+</td>
+
+<td>
+Recuento de llamadas API de Cloud Tasks, desglosado por `api_method` y `response_code`.
+</td>
+</tr>
+</tbody>
+</table>
+
+Para obtener la lista completa de métricas de Cloud Tasks, consulte la [documentación de métricas de Cloud Tasks de Google](https://cloud.google.com/monitoring/api/metrics_gcp_c#gcp-cloudtasks).
+
+## Cuenta de servicio o cuenta de usuario [#service-account]
+
+### Buscar y utilizar datos [#find-data]
+
+Después [de conectar la integración de Google App Engine a New Relic](/docs/connect-google-cloud-platform-services-infrastructure) y esperar unos minutos (según la [frecuencia de sondeo](#polling)), puede [buscar y utilizar datos de integración](/docs/telemetry-data-platform/understand-data/new-relic-data-types/):
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+Ver datos de integración de Google App Engine
+</th>
+
+<th>
+Aquí...
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+<InlinePopover type="dashboards" />y [alertas](/docs/infrastructure/new-relic-infrastructure/infrastructure-alert-conditions/infrastructure-alerts-add-edit-or-view-host-alert-information#integration)
+</td>
+
+<td>
+Vaya a <DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Infrastructure &gt; GCP &gt; Google App Engine**</DNT>.
+</td>
+</tr>
+
+<tr>
+<td>
+[datos métricos](#metrics) en tablero personalizado
+</td>
+
+<td>
+[Cree consultas y gráficos personalizados](/docs/using-new-relic/data/understand-data/query-new-relic-data) usando `GcpAppEngineServiceSample` y `GcpCloudTasksQueueSample` evento.
+</td>
+</tr>
+</tbody>
+</table>
+
+## Datos métricos [#metrics]
+
+Para ver [datos métricos](/docs/telemetry-data-platform/understand-data/new-relic-data-types/#metrics) para su integración de Google App Engine en New Relic, [cree una consulta NRQL ](/docs/integrations/new-relic-integrations/getting-started/use-integration-data-new-relic-insights#nrql)para `GcpAppEngineServiceSample` y `GcpCloudTasksQueueSample` [evento](/docs/data-apis/understand-data/new-relic-data-types/#event-data) y su atributo relacionado.
+
+<Callout variant="important">
+Hay diferentes métricas disponibles dependiendo de si su aplicación se ejecuta en un [entorno estándar o flexible](#environments), por lo que es posible que algunas métricas no estén disponibles para su aplicación.
+</Callout>
+
+### Muestra de servicio de GcpAppEngine [#gcp-app-engine-service-sample]
+
+Consulta `GcpAppEngineServiceSample` evento en New Relic para ver datos del siguiente atributo:
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "300px" }}>
+Atributo
+</th>
+
+<th>
+Descripción
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`flex.Cpu.ReservedCores`
+</td>
+
+<td>
+Número total de núcleos de CPU asignados a una versión del entorno flexible de App Engine.
+</td>
+</tr>
+
+<tr>
+<td>
+`flex.Cpu.Utilization`
+</td>
+
+<td>
+La fracción de CPU asignada en uso en una versión del entorno flexible de App Engine.
+</td>
+</tr>
+
+<tr>
+<td>
+`flex.Disk.ReadBytes`
+</td>
+
+<td>
+Recuento delta de bytes leídos desde el disco en una versión del entorno flexible de App Engine.
+</td>
+</tr>
+
+<tr>
+<td>
+`flex.Disk.WriteBytes`
+</td>
+
+<td>
+Recuento delta de bytes escritos desde el disco en una versión del entorno flexible de App Engine.
+</td>
+</tr>
+
+<tr>
+<td>
+`flex.Disk.ReceivedBytes`
+</td>
+
+<td>
+Recuento delta de bytes de red entrantes en todas las máquinas virtuales (VM) en una versión de entorno flexible de App Engine.
+</td>
+</tr>
+
+<tr>
+<td>
+`flex.Disk.SentBytes`
+</td>
+
+<td>
+Recuento delta de bytes de red salientes en todas las máquinas virtuales (VM) en una versión de entorno flexible de App Engine.
+</td>
+</tr>
+
+<tr>
+<td>
+`server.DosIntercepts`
+</td>
+
+<td>
+Recuento delta de intercepciones realizadas para prevenir ataques DoS.
+</td>
+</tr>
+
+<tr>
+<td>
+`server.QuotaDenials`
+</td>
+
+<td>
+Recuento delta de solicitudes que fallaron debido a que la aplicación superó la cuota.
+</td>
+</tr>
+
+<tr>
+<td>
+`server.Responses`
+</td>
+
+<td>
+Recuento de respuestas HTTP delta.
+</td>
+</tr>
+
+<tr>
+<td>
+`server.ResponseLatenciesMilliseconds`
+</td>
+
+<td>
+Latencia de respuesta HTTP, en milisegundos.
+</td>
+</tr>
+
+<tr>
+<td>
+`server.ResponseStyle`
+</td>
+
+<td>
+Delta cuenta con el estilo de servicio HTTP.
+</td>
+</tr>
+
+<tr>
+<td>
+`memcache.CentiMcu`
+</td>
+
+<td>
+Utilización de Memcache, en 1/100 de una unidad de computación de Memcache.
+</td>
+</tr>
+
+<tr>
+<td>
+`memcache.Operations`
+</td>
+
+<td>
+Recuento de operaciones clave de Memcache.
+</td>
+</tr>
+
+<tr>
+<td>
+`memcache.ReceivedBytes`
+</td>
+
+<td>
+Número de bytes recibidos por la aplicación desde la API de Memcache.
+</td>
+</tr>
+
+<tr>
+<td>
+`memcache.SentBytes`
+</td>
+
+<td>
+Número de bytes enviados por la aplicación a través de la API de Memcache.
+</td>
+</tr>
+
+<tr>
+<td>
+`system.cpu.Usage`
+</td>
+
+<td>
+Uso de CPU en megaciclos.
+</td>
+</tr>
+
+<tr>
+<td>
+`system.Instances`
+</td>
+
+<td>
+Número de instancias que existen.
+</td>
+</tr>
+
+<tr>
+<td>
+`system.Memory.UsageBytes`
+</td>
+
+<td>
+Memoria total utilizada al ejecutar instancia.
+</td>
+</tr>
+
+<tr>
+<td>
+`system.Network.ReceivedBytes`
+</td>
+
+<td>
+Recuento delta del ancho de banda de la red entrante.
+</td>
+</tr>
+
+<tr>
+<td>
+`system.Network.SentBytes`
+</td>
+
+<td>
+Recuento delta del ancho de banda de la red saliente.
+</td>
+</tr>
+</tbody>
+</table>
+
+### GcpCloudTasksQueueMuestra [#gcp-cloud-tasks-queue-sample]
+
+Consulta `GcpCloudTasksQueueSample` evento en New Relic para ver datos del siguiente atributo:
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "300px" }}>
+Atributo
+</th>
+
+<th>
+Descripción
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`api.Requests`
+</td>
+
+<td>
+Recuento de API de llamadas de Cloud Tasks.
+</td>
+</tr>
+
+<tr>
+<td>
+`queue.TaskAttempts`
+</td>
+
+<td>
+Recuento de intentos de tareas desglosados por código de respuesta.
+</td>
+</tr>
+
+<tr>
+<td>
+`queue.taskAttemptDelaysMilliseconds`
+</td>
+
+<td>
+Retraso entre cada tiempo de intento programado y el tiempo de intento real.
+</td>
+</tr>
+</tbody>
+</table>

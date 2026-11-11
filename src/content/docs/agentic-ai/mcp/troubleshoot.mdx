@@ -1,0 +1,105 @@
+---
+title: Troubleshoot New Relic MCP
+metaDescription: "Common troubleshooting steps and solutions for New Relic's Model Context Protocol server setup and configuration issues."
+freshnessValidatedDate: never
+---
+
+## OAuth flow not starting
+- Ensure your browser can access `localhost`.
+- Check firewall settings.
+- Verify that your tools can access `OAuth` URLs.
+
+## API key not working
+- Verify key format (starts with `NRAK-`).
+- Check key permissions in New Relic.
+- Ensure the key is not expired.
+
+## MCP server not detected
+- Verify with your org admin that MCP is enabled in [feature control manager](/docs/accounts/accounts-billing/new-relic-one-user-management/feature-control-manager/) and that the required sub-toggles are on.
+- Restart the application completely.
+- Check `JSON` syntax validity.
+- Verify file paths and permissions.
+
+## mcp-remote proxy issues
+- Ensure `Node.js` is installed.
+- Check internet connectivity.
+- Verify npx can access `mcp-remote` package.
+
+## Access denied for custom groups
+
+### Problem
+You are unable to successfully connect to or authenticate with the New Relic AI MCP Server and receive the following error message: `Missing required capabilities to access MCP server. Please ensure you have the necessary permissions.` This typically occurs if you are a member of a custom user group without any organization-level grant.
+
+### Cause
+Your group lacks an organization-scoped role with permission to read the MCP server. Access to this organization-wide feature must be explicitly granted to your group via an organization-scoped role.
+
+### Resolution
+Your org admin who has the `Authentication Domain Manager` role must implement one of the following two solutions to grant you access:
+1. Grant your group a role with permission to read the MCP server:
+    - The administrator must add one of the following roles to the custom group you belong to: `Organization Read Only`, `Organization Manager`, or `Organization Product admin`.
+    - The administrator can create a [custom organization-scoped role](/docs/accounts/accounts-billing/new-relic-one-user-management/account-user-mgmt-tutorial/#roles) and assign it to a group you belong to via an [organization-coped grant](/docs/accounts/accounts-billing/new-relic-one-user-management/account-user-mgmt-tutorial/#access-grants). This custom role must include the `New Relic MCP Server` read permission.
+
+2. Add you to an authorized group:
+    - The administrator must add you to an existing user group that already has an organization-scoped role with permission to read the MCP server.
+
+For detailed information on user management concepts, roles, and organization grants, refer to the [New Relic user management documentation](/docs/accounts/accounts-billing/new-relic-one-user-management/user-management-concepts). If your organization uses System for Cross-domain Identity Management (SCIM) for user management, these group and role adjustments must be performed within your external Identity Provider (IdP).
+
+## Unexpected connection error in Claude Code [#connection-error]
+
+### Problem
+You receive an unexpected error when connecting the New Relic MCP server via Claude Code.
+
+### Resolution
+Run the following in a fresh terminal, then reconnect:
+
+```shell
+claude mcp logout "plugin:nr:nr-mcp-server" 2>&1
+```
+
+## Stale OAuth credentials in Claude Desktop [#stale-creds]
+
+### Problem
+The connection error persists after logging out. Stale OAuth credentials cached across multiple stores may be causing Claude Desktop to reuse dead credentials instead of re-registering.
+
+### Resolution
+Ask Claude to help locate and clear the stale credentials:
+
+```
+Stale OAuth client ID or stale refresh and access tokens for MCP server `newrelic-mcp-server` is making
+Claude Desktop's Connect reuses dead credentials instead of re-registering. On macOS, find
+every store holding it — the "Claude Code-credentials" keychain item (`.mcpOAuth` keys, watch
+for a `plugin:` prefix), `~/Library/Application Support/Claude-3p/config.json`
+(`custom3pMcpOAuth."newrelic-mcp-server"`), and every registration across `claude mcp list`,
+`~/.claude.json`, and project `.mcp.json` files. Show me which stores match before changing
+anything; then clear it (quitting Claude Desktop and backing up config.json first), reconnect,
+and confirm a new client ID/new access token is issued.
+```
+
+## Error messages
+- **Connection refused**: Check URL and network connectivity of your tools.
+- **Authentication required**: Verify that the API key is still active and was inputted correctly or complete `OAuth` flow.
+- **Invalid client**: `OAuth` configuration issue, try `mcp-remote` proxy.
+- **`Time.UnmarshalJSON`**: Use `mcp-remote` proxy for `OAuth`.
+
+## FCM errors
+
+### API key error
+
+**Error message:** `Your organization has disabled the API Key sub-toggle under the New Relic MCP Server feature control. Please contact your administrator to enable access.`
+
+**Cause:** The API Keys sub-toggle is disabled under Feature Control Manager.
+
+**Resolution:**
+1. Go to **Administration** in the New Relic portal.
+2. Open **Feature Control** and select **New Relic MCP Server**.
+3. Under the sub-toggles, enable **API Keys**.
+
+### MCP server disabled error
+
+**Error message:** `Your organization has disabled New Relic MCP Server feature control. Please contact your administrator to enable access.`
+
+**Cause:** The main New Relic MCP Server toggle is disabled under Feature Control Manager.
+
+**Resolution:**
+1. Go to **Administration** in the New Relic portal.
+2. Open **Feature Control** and enable **New Relic MCP Server**.

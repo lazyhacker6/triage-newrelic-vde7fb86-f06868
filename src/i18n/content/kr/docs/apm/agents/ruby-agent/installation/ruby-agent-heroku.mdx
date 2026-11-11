@@ -1,0 +1,130 @@
+---
+title: Heroku에 루비 에이전트 설치
+tags:
+  - Agents
+  - Ruby agent
+  - Installation
+metaDescription: How to install the New Relic Ruby agent on Heroku using the New Relic add-on.
+freshnessValidatedDate: '2026-08-05T00:00:00.000Z'
+translationType: machine
+---
+
+뉴렐릭 애드온을 사용하여 Heroku에 뉴렐릭 루비 에이전트를 설치하십시오.
+
+## 전제 조건 [#prerequisites]
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+요구 사항
+</th>
+
+<th>
+세부
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+**New Relic 계정**
+</td>
+
+<td>
+Heroku 애드온을 설치하면 뉴렐릭 계정이 자동으로 생성됩니다.
+</td>
+</tr>
+
+<tr>
+<td>
+**Heroku 계정**
+</td>
+
+<td>
+루비 앱이 이미 배포된 [Heroku](https://www.heroku.com/) 계정.
+</td>
+</tr>
+
+<tr>
+<td>
+**루비 버전**
+</td>
+
+<td>
+지원되는 버전은 [루비 에이전트 요구사항 및 지원되는 프레임워크](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks)를 확인해 주십시오.
+</td>
+</tr>
+</tbody>
+</table>
+
+<Steps>
+<Step>
+## New Relic 애드온 설치 [#install]
+
+<Tabs>
+<TabsBar>
+<TabsBarItem id="heroku-website">Heroku 웹사이트</TabsBarItem> <TabsBarItem id="heroku-toolbelt">Heroku 툴벨트</TabsBarItem>
+</TabsBar>
+
+<TabsPages>
+<TabsPageItem id="heroku-website">
+1. [뉴렐릭용 Heroku 애드온 페이지](https://elements.heroku.com/addons/newrelic#pricing)로 이동하여 구독 플랜을 선택합니다.
+2. **Select an app** 아래에서 앱을 선택합니다.
+3. **Submit Order Form**을 클릭합니다.
+</TabsPageItem>
+
+<TabsPageItem id="heroku-toolbelt">
+`$planlevel`을(를) [적절한 구독 플랜](https://elements.heroku.com/addons/newrelic#pricing)으로 변경하여 다음 명령을 실행하십시오:
+
+```bash
+heroku addons:create newrelic:$planlevel
+```
+</TabsPageItem>
+</TabsPages>
+</Tabs>
+
+애드온을 설치하면 자동으로 뉴렐릭 계정이 생성되고 Heroku 호스트에 대한 액세스가 구성됩니다.
+</Step>
+
+<Step>
+## 에이전트 구성 [#configure]
+
+`Gemfile`에 `newrelic_rpm` gem을 추가합니다:
+
+```ruby
+gem 'newrelic_rpm'
+```
+
+Heroku 툴벨트를 사용하여 앱 이름을 설정하십시오:
+
+```bash
+heroku config:set NEW_RELIC_APP_NAME='Your Application Name'
+```
+
+라이선스 키는 애드온에 의해 자동으로 설정됩니다. 기타 모든 설정 옵션은 [루비 에이전트 설정](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration)을 참조하십시오.
+</Step>
+
+<Step>
+## 데이터가 흐르고 있는지 확인 [#verify]
+
+다이노를 다시 시작하고 앱에 트래픽을 발생시키십시오:
+
+```bash
+heroku restart
+```
+
+2～3분 정도 기다린 후 [one.newrelic.com &gt; APM](https://one.newrelic.com/apm)을 열어 이름으로 앱을 찾으십시오.
+
+<Callout variant="tip">
+앱이 표시되지 않습니까? [데이터가 표시되지 않음(루비)](/docs/apm/agents/ruby-agent/troubleshooting/no-data-appears-ruby)을 참조하십시오.
+</Callout>
+</Step>
+</Steps>
+
+## 관련 기사 [#related-docs]
+
+* [루비 에이전트 요구사항 및 지원되는 프레임워크](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks) — 지원되는 루비 버전.
+* [루비 에이전트 설정](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration) — 사용 가능한 모든 설정.
+* [뉴렐릭용 Heroku 애드온](https://elements.heroku.com/addons/newrelic) — 구독 플랜 및 가격.

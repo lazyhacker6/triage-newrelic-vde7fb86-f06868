@@ -1,0 +1,48 @@
+---
+title: Contention de verrouillage élevée AppDomain.GetData() ou augmentation de la mémoire native
+type: troubleshooting
+tags:
+  - Agents
+  - NET agent
+  - Troubleshooting
+metaDescription: 'Information about the .NET agent''s method cache, and how it relates to AppDomain.GetData() lock contention on .NET Framework and increased native memory on .NET and .NET Core.'
+freshnessValidatedDate: '2026-10-07T00:00:00.000Z'
+translationType: machine
+---
+
+## Problème
+
+L’agent .NET met en cache les informations de méthode dont il a besoin pour appeler l’agent à partir des méthodes instrumentées. Depuis la version 10.54.0, l’agent utilise ce cache à la fois pour les applications .NET framework et .NET ou .NET Core. Avant la version 10.54.0, l’agent l’utilisait uniquement pour les applications .NET framework.
+
+Le cache peut provoquer ces symptômes :
+
+* **.NET framework :** une application à haut débit montre une forte contention de threads. Les vidages de processus et les traces d’appels montrent de nombreux threads bloqués dans des appels à `AppDomain.GetData()`.
+* **.NET ou .NET Core, versions de l’agent 10.54.0 à 10.56.0 :** L’application utilise plus de mémoire native qu’avec la version 10.53.x de l’agent. L’augmentation croît avec le nombre d’assemblys que l’application charge.
+
+## Cause
+
+L&apos;agent .NET a besoin des informations de signature de méthode pour instrumenter les méthodes. Pour éviter un appel de réflexion chaque fois qu&apos;une méthode instrumentée s&apos;exécute, l&apos;agent met ces informations en cache. Le cache utilise plus de mémoire pour économiser du temps CPU. Lors de nos tests, les applications présentaient un débit maximal plus élevé avec le cache activé.
+
+Sur .NET framework, l’agent stocke une partie de ce cache dans le stockage `AppDomain`. Les appels à `AppDomain.GetData()` prennent un verrou global, ce qui peut provoquer une contention de threads dans certaines applications à haut débit.
+
+Sur .NET et .NET Core, les versions 10.54.0 à 10.56.0 de l’agent ajoutent des références aux méthodes d’assistance de l’agent à chaque module que l’application charge, y compris les modules qui n’ont aucune méthode instrumentée. Le runtime conserve une copie des métadonnées de chaque module modifié dans la mémoire native.
+
+## Avant de modifier les paramètres de l&apos;agent
+
+Les symptômes ci-dessus peuvent avoir de nombreuses causes. Contactez [le support New Relic](https://support.newrelic.com/) avec un thread dump ou des mesures de mémoire avant de modifier les paramètres de l’agent. Le support peut confirmer si le cache de méthode de l’agent en est la cause.
+
+## Solution
+
+Si vous utilisez l’agent .NET 10.54.0 à 10.56.0 sur .NET ou .NET Core et que vous constatez l’augmentation de la mémoire native décrite ci-dessus, [mettez à jour l’agent](/docs/apm/agents/net-agent/installation/update-net-agent/) vers une version plus récente que la 10.56.0. Dans ces versions, l’agent ajoute ces références uniquement à `System.Private.CoreLib` et aux modules qui ont des méthodes instrumentées.
+
+Si le support confirme que le cache de méthodes de l’agent est la cause et que vous ne pouvez pas mettre à jour l’agent, vous pouvez désactiver le cache avec cette variable d’environnement :
+
+```ini
+NEW_RELIC_DISABLE_APPDOMAIN_CACHING=true
+```
+
+Ce paramètre est disponible à partir de la version 9.7 de l’agent .NET, et il s’applique aux applications .NET framework, .NET, et .NET Core. Vous pouvez le laisser activé à long terme.
+
+<Callout variant="caution">
+  Ce paramètre ne réduit pas l’utilisation du tas managé, et il ne corrige pas les requests lentes ou l’utilisation élevée du CPU. Avec le cache désactivé, l’agent utilise la réflexion chaque fois qu’une méthode instrumentée s’exécute, ce qui augmente la surcharge de l’agent. Lors de nos tests, les applications avaient un débit maximal inférieur avec le cache désactivé.
+</Callout>

@@ -1,0 +1,146 @@
+---
+title: GAE 가변형 환경에 루비 에이전트 설치
+tags:
+  - Agents
+  - Ruby agent
+  - Installation
+metaDescription: How to install the New Relic Ruby agent in a Google App Engine flexible environment.
+freshnessValidatedDate: '2026-08-05T00:00:00.000Z'
+translationType: machine
+---
+
+GAE의 네이티브 모드 또는 사용자 지정 도커 런타임을 사용하여 [Google App Engine(GAE) 가변형 환경](https://cloud.google.com/appengine/docs/flexible/ruby/)에 뉴렐릭 루비 에이전트를 설치하십시오.
+
+## 전제 조건 [#prerequisites]
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+요구 사항
+</th>
+
+<th>
+세부
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+**New Relic 계정**
+</td>
+
+<td>
+[뉴렐릭 계정](https://newrelic.com/signup)과 <InlinePopover type="licenseKey" />이(가) 필요합니다.
+</td>
+</tr>
+
+<tr>
+<td>
+**Google Cloud 프로젝트**
+</td>
+
+<td>
+App Engine 애플리케이션이 생성된 Google Cloud Platform 프로젝트. [루비용 Google App Engine 절차](https://cloud.google.com/appengine/docs/flexible/ruby/managing-projects-apps-billing#create)를 참조하십시오.
+</td>
+</tr>
+
+<tr>
+<td>
+**Google Cloud SDK**
+</td>
+
+<td>
+`gcloud` CLI가 설치되고 초기화되었습니다. [Google Cloud SDK 문서](https://cloud.google.com/sdk/docs/)를 참조하십시오.
+</td>
+</tr>
+
+<tr>
+<td>
+**루비 버전**
+</td>
+
+<td>
+지원되는 버전은 [루비 에이전트 요구사항 및 지원되는 프레임워크](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks)를 확인해 주십시오.
+</td>
+</tr>
+</tbody>
+</table>
+
+<Steps>
+<Step>
+## gem을 설치하고 앱을 구성합니다. [#install]
+
+`Gemfile`에 `newrelic_rpm` gem을 추가합니다:
+
+```ruby
+gem 'newrelic_rpm'
+```
+
+그런 다음 실행하십시오:
+
+```sh
+bundle install
+```
+
+<Tabs>
+<TabsBar>
+<TabsBarItem id="native-mode">네이티브 모드(Rails 또는 Sinatra)</TabsBarItem> <TabsBarItem id="docker-runtime">커스텀 도커 런타임</TabsBarItem>
+</TabsBar>
+
+<TabsPages>
+<TabsPageItem id="native-mode">
+GAE 기본 모드를 사용할 때 앱 코드와 `app.yaml`을(를) 제공합니다. GAE는 표준 사전 빌드된 도커 이미지에 자동으로 배포합니다. 추가 Dockerfile은 필요하지 않습니다.
+</TabsPageItem>
+
+<TabsPageItem id="docker-runtime">
+앱에 특정 라이브러리나 헤더가 필요한 경우 사용자 지정 런타임을 사용하십시오. `Dockerfile`을(를) 생성하고 `app.yaml`을(를) 다음과 같이 설정하십시오:
+
+```yaml
+runtime: custom
+env: flex
+```
+
+뉴렐릭은 사용자 지정 런타임 방법을 권장합니다. 또한 Google App Engine이 상태 확인을 처리하도록 허용하는 것을 권장합니다.
+</TabsPageItem>
+</TabsPages>
+</Tabs>
+</Step>
+
+<Step>
+## 에이전트 구성 [#configure]
+
+뉴렐릭 GitHub 저장소에서 [`newrelic.yml`](https://github.com/newrelic/newrelic-ruby-agent/blob/dev/newrelic.yml)을(를) 다운로드하여 애플리케이션의 `config` 디렉터리에 복사하십시오.
+
+두 가지 필수 값을 설정하십시오:
+
+1. <InlinePopover type="licenseKey" />에 `license_key`을(를) 설정합니다.
+2. `app_name`을(를) 애플리케이션의 의미 있는 이름으로 설정해 주십시오.
+
+기타 모든 설정 옵션은 [루비 에이전트 설정](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration)을 참조하십시오.
+</Step>
+
+<Step>
+## 구현하다, 배포하다 그리고 검증하다 [#verify]
+
+`gcloud` CLI를 사용하여 앱을 배포하십시오:
+
+```bash
+gcloud app deploy
+```
+
+배포가 완료될 때까지 기다리십시오. 최소 2개의 requests를 보낸 다음, 2～3분 정도 기다렸다가 [one.newrelic.com &gt; APM](https://one.newrelic.com/apm)을 열어 이름으로 앱을 찾아보십시오.
+
+<Callout variant="tip">
+앱이 표시되지 않습니까? [데이터가 표시되지 않음(루비)](/docs/apm/agents/ruby-agent/troubleshooting/no-data-appears-ruby)을 참조하십시오.
+</Callout>
+</Step>
+</Steps>
+
+## 관련 기사 [#related-docs]
+
+* [루비 에이전트 요구사항 및 지원되는 프레임워크](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks) — 지원되는 루비 버전.
+* [루비 에이전트 설정](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration) — 사용 가능한 모든 설정.
+* [루비용 Google App Engine 문서](https://cloud.google.com/appengine/docs/flexible/ruby/) — GAE flex 참조.

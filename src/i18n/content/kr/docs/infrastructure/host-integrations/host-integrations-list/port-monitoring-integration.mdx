@@ -1,0 +1,104 @@
+---
+title: 포트 모니터링 통합
+tags:
+  - Integrations
+  - On-host integrations
+  - On-host integrations list
+metaDescription: An introduction to New Relic's open-source port monitoring integration.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+TCP, UDP 등 네트워킹 포트에 대한 포트 모니터링 통합 모니터 상태를 확인하고, 업타임 및 중단 데이터를 뉴렐릭에 보고합니다.
+
+<img title="port-dashboard" alt="Dashboard of the port monitoring integration" src="/images/infrastructure_screenshot-crop_port-monitoring-dashboard.webp" />
+
+<Callout variant="tip">
+  이 통합은 [Github에서 오픈 소스](https://github.com/newrelic/nri-port-monitor) 로 공개되었습니다. 최신 업데이트에 대한 변경 로그도 여기에서 확인할 수 있습니다.
+</Callout>
+
+## 통합 설치 [#install]
+
+통합을 설치하려면 아래 단계를 따르세요.
+
+<Steps>
+  <Step>
+    ## 인프라 에이전트 설치 [#infra-install]
+
+    포트 모니터링 통합을 사용하려면 먼저 동일한 호스트에 [인프라 에이전트를 설치](/docs/infrastructure/install-infrastructure-agent/get-started/install-infrastructure-agent-new-relic/) 해야 합니다. 모든 온호스트 통합에는 지표를 뉴렐릭에 노출하고 보고하는 데 도움이 되는 베어링 에이전트가 필요합니다.
+  </Step>
+
+  <Step>
+    ## 통합 다운로드 및 준비 [#download]
+
+    1. [GitHub 리포지터리](https://github.com/newrelic/nri-port-monitor/releases) 에서 해당 플랫폼에 대한 릴리스를 선택하고 다운로드하세요. 예를 들어:
+
+       ```shell
+       wget https://github.com/newrelic/nri-port-monitor/releases/download/1.4/nri-port-monitor_x86_64.tar.gz && tar -zxvf nri-port-monitor_x86_64.tar.gz  
+       ```
+
+    2. `nri-port-monitor` 실행 파일을 `/var/db/newrelic-infra/newrelic-integrations` 로 복사합니다. `port-monitor-config.yml` 복사합니다. `/etc/newrelic-infra/integrations.d`
+
+       ```shell
+       cp nri-port-monitor /var/db/newrelic-infra/newrelic-integrations && cp port-monitor-config.yml /etc/newrelic-infra/integrations.d
+       ```
+
+    3. 올바르게 실행될 수 있도록 바이너리 파일 `nri-port-monitor` 에 대한 실행 권한을 설정합니다.
+
+       ```shell
+       chmod +x /var/db/newrelic-infra/newrelic-integrations/nri-port-monitor
+       ```
+  </Step>
+
+  <Step>
+    ## 통합 구성 [#configure-step]
+
+    1. `port-monitor-config.yml` 열고 모니터링할 모든 포트 인스턴스를 포함하여 구성을 편집합니다(모니터링할 각 주소/포트에 대해 통합 블록에 여러 스탠자를 추가하세요).
+
+       ```yml
+       ```
+
+    통합:
+
+    * 이름: nri-port-모니터 간격: 60초 환경:
+
+      # 네트워크 유형. 알려진 네트워크는 다음과 같습니다.
+
+      # TCP, TCP4(IPv4 전용), TCP6(IPv6 전용)
+
+      # udp, udp4(IPv4 전용), udp6(IPv6 전용)
+
+      # ip, ip4(IPv4 전용), ip6(IPv6 전용)
+
+      # 유닉스, 유닉스그램 및 유닉스패킷
+
+      네트워크: tcp
+
+      # 주소는 호스트:포트 형식으로 입력하여 확인하십시오.
+
+      주소: localhost:80
+
+      # 타임아웃(초)
+
+      타임아웃: 5 레이블: 환경: 프로덕션
+
+    ````
+    </Step>
+
+    <Step>
+    ## Find your data [#find-data]
+
+    To easily find your Port Monitoring data, download our pre-built dashboard:
+
+    1. Go to <DNT>**[one.newrelic.com](https://one.newrelic.com/)**</DNT> and click on <DNT>**+ Integrations & Agents**</DNT>.
+    2. Click on <DNT>**Dashboards**</DNT> tab.
+    3. In the search box, search for <DNT>**Port Monitoring**</DNT>.
+    4. Click on the Port Monitoring dashboard to install it.
+
+    Here's an example NRQL query that returns the status of configured ports:
+
+    ```sql
+    SELECT latest(status) FROM NetworkPortSample FACET address SINCE 30 MINUTES AGO TIMESERIES
+    ````
+  </Step>
+</Steps>

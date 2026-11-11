@@ -1,0 +1,262 @@
+---
+title: 重要なユーザーとアクセス管理の概念
+tags:
+  - Accounts
+  - Accounts and billing
+  - New Relic user management
+metaDescription: 'For New Relic user management: how permissions work, including how groups, roles, and permissions work.'
+freshnessValidatedDate: never
+translationType: human
+---
+
+New Relicユーザーを設定して管理するには、まずユーザー管理システムの仕組みに関する基本的な概念を理解する必要があります。
+
+## ユーザーアクセスの概要 [#overview]
+
+ユーザーが製品機能にアクセスできるかどうかは、次の2つの要素によって制御されます。
+
+* ユーザータイプ（ベーシックユーザー、コアユーザー、フルプラットフォームユーザー）：ユーザーのユーザータイプは、対象ユーザーがNew Relicをどの程度使用すると予想されるかに基づきます。ユーザータイプは課金要素です。これは権限を設定するためのものではありません。詳細については、[ユーザータイプ](/docs/accounts/accounts-billing/new-relic-one-user-management/user-type)を参照してください
+* ロールベースのアクセス：これは、ロール（権限のセット）、グループ（ユーザーのコンテナ）、アクセス許可（特定のターゲットに対するグループとロール間のリンク）を通じてユーザーの権限を制御するために使用するものです。
+
+これらは2つの個別のシステムです。New Relicの機能にアクセスできるようにするには、ユーザータイプとロールベースの権限の両方でそのアクセスが許可されている必要があります。ユーザーのタイプとロールの関係について詳しくは、[ユーザータイプとロール](/docs/accounts/accounts-billing/new-relic-one-user-management/user-type#user-type-and-roles)を参照してください。このドキュメントでは、ロールベースのアクセスに焦点を当てています。
+
+ロールベースのアクセスに加えて、[データアクセス制御](/docs/accounts/accounts-billing/new-relic-one-user-management/data-access-control)を使用して、特定のログデータへのアクセスを制御することもできます。これにより、ユーザーが表示できる[ログパーティション](/docs/logs/ui-data/data-partitions/)を制限できます。
+
+## グループ、ロール、アクセス権限によるNew Relicへのアクセス制御 [#understand-concepts]
+
+New Relicでは、ユーザー<DNT>**groups**</DNT>にはユーザーが含まれ、 <DNT>**roles**</DNT>には<DNT>**permissions**</DNT>が含まれています。アクセス権限は、特定のターゲット上のロールにグループを明示的にリンクする<DNT>**access grants**</DNT>を通じて付与されます。New RelicユーザーがNew Relic機能にアクセスするには、次の[アクセス権限](#access-grants)を持つ[グループ](#groups)にユーザーを配置する必要があります。
+
+* 特定の[ロール](#roles)（特定のより詳細な[権限](/docs/accounts/accounts-billing/new-relic-one-user-management/user-permissions)のセットであるロール）。
+* 適切なターゲット（ロールの範囲に応じて、組織、特定のアカウント、ターゲットグループ）。
+
+[ProまたはEnterpriseエディション](https://newrelic.com/pricing)を使用する組織は、組織内に複数のアカウントを持つことができ、[カスタムロールとグループを作成](/docs/accounts/accounts-billing/new-relic-one-user-management/account-user-mgmt-tutorial/#roles)できます。カスタムロールは、管理機能の組織レベル、プラットフォーム機能のアカウントレベル、特定のリソースへのきめ細かなアクセスのエンティティレベルの3つの異なるスコープで作成できます。FreeエディションとStandardエディションでは、組織内で1つのアカウントのみ許可され、カスタムロールやグループを作成することができません。
+
+New Relicに初めてサインアップすると、組織には、デフォルトの[<DNT>**User**</DNT>または<DNT>**Admin**</DNT>グループ](/docs/accounts/accounts-billing/new-relic-one-user-management/user-management-concepts#groups)向けに事前定義済みのロールとアカウントが複数用意されています。たとえば、 <DNT>**Admin**</DNT>グループには、上位レベルの管理権限や[組織規模の機能管理](/docs/accounts/accounts-billing/new-relic-one-user-management/feature-control-manager)といった広範なNew Relicアクセスをグループ内のユーザーに付与するロールが複数用意されています。
+
+<Callout variant="tip">
+ユーザーがNew Relicにアクセスする方法を制御する場合は、[こちら](/docs/accounts/accounts-billing/new-relic-one-user-management/authentication-domains-saml-sso-scim-more/)で認証ドメインを管理します。
+</Callout>
+
+以下は、グループアクセスがどのように機能するか、また、より大規模な組織にどのように関連しているかを示す図です。
+
+<img title="user-management-diagram.png" alt="New Relic user management diagram" src="/images/accounts_diagram_user-mgmt-concepts-diagram.webp" />
+
+<figcaption>
+グループが、そのグループのユーザーにロールとアカウントへのアクセス権を付与する方法を示す図。
+</figcaption>
+
+グループの設定に関するヒントについては、[ユーザー管理チュートリアル](/docs/accounts/accounts-billing/new-relic-one-user-management/tutorial-add-new-user-groups-roles-new-relic-one-user-model#group-access)を参照してください。
+
+## アクセス権限 [#access-grants]
+
+<DNT>**Access grants**</DNT> 特定のターゲット上のロールにグループを接続する明示的なリンクです。アクセス権限を作成して、特定のスコープに対して適用される、ロールで定義された権限をグループ内のユーザーに付与します。
+
+すべてのアクセス権限には、次の3つのコンポーネントが必要です。
+
+* **担当者**：アクセスを受け取るグループ
+* **ロール**：付与される権限のセット
+* **ターゲット**：ロールが適用されるリソースのスコープ
+
+スコープに基づいて、次の3種類のアクセス権限を作成できます。
+
+### 組織権限
+
+組織権限を適用して、グループに組織レベルの権限を付与します。これらの権限には、以下の機能があります。
+
+* 組織全体をターゲットにします。
+* 組織スコープのロールが必要です。
+* 組織全体の機能に対する権限をユーザーに付与します。
+
+### アカウント権限
+
+アカウント権限を適用して、特定のアカウント内のプラットフォーム機能へのアクセス権をグループに付与します。これらの権限には、以下の機能があります。
+
+* アカウントスコープのロールが必要です。
+* グループがアクセスできるアカウントを選択できます。
+* ログデータの可視性を制御するためのデータアクセスポリシーを含めることができます。
+
+### グループ権限
+
+グループ管理の責任を委任するには、グループ権限を適用します。これらの権限には、以下の機能があります。
+
+* グループスコープのロール（グループ管理者など）が必要です。
+* 担当者グループが管理できるグループを指定できます。
+* 広範な管理アクセスなしで分散ユーザー管理を有効にします。
+
+アクセス権限を作成する手順については、[ユーザー管理チュートリアル](/docs/accounts/accounts-billing/new-relic-one-user-management/tutorial-add-new-user-groups-roles-new-relic-one-user-model#grants)を参照してください。
+
+## グループ [#groups]
+
+New Relicで、ユーザーを<DNT>**group**</DNT>に配置すると、複数のユーザーを同時に管理できます。 たとえば、[自動ユーザー管理](/docs/accounts/accounts/automated-user-management/automated-user-provisioning-single-sign)機能を使用している場合は、IDプロバイダーサービスからユーザーのカスタムグループ（たとえば、<DNT>**External consultants**</DNT> ) をインポートし、そのグループに[ロールとアカウントを付与](#understand-concepts)できます。
+
+New Relicの機能にアクセスするには、ユーザーがロールと1つ以上のアカウントにアクセスできる、1つ以上のグループに属している必要があります。 グループはユーザーのNew Relic権限を制限するものでは**ありません**。グループに割り当てられた<DNT>**role**</DNT>で、権限へのアクセスを許可します。
+
+デフォルトでは、2つのシンプルなユーザーグループを使用できます。また、ProおよびEnterpriseの組織は、[カスタムグループを作成](/docs/accounts/accounts-billing/new-relic-one-user-management/account-user-mgmt-tutorial/#group-access)できます。ユーザーとグループは、[認証ドメイン内](/docs/accounts/accounts-billing/new-relic-one-user-management/authentication-domains-saml-sso-scim-more/)にあります。ここで、ユーザーのプロビジョニング方法（IDプロバイダー経由など）と、ユーザーのログイン方法に関連する設定を制御します。
+
+### デフォルトのユーザーグループ [#default-groups]
+
+2つのデフォルトのユーザーグループがあります。
+
+* <DNT>**User**</DNT>：このグループのユーザーはオブザーバビリティおよびモニタリングの使用と設定ができますが、請求の管理や他のユーザーの管理などのアカウントレベルのタスクを実行することは**できません**。すべてのオブザーバビリティプラットフォームツールの制御を許可する[<DNT>**All product admin**</DNT>](#standard-roles)ロールと、製品管理権限を持つ組織スコープのロールにアクセスできます。ユーザー管理機能を備えた組織スコープのロールにはアクセスできません。
+* <DNT>**Admin**</DNT>：[<DNT>**All product admin**</DNT>ロール](#standard-roles)があり、さらに組織レベルの利用可能なすべての権限を持つ組織スコープのロールにアクセスできます。その結果、このグループは、より高いレベルの管理者機能を含むすべての機能にアクセスできます。
+
+ユーザーが所属するグループを編集するには、 <DNT>**Access management**</DNT> UI に移動してグループを編集するか、 <DNT>**User management**</DNT> UI に移動してユーザーを編集します。
+
+## ロール [#roles]
+
+[デフォルトのロール](#standard-roles)をいくつか用意していますが、プロまたはエンタープライズエディションの組織は、3つのロールスコープのいずれかで独自の[カスタムロール](/docs/accounts/accounts-billing/new-relic-one-user-management/account-user-mgmt-tutorial/#roles)を作成できます。
+
+### ロールスコープ [#role-scopes]
+
+それぞれ異なる目的を果たす3つの異なるスコープでロールを作成できます。
+
+* **組織スコープのロール**：これらのロールは、認証ドメインの管理、アカウントの作成、組織設定の構成、スコアカードとチームの管理などの組織全体の機能に適用します。標準ロールに含まれるもの：
+
+  * <DNT>**Organization manager**</DNT>: アカウントの追加、組織とアカウントの名前の変更など、組織の設定に関連する権限。これには、特定のエンティティの削除など、機密性の高い監視タスクも含まれます。
+  * <DNT>**Authentication Domain Manager**</DNT>: 認証ドメインの構成やグループとロールのカスタマイズなど、ユーザーの追加と管理に関連する権限。
+  * <DNT>**Authentication Domain Read Only**</DNT>：認証ドメイン、ユーザーロール、グループ、およびアカウントの読み取りに関連する権限。
+  * <DNT>**Billing**</DNT>：ユーザーは請求と使用状況、データ保持期間を表示および管理できます。複数のアカウントを持つ組織の場合、請求は<DNT>**reporting account**</DNT> （通常は組織で最初に作成されたアカウント）に集約されます。
+  * <DNT>**Organization product admin**</DNT>：スコアカードやチーム管理など、組織スコープのオブザーバビリティ機能に関連する権限。これは、<DNT>**All product admin**</DNT>の組織スコープ版に相当します。IAM、請求、組織設定などの管理機能は含まれません。
+
+* <DNT>**Organization read only**</DNT>：New Relicプラットフォームにおける組織スコープの機能への読み取り専用アクセスを提供します。
+
+* **アカウントスコープのロール**：これらのロールを適用すると、APM設定の構成、アラートの管理、クエリの実行など、特定のアカウント内のプラットフォーム機能にアクセスできます。これらは、ほとんどのユーザーが使用する従来のロールです。標準ロールに含まれるもの：
+
+  * <DNT>**All product admin**</DNT>: 組織レベルの設定、ユーザー、請求を管理する機能を除く、すべてのNew Relicプラットフォーム権限が含まれています。
+  * <DNT>**Standard user**</DNT>: 当社のプラットフォーム機能へのアクセスを提供しますが、これらの機能を設定するための権限がなく、組織レベルおよびユーザー管理の権限がありません。
+  * <DNT>**Read only**</DNT>：New Relicプラットフォームにおけるアカウントスコープの機能への読み取り専用アクセスを提供します。
+
+* **エンティティスコープのロール**：ロールを適用すると、個々のフリートやアラートポリシーなど各リソースへのアクセスをきめ細かく制御できます。これにより、個々のリソースレベルで正確な権限制御が可能になります。ニーズに応じて、カスタムのエンティティスコープロールを作成できます。
+
+<Callout variant="important">
+組織スコープのカスタムロールには、新しい権限が自動的に追加されません。New Relicが新しい組織スコープの機能をリリースすると、その権限が標準ロールに追加されるため、標準ロールを持つユーザーは自動的に新しい機能を利用できるようになります。組織スコープのカスタムロールには追加した権限のみが付与されるため、その機能が必要な各カスタムロールにアドミニストレーターが新しい権限を追加する必要があります。
+
+ユーザーが新しい組織スコープの機能を自動的に利用できるようにするには、製品へのフルアクセスが必要な場合は標準の<DNT>**Organization product admin**</DNT>ロールを割り当て、読み取りアクセスが必要な場合は<DNT>**Organization read only**</DNT>ロールを割り当てます。
+</Callout>
+
+### ロールに関する重要なポイント：
+
+* 追加的なロール：複数のロールが割り当てられているユーザーは、それらのロールによって付与されたすべての権限があります。たとえば、アカウントで`All product admin`のロールを付与するグループと、同じアカウントで`Read only`のロールを付与する別のグループに属している場合は、両方のロールがあり、`Read only`のロールによって制限されません。
+* アクセスは、ユーザータイプと権限の両方によって異なります（[詳細はこちら](/docs/accounts/accounts-billing/new-relic-one-user-management/user-type#user-type-and-roles)）。
+* ロールを作成しても、グループをそのロールにリンクするアクセス権限を作成するまでアクセスは許可されません。
+
+ロールおよび権限を表示するには、 [<DNT>**Access management**</DNT> UI](/docs/accounts/accounts-billing/new-relic-one-user-management/user-management-ui-and-tasks#where)に移動し、 <DNT>**Roles**</DNT>をクリックします。
+
+### 標準（デフォルト）ロール [#standard-roles]
+
+アカウントスコープの<DNT>**standard roles**</DNT>がいくつかあります。これらのロールはデフォルトで利用でき、一般的なユーザー管理のユースケースを満たしています。
+
+<Callout variant="important">
+標準ロールの一部には、公開されていない権限があるため、カスタムロールへの追加はできないことに留意してください。カスタムロールで複製できる唯一の標準ロールは、<DNT>**Standard user**</DNT>と<DNT>**Read only**</DNT>で、その他のすべてには非公開の権限があります。
+</Callout>
+
+これは、当社の標準ロールの表です。これらのロールをさらに理解するには、アクセス管理UIに移動してロールを選択します。
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "150px" }}>
+標準ロール
+</th>
+
+<th>
+説明
+</th>
+
+<th style={{ width: "200px" }}>
+[ユーザータイプ](/docs/accounts/accounts-billing/new-relic-one-user-management/user-type)のガイドライン
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+<DNT>
+**All product admin**
+</DNT>
+</td>
+
+<td>
+このロールには、組織レベルの設定、ユーザー、請求を管理する機能を<DNT>**except**</DNT>、すべてのNew Relicプラットフォーム権限が含まれています。これは、プラットフォーム機能（<InlinePopover type="apm" />設定を構成する機能など）の設定を許可するという意味で管理者ロールですが、組織レベルの管理者権限（[管理者設定](#admin-settings)を要する権限）は提供しません。
+
+このロールは、基本的には下記の<DNT>**Standard user**</DNT>ロールに加えて、オブザーバビリティ機能を設定する機能が追加されています。
+</td>
+
+<td>
+任意。推奨：コアまたはフルプラットフォーム。
+</td>
+</tr>
+
+<tr>
+<td>
+<DNT>
+**Standard user**
+</DNT>
+</td>
+
+<td>
+当社のプラットフォーム機能（APM UIや<InlinePopover type="browser" />UIなど）へのアクセスを提供しますが、これらの機能を設定するための権限や、組織レベルおよびユーザー管理の権限はありません。
+
+アクセス管理UIを使用して、プラットフォーム全体の標準ユーザーロールに含まれる機能を表示します。
+</td>
+
+<td>
+任意。推奨：コアまたはフルプラットフォーム。
+</td>
+</tr>
+
+<tr>
+<td>
+<DNT>
+**Read only**
+</DNT>
+</td>
+
+<td>
+New Relicプラットフォームへの読み取り専用アクセスを提供します（[合成モニターのセキュア資格情報](/docs/synthetics/synthetic-monitoring/using-monitors/store-secure-credentials-scripted-browsers-api-tests/)を除く）。
+</td>
+
+<td>
+任意。
+</td>
+</tr>
+</tbody>
+</table>
+
+ロールをグループに割り当てる方法およびカスタムロールを作成する方法の詳細については、[ユーザー管理チュートリアル](/docs/accounts/accounts-billing/new-relic-one-user-management/tutorial-add-new-user-groups-roles-new-relic-one-user-model)を参照してください。
+
+### 組織レベルの権限 [#org-permissions]
+
+組織スコープのカスタムロールを作成すると、IDとアクセスの管理、組織の設定、組織の製品管理など、さまざまな組織レベルの権限を割り当てることができます。フルプラットフォーム管理者は、組織の特定のニーズに基づいて、これらの権限をカスタムロールに組み合わせることができます。ベーシックユーザーはこれらの権限を持つロールを使用できません。
+
+### グループ管理者 [#group-admin]
+
+グループに<DNT>**Group admin**</DNT>ロールを割り当てることができます。このロールにより、選択した 1 つ以上のターゲットグループに対してユーザーを追加および削除する権限がグループに付与されます。
+
+これは、完全なユーザー管理権限を持つ、より強力な<DNT>Authentication domain manager</DNT>ロールをユーザーに付与するよりも望ましい場合があります。たとえば、会社内に組織全体のユーザー管理権限を持つ管理者が1人か2人しかいない場合でも、さらに数人の管理者に特定のチームのユーザーを管理する権限を与えたい場合があります。
+
+<DNT>**Group admin**</DNT>ロールを使用するには、 <DNT>group access grant</DNT>を作成し、ロールをグループに割り当て、管理できるターゲットグループを割り当てます。
+
+## アクセス権限 [#permissions]
+
+ロールが持つ権限およびカスタムロールに追加できる権限については、[権限](/docs/accounts/accounts-billing/new-relic-one-user-management/user-permissions)を参照してください。
+
+## ユーザーの管理
+
+ユーザーを追加する方法、グループに割り当てる方法、カスタムグループおよびロールを作成する方法については、[ユーザーの管理](/docs/accounts/accounts-billing/new-relic-one-user-management/user-management-ui-and-tasks)を参照してください。
+
+## APIの使用 [#api]
+
+API経由でユーザー、グループ、ロールを管理する方法については、[NerdGraphドキュメント](/docs/apis/nerdgraph/examples/nerdgraph-manage-users)を参照してください。
+
+## ユーザー管理の用語と定義 [#definitions]
+
+アカウントおよびロールへのユーザーアクセスの仕組みについては、[ユーザー管理の概念](#understand-concepts)を参照してください。ここでは、ユーザー管理用語の定義をいくつかご紹介します。
+
+* New Relicの<DNT>**organization**</DNT>は、アカウント、ユーザー、データをすべて含む組織を表すものです。詳細については、 [組織とアカウント構造](/docs/accounts/accounts-billing/account-structure/new-relic-account-structure)を参照してください。
+* <DNT>**permission**</DNT>は、特定のきめ細かなNew Relic機能を使用または編集する機能です。詳細については、 [権限](/docs/accounts/accounts-billing/new-relic-one-user-management/user-permissions)を参照してください。
+* <DNT>**role**</DNT>は一連の権限です。これはユーザーに権限を与えるものです。デフォルトの[標準ロール](#standard-roles)にはさまざまな権限があり、カスタム権限を持つカスタムロールを作成できます。
+* ユーザー<DNT>**group**</DNT>には、1つ以上のロールが関連付けられています。 ユーザーをグループに割り当てます。 [デフォルトのユーザーグループ](#default-groups)（<DNT>**Admin**</DNT>と<DNT>**User**</DNT> ）があり、独自のグループも作成できます。
+* [<DNT>**authentication domain**</DNT>](/docs/accounts/accounts-billing/new-relic-one-pricing-users/configure-authentication-domains)には、New Relicに追加され、同じ方法でNew Relic にログインする一連のユーザーが含まれます。
+* ユーザーが[ベーシックユーザー](/docs/accounts/accounts-billing/new-relic-one-user-management/user-type)の場合、これはロール関連の権限よりも優先されます。詳細については、[ベーシックユーザーとロール](/docs/accounts/accounts-billing/new-relic-one-user-management/user-management-concepts/#user-type-groups-relation)を参照してください。

@@ -1,0 +1,105 @@
+---
+title: 인텔리전트 워크로드 UI 개요
+tags:
+  - New Relic
+  - Use New Relic
+  - Workloads
+  - Intelligent Workloads
+metaDescription: 'Use the Intelligent Workloads Summary page to monitor transaction flows, track KPIs, and understand workload health in real time.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Intelligent 워크로드 요약 페이지는 풀 스택 종속성, 골든 메트릭 및 커스텀 비즈니스 KPI를 단일 통합 뷰로 가져오는 중앙 운영 콕핏 역할을 합니다. 이 가이드는 요약 페이지 구성 요소를 사용하여 실시간으로 트랜잭션 상태를 모니터링하고 성능 저하 시 문제 해결을 가속화하는 방법을 설명합니다. 스크롤함에 따라 레이아웃은 고객 대면 영향에서 기술적 성능 요인으로 조사를 체계적으로 안내합니다.
+
+아래의 분석은 활성 인시던트 동안 각 뷰가 어떻게 기능하는지 보여주기 위해 결제 트랜잭션 저하를 반복적인 예로 사용합니다.
+
+<img title="Intelligent Workloads summary page" alt="Screenshot of the Intelligent Workloads summary page showing KPI tiles, golden metrics, and participating entities" src="/images/intelligent-workload-summary.webp" />
+
+## 지능형 워크로드 액세스 [#access]
+
+지능형 워크로드를 생성한 후, 기본 워크로드 페이지에서 액세스할 수 있습니다:
+
+1. <DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Workloads**</DNT> 으)로 이동합니다.
+2. <DNT>**Type**</DNT> 필터를 사용하여 **Intelligent**를 선택하십시오.
+3. 워크로드를 클릭하여 해당 대시보드를 엽니다.
+
+## AI 요약 [#ai-summary]
+
+요약 페이지 상단에 위치한 AI 요약은 인시던트 대응을 가속화하기 위해 워크로드에 참여하는 모든 엔티티 전반에 걸쳐 실시간 성능 데이터 ― 메트릭, 트레이스 및 엔티티 상태 포함 ― 를 자동으로 분석합니다. <DNT>**Generate insights**</DNT> 을(를) 클릭하여 성능 이상 징후를 즉시 표시하고 조사를 시작할 위치에 대한 제안을 받으십시오. 예를 들어, 갑작스러운 결제 지연 중에 AI 요약은 단일 트레이스를 가져오기 전에 종속성 체인을 분석하고 지연시간이 긴 데이터베이스 호출을 강조 표시할 수 있습니다.
+
+**요구 사항:**
+
+* 계정에서 뉴렐릭 AI를 옵트인해야 합니다. [뉴렐릭 AI를 활성화하는 방법 알아보기](/docs/new-relic-solutions/new-relic-one/core-concepts/new-relic-ai).
+* AWS 인프라에서만 사용할 수 있으며, FedRAMP 고객은 사용할 수 없습니다.
+* 자세한 요구 사항 및 문제 진단, 해결에 대해서는 [인텔리전트 워크로드를 위한 AI 인사이트](/docs/new-relic-solutions/new-relic-one/workloads/advanced-workload-ai-insights)를 참조하십시오.
+
+<Callout variant="important">
+**가격:** AI 인사이트 생성에는 뉴렐릭 AI 사용량에 따라 추가 비용이 발생합니다. 뉴렐릭 AI 가격에 대한 자세한 내용은 [뉴렐릭 AI 가격 설명서](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/new-relic-one-pricing-billing/)를 참조하십시오.
+</Callout>
+
+## 워크로드 KPI [#workload-kpis]
+
+AI 요약 바로 아래에 위치한 사용자 지정 KPI 타일은 주문 완료율과 같은 주요 비즈니스 지표를 기술적 성능과 함께 직접 추적합니다. KPI를 추적하면 팀이 고객 경험을 기준으로 시스템 상태를 정의할 수 있으며, 비즈니스 성과가 위협받는 순간 알림을 받을 수 있습니다. 결제 성공률 KPI가 99%에서 92%로 떨어지면, 백그라운드 CPU의 일시적인 급증과 같은 무해한 현상이 아니라 고객의 구매가 실패하고 있다는 것을 즉시 알 수 있습니다.
+
+요약 페이지에 한 번에 최대 3개의 KPI를 표시할 수 있습니다. 인텔리전트 워크로드를 생성할 때 두 개의 기본 KPI가 자동으로 추가됩니다:
+
+* **트랜잭션 처리량**: 시간이 지남에 따라 선택한 트랜잭션을 통해 처리되는 수신 requests의 총 볼륨을 추적합니다.
+* **트랜잭션 오류율**: 실패한 트랜잭션의 비율을 모니터하여 트랜잭션 안정성의 즉각적인 기준을 제공합니다.
+
+KPI 관리에 대한 자세한 내용은 [사용자 지정 KPI 관리](/docs/new-relic-solutions/new-relic-one/workloads/intelligent-workload-kpis)를 참조하십시오.
+
+## 중심 트랜잭션 골든 메트릭 [#golden-metrics]
+
+나란히 배치된 3개의 차트는 중심 트랜잭션 ― 워크로드를 구축할 때 선택한 핵심 트랜잭션 ― 에 특별히 범위가 지정된 [응답 시간](/docs/apm/apm-ui-pages/monitoring/response-time-chart-types-apm-browser/), [처리량](/docs/apm/apm-ui-pages/monitoring/response-time-chart-types-apm-browser/#throughput) 및 [오류](/docs/apm/apm-ui-pages/monitoring/response-time-chart-types-apm-browser/#errors)를 강조 표시합니다. 모든 서비스 트래픽을 함께 혼합하는 표준 APM 뷰와 달리, 이러한 골든 메트릭은 해당 중심 워크플로우의 정확한 실행 경로를 분리합니다. 결제 KPI가 떨어질 때 이러한 골든 메트릭을 검토하면 동시 지연시간 급증이 비즈니스 영향과 상관관계가 있는지 확인하는 데 도움이 됩니다.
+
+## 참여 엔티티 [#participating-entities]
+
+하단 섹션은 중심 트랜잭션을 활발하게 처리하는 상위 20개의 서비스, 데이터베이스 및 서버리스 구성 요소 전반의 성능을 분석합니다. 이러한 종속성 전반에 걸쳐 응답 시간, 처리량 및 오류율을 스캔하면 어떤 마이크로서비스가 실패하고 있는지 정확하게 분리하는 데 도움이 됩니다. 예를 들어, 결제 인시던트 중에 참여하는 엔티티를 응답 시간별로 정렬하면 다운스트림 결제 게이트웨이 데이터베이스 구성 요소가 전체 트랜잭션 지연시간의 85%를 차지한다는 사실이 드러날 수 있으며, 이는 저하의 주요 원인을 직접적으로 가리킵니다.
+
+차트를 살펴보고 지연시간, 요청 볼륨 또는 오류율이 가장 높은 서비스를 확인하십시오 ― 이상치는 일반적으로 성능 저하가 시작되는 곳입니다.
+
+## 동적 흐름 맵 [#flow-map]
+
+동적 흐름 맵은 집계된 트레이스 데이터를 표시하여 업스트림 및 다운스트림 종속성의 성능 변화가 중심 서비스에 미치는 영향을 보여주는 시각화 도구입니다. 이 맵은 서비스 간 트래픽에서 상관관계가 있는 비정상적인 지연시간 및 오류를 강조 표시하여 트랜잭션 흐름 전반에서 성능 병목현상을 격리하는 데 도움을 줍니다.
+
+<img title="Dynamic Flow Map" alt="Screenshot of the Dynamic Flow Map showing service dependencies for a transaction flow" src="/images/intelligent-workload-dfm.webp" />
+
+#### 서비스 지도상의 격차 이해하기 [#flowmap-gaps]
+
+서비스 의존성/종속성 시각화에서 서비스 간극이나 연결이 끊긴 부분을 발견할 수 있습니다. 이러한 문제의 원인과 해결 방법은 다음과 같습니다.
+
+**격차의 일반적인 원인:**
+
+* **낮은 샘플링 속도**: 특정 서비스 연결에 대해 트레이스 위치가 너무 낮은 경우, 뉴렐릭은 쿼리 창 동안 해당 관계를 표시할 만큼 해당 에지에 대한 트레이스 데이터가 충분하지 않을 수 있습니다.
+
+  * **해결 방법**: 사용 중인 프로그램의 최신 버전과 샘플링 설정을 확인하여 향상된 샘플링 기능을 활용하십시오.
+
+* **텔레메트리 누락**: 트랙 중간에 있는 서비스가 트랙에는 정상적으로 참여하고 있지만 뉴렐릭에게 스팬 데이터를 전송하지 못하고 있을 수 있습니다.
+
+  * **여러분이 할 수 있는 일**:
+
+    * 서비스가 제대로 계측되고 뉴런으로 데이터를 전송하도록 구성되었는지 확인하십시오.
+    * 네트워크 연결 상태와 방화벽 규칙을 확인하세요.
+    * 에이전트 로그를 검토하여 오류를 확인하십시오.
+
+  * **해결할 수 없는 경우**: 일부 서비스 유형 또는 측정, 계측(특정 AWS 계측 유형 등)은 스팬 데이터 전송을 지원하지 않을 수 있습니다. 이러한 경우에는 차이가 발생할 수밖에 없으며 해결할 수 없습니다.
+
+**연결이 끊긴 서비스:**
+
+전송 경로 중간에 있는 서비스가 데이터 전송에 실패하면 하위 서비스가 목록에 나타나지만 중심 서비스와 연결이 끊어진 상태로 표시될 수 있습니다. 이러한 연결되지 않은 서비스:
+
+* 그들이 뉴렐릭에게 트레이스 데이터를 성공적으로 전송했기 때문에 나타납니다.
+* 상위 서비스가 전송 목록에 없기 때문에 고립된 것처럼 보입니다.
+* 각각 별개의 조각으로 나뉜, 서로 연결된 아동 서비스를 보유할 수도 있습니다.
+
+<Callout variant="tip">
+지속적인 서비스 중단이나 연결 끊김 현상이 발생하는 경우, 먼저 누락된 서비스의 샘플링 설정과 측정, 계측 상태를 확인하십시오. 핵심 대상과 단절된 조각들 사이에 나타나는 서비스에 집중하세요.
+</Callout>
+
+## 다음 단계 [#next-steps]
+
+* **[통합 환경으로 조사](/docs/new-relic-solutions/new-relic-one/workloads/intelligent-workload-integrated-experiences)**: 에러스 인박스(errors inbox), 트랜잭션 360 및 의존성 맵을 포함하여 범위가 지정된 하위 뷰를 탐색하십시오
+* **[사용자 지정 KPI 관리](/docs/new-relic-solutions/new-relic-one/workloads/intelligent-workload-kpis)**: 비즈니스별 KPI 정의
+* **[상태 구성](/docs/new-relic-solutions/new-relic-one/workloads/workload-status-configuration)**: 워크로드 상태 계산 방식을 사용자 지정합니다.
+* **[공지 설정](/docs/new-relic-solutions/new-relic-one/workloads/workload-status-views-notifications)**: 워크로드 상태 변경 알림 받기

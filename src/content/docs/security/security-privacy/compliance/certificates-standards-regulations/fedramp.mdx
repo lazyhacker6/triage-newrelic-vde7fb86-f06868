@@ -1,0 +1,335 @@
+---
+title: FedRAMP
+tags:
+  - Security
+  - Security and Privacy
+  - Compliance
+metaDescription: Criteria and compliance with FedRAMP audits by New Relic services.
+freshnessValidatedDate: 2026-09-14
+redirects:
+  - /docs/security/security-privacy/compliance/certificates-standards-regulations/fedramp-moderate
+---
+
+The Federal Risk and Authorization Management Program (FedRAMP) is a government-wide program that promotes the adoption of secure cloud services across the federal government by providing a standardized approach to security and risk assessment for cloud technologies and federal agencies. FedRAMP uses the National Institutes of Standards & Technology Special Publication (NIST SP) 800 series and requires cloud service providers to complete an independent security assessment conducted by an accredited third-party assessment organization (3PAO) to ensure that authorizations are compliant with the Federal Information Security Management Act of 2002 (FISMA 2002).
+
+New Relic has met the FedRAMP security control requirements as described in the NIST SP 800-53, Rev. 5 security control baseline for **Class C (Moderate)** impact levels, has been assessed by an independent 3PAO, has posted its security package in FedRAMP's secure repository, and maintains a FedRAMP Class C (Moderate) certification, see [New Relic Attains FedRAMP Moderate Impact for SaaS Services](https://newrelic.com/solutions/industry/public-sector). Federal agencies are responsible for reviewing New Relic's security package, including shared responsibility details, and issuing their own Authority to Operate (ATO) decision. 
+
+As a part of achieving a FedRAMP **Class C (Moderate)** certification, New Relic has produced a FedRAMP Customer Implementation Summary/Customer Responsibility Matrix (CIS/CRM) that delineates the shared security and privacy responsibilities between New Relic and its Customers (for example, federal agencies). Download our New Relic FedRAMP Customer Responsibility Matrix (CRM) as an [XLSX](https://github.com/newrelic/docs-website/raw/develop/src/content/docs/security/security-privacy/compliance/certificates-standards-regulations/New-Relic-Observability-Platform-Public-CRM-Matrix.xlsx) file (70 KB) or as a [PDF](https://github.com/newrelic/docs-website/raw/develop/src/content/docs/security/security-privacy/compliance/certificates-standards-regulations/New-Relic-Observability-Platform-Public-CRM-Matrix.pdf) file (176KB) to understand your specific implementation responsibilities. This document outlines the security controls that customers will need to engineer, design, define, and implement in order to be in compliance with the FedRAMP baseline and to help customers achieve and maintain their ATO.  New Relic has also produced a [FedRAMP Customer Secure Configuration Guide](https://drive.google.com/file/d/1-1r4C9CCMmRanLnPHoMuHTk0bfp4P8eD/view) to provide recommendations for securely configuring the New Relic Observability Platform. Customers are responsible for applying configurations in order to meet their own security and compliance requirements.
+
+For access to the New Relic security package, U.S. government employees and contractors can sign and submit the FedRAMP Package Request Form from the [New Relic FedRAMP Marketplace](https://marketplace.fedramp.gov/products/F1607057910) to package-access@fedramp.gov.
+
+## Applicable document by service [#applicable-services]
+
+<Callout variant="caution">
+  Not all [New Relic Observability Platform](/docs/new-relic-one/use-new-relic-one/get-started/introduction-new-relic-one/) services are in compliance with this program. For non-compliant services, please see the section on [services not in scope](#not-scope).
+</Callout>
+
+The following applies to the New Relic Observability Platform:
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>
+        Document
+      </th>
+
+      <th>
+        Last updated
+      </th>
+
+      <th>
+        Infrastructure
+      </th>
+
+      <th>
+        Services
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        [FedRAMP Class C (Moderate)](https://marketplace.fedramp.gov/products/F1607057910)
+      </td>
+      <td>
+        2026-SEP-14
+      </td>
+
+      <td>
+        AWS, First Party
+      </td>
+
+      <td>
+        New Relic Observability Platform
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<Callout variant="important">
+To use New Relic's offering in compliance with FedRAMP Class C (moderate) certification, contact your account representative to assign the account or accounts appropriately.  If you require more information about New Relic's FedRAMP certification, see [New Relic's listing in the FedRAMP Marketplace](https://marketplace.fedramp.gov/products/F1607057910).
+</Callout>
+
+## Services not in scope [#not-scope]
+
+The following services are not FedRAMP-authorized:
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>
+        Last updated
+      </th>
+
+      <th>
+        Infrastructure
+      </th>
+
+      <th>
+        Services
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        11/09/2026
+      </td>
+
+      <td>
+        Azure
+      </td>
+
+      <td>
+        Azure Native New Relic Service
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        11/09/2026
+      </td>
+
+      <td>
+        AWS
+      </td>
+
+      <td>
+        CodeStream
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        11/09/2026
+      </td>
+
+      <td>
+        Customer
+      </td>
+
+      <td>
+        New Relic Mobile App
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        11/09/2026
+      </td>
+
+      <td>
+        GCP
+      </td>
+
+      <td>
+        Pixie: Community Cloud for Pixie
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        11/09/2026
+      </td>
+
+      <td>
+        GCP
+      </td>
+
+      <td>
+        Pixie: Auto-telemetry with Pixie
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        11/09/2026
+      </td>
+
+      <td>
+        AWS, Azure
+      </td>
+
+      <td>
+        New Relic AI
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        11/09/2026
+      </td>
+
+      <td>
+        AWS
+      </td>
+
+      <td>
+        Agentic Integration - Github Copilot
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        11/09/2026
+      </td>
+
+      <td>
+        AWS
+      </td>
+
+      <td>
+        Agentic Integration - Google Gemini Code Assist
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        11/09/2026
+      </td>
+
+      <td>
+        AWS
+      </td>
+
+      <td>
+        New Relic Control
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        11/09/2026
+      </td>
+
+      <td>
+        N/A
+      </td>
+
+      <td>
+        Federated Logs
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        11/09/2026
+      </td>
+
+      <td>
+        AWS
+      </td>
+
+      <td>
+        Response Intelligence - RAG Data Indexing & Mgmt
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        11/09/2026
+      </td>
+
+      <td>
+        N/A
+      </td>
+
+      <td>
+        Schedule NRQL Searches
+      </td>
+    </tr>
+
+
+    <tr>
+      <td>
+        11/09/2026
+      </td>
+
+      <td>
+        N/A
+      </td>
+
+      <td>
+        Agentic Platform
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        11/09/2026
+      </td>
+
+      <td>
+        Customer
+      </td>
+
+      <td>
+        Autopilot (formerly known as SRE Agent)
+      </td>
+    </tr> 
+
+    <tr>
+      <td>
+        11/09/2026
+      </td>
+
+      <td>
+        Customer
+      </td>
+
+      <td>
+        SRX Agent
+      </td>
+    </tr> 
+
+    <tr>
+      <td>
+        11/09/2026
+      </td>
+
+      <td>
+        N/A
+      </td>
+
+      <td>
+        Incident Management
+      </td>
+    </tr> 
+
+ <tr>
+      <td>
+        11/09/2026
+      </td>
+
+      <td>
+        AWS
+      </td>
+
+      <td>
+        Pipeline Control
+      </td>
+    </tr>
+  </tbody>
+</table>

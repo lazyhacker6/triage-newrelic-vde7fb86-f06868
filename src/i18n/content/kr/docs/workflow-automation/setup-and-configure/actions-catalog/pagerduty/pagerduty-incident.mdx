@@ -1,0 +1,116 @@
+---
+title: PagerDuty 인시던트 작업
+tags:
+  - workflow automation
+  - workflow
+  - workflow automation actions
+  - PagerDuty actions
+  - PagerDuty Incident actions
+metaDescription: 'Reference for all PagerDuty incident actions in the workflow automation actions catalog: create, get, list, update, and resolve incidents.'
+freshnessValidatedDate: '2026-09-18T00:00:00.000Z'
+translationType: machine
+---
+
+이 페이지는 워크플로우 자동화 액션 카탈로그에서 사용할 수 있는 모든 PagerDuty 인시던트 액션에 대한 참조를 제공합니다. 이러한 액션을 사용하여 워크플로우에서 직접 PagerDuty 인시던트를 생성, 검색, 나열, 업데이트 및 해결하십시오.
+
+## 전제 조건
+
+워크플로우 자동화에서 PagerDuty 작업을 사용하기 전에 다음이 필요합니다:
+
+* 인시던트를 관리할 수 있는 적절한 권한을 가진 PagerDuty 계정.
+* PagerDuty API 토큰(사용자 토큰 또는 계정 토큰).
+* 요청하는 사용자의 `from` 이메일 주소입니다(관련 작업의 계정 토큰에 필요합니다).
+
+## 인시던트 액션
+
+다음 표에는 사용 가능한 모든 PagerDuty 인시던트 작업이 나열되어 있습니다.
+
+<table>
+  <thead>
+    <tr>
+      <th>
+        액션 식별자
+      </th>
+
+      <th>
+        설명
+      </th>
+
+      <th>
+        참조
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        `pagerduty.incident.create`
+      </td>
+
+      <td>
+        새로운 PagerDuty 인시던트를 생성합니다.
+      </td>
+
+      <td>
+        [PagerDuty 인시던트 생성](/docs/workflow-automation/setup-and-configure/actions-catalog/pagerduty/pagerduty-incident-create)
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `pagerduty.incident.get`
+      </td>
+
+      <td>
+        단일 PagerDuty 인시던트의 세부 정보를 조회합니다.
+      </td>
+
+      <td>
+        [PagerDuty 받기 인시던트](/docs/workflow-automation/setup-and-configure/actions-catalog/pagerduty/pagerduty-incident-get)
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `pagerduty.incident.list`
+      </td>
+
+      <td>
+        선택적 필터링을 사용하여 인시던트 목록을 검색합니다.
+      </td>
+
+      <td>
+        [PagerDuty 목록 인시던트](/docs/workflow-automation/setup-and-configure/actions-catalog/pagerduty/pagerduty-incident-list)
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `pagerduty.incident.update`
+      </td>
+
+      <td>
+        기존 PagerDuty 인시던트를 업데이트합니다.
+      </td>
+
+      <td>
+        [PagerDuty 업데이트 인시던트](/docs/workflow-automation/setup-and-configure/actions-catalog/pagerduty/pagerduty-incident-update)
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `pagerduty.incident.resolve`
+      </td>
+
+      <td>
+        PagerDuty 인시던트를 해결합니다.
+      </td>
+
+      <td>
+        [PagerDuty 해결 인시던트](/docs/workflow-automation/setup-and-configure/actions-catalog/pagerduty/pagerduty-incident-resolve)
+      </td>
+    </tr>
+  </tbody>
+</table>

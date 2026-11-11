@@ -1,0 +1,122 @@
+---
+title: New Relic Ground Truth
+metaDescription: New Relic Ground Truth gives AI tools and agents governed access to New Relic operational intelligence through MCP.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Ground Truth est la couche d’intelligence opérationnelle de New Relic. Les outils Model Context Protocol (MCP) aident à organiser vos données d’observabilité afin que les agents d’IA puissent mieux comprendre votre stack technologique.
+
+MCP est un moyen standard pour les modèles d’IA ou les agents de recevoir des informations pertinentes (contexte) sur un système ou un environnement spécifique. Ce contexte peut aider l’IA à comprendre la situation actuelle, à effectuer des tâches avec plus de précision, et à fournir des réponses plus utiles. Le serveur MCP permet aux agent(s) d’IA pris en charge d’appeler certains outils qui peuvent vous aider à effectuer des requêtes, à enquêter, ou à agir sur les données New Relic en langage naturel. Cela peut à son tour aider à accélérer la réponse aux incidents et l’analyse des performances.
+
+## Avantages potentiels
+
+Le serveur MCP offre des avantages pratiques pour les ingénieurs et les équipes opérationnelles de la manière suivante :
+
+* **Intégration directe :** accédez aux outils MCP de New Relic directement depuis votre environnement de développement pris en charge. Cela évite de basculer entre différents outils d’IA.
+* **Dépannage plus rapide :** utilisez MCP pour vous aider à trouver et corriger rapidement les problèmes à partir de vos données d’observabilité, analyser les logs d’erreurs et déterminer les causes probables grâce aux informations détaillées fournies par l’IA.
+* **Requêtes opérationnelles :** demandez à votre agent d’IA de vérifier les statuts d’alerte, de générer des rapports d’événements d’alerte, ou d’analyser l’impact des déploiements sur vos systèmes.
+* **Requête de données simple :** formulez des questions en anglais courant, et le serveur les convertit en langage de requête New Relic (NRQL) pour obtenir des résultats, même si vous n’êtes pas familier avec NRQL.
+
+## Outils de développement d&apos;IA pris en charge [#supported-tools]
+
+New Relic MCP fonctionne avec ces environnements de développement d’IA (clients MCP pris en charge) :
+
+* **Claude Code :** interface de ligne de commande pour Claude
+* **Antigravity CLI :** interface de ligne de commande pour Antigravity
+* **Codex :** interface de ligne de commande pour OpenAI Codex
+* **Kiro CLI :** interface de ligne de commande pour Kiro
+* **Claude Desktop :** Application de bureau pour le développement d&apos;IA interactive
+* **VS Code :** environnement de développement intégré avec prise en charge de MCP
+
+Chaque environnement offre des avantages uniques en fonction de vos préférences workflow. Consultez notre [guide d’installation](/docs/agentic-ai/mcp/setup) pour obtenir les instructions de configuration spécifiques au client MCP.
+
+## Prérequis [#prerequisites]
+
+Pour utiliser New Relic MCP, vous avez besoin de :
+
+* Un compte New Relic (MCP est disponible pour tous les comptes : tous les utilisateurs de données et CCU peuvent accéder aux outils de base, les utilisateurs aCCU peuvent accéder à tous les outils, y compris les outils avancés)
+* `Node.js` installé (requis pour certaines méthodes d&apos;authentification)
+* L’un des clients MCP pris en charge mentionnés précédemment installé
+
+### Accès à l’organisation [#org-access]
+
+Avant de pouvoir vous connecter, un administrateur New Relic doit effectuer les opérations suivantes :
+
+**Appartenance au groupe et rôles**
+
+Vous devez être membre d’un groupe auquel est attribué soit un rôle d’organisation par défaut (`Organization Read Only`, `Organization Manager`, ou `Organization Product Admin`), soit un rôle personnalisé à l’échelle de l’organisation avec l’autorisation de lire le serveur MCP. Si votre groupe ne dispose pas de l’autorisation requise, contactez un administrateur avec le rôle `Organization Manager`, ou `Authentication Domain Manager` pour qu’elle vous soit accordée.
+
+**gestionnaire de contrôle des fonctionnalités**
+
+L’administrateur de votre organisation doit activer l’accès MCP via le [gestionnaire de contrôle des fonctionnalités](/docs/accounts/accounts-billing/new-relic-one-user-management/feature-control-manager/). Les commutateurs suivants contrôlent l’accès MCP. **New Relic MCP Server** et **Local Clients** sont activés par défaut. Tous les autres sous-commutateurs sont désactivés par défaut et peuvent être activés par votre administrateur New Relic selon les besoins.
+
+* **Serveur MCP New Relic**: requis pour la configuration de MCP. Bouton d’activation principal qui doit être activé pour que tout accès MCP fonctionne.
+* **Clients locaux**: requis pour les connexions de clients locaux (Claude Code, Claude Desktop, VS Code, Kiro).
+* **Clés API**: requises pour les connexions par clé API, y compris les scripts automatisés.
+* **Outils en préversion**: requis si vous souhaitez accéder aux outils MCP en préversion (non-GA).
+* **Atlassian**: requis pour l’intégration Atlassian
+* **AWS**: requis pour l’intégration AWS
+
+### Options d&apos;authentification [#auth-options]
+
+* **OAuth (recommandé)**: New Relic fournit des points de terminaison OAuth préconfigurés :
+
+  * ID client : `pUWGgnjsQ0bydqCbavTPpw==`
+  * URL d&apos;autorisation : `https://oauth2.service.newrelic.com/oauth2/auth`
+  * URL du jeton : `https://oauth2.service.newrelic.com/oauth2/token`
+  * Portées : `["observability:read", "offline", "offline_access"]`
+
+* **Clé API utilisateur**: notez que **certains outils MCP ne sont accessibles que via OAuth**.
+
+  1. Connectez-vous à New Relic.
+  2. Sélectionnez **menu utilisateur -&gt; API keys**.
+  3. Créez une nouvelle clé utilisateur ou copiez-en une existante.
+  4. Format de clé : `NRAK-XXXXXXXXXXXXXXXXXXXXX`.
+
+<Callout variant="important">
+Certains outils sont uniquement accessibles via OAuth, et ne sont pas disponibles lors de l’utilisation d’une clé API. Ceux-ci incluent les outils d’analyse basés sur l’IA (`natural_language_to_nrql_query`, `generate_alert_insights_report`, `generate_user_impact_report`, `analyze_deployment_impact`), et les outils en préversion (`search_traces`, `analyze_trace_anomaly`, `analyze_service_dependencies`). Consultez la [référence des outils](/docs/agentic-ai/mcp/tool-reference) pour plus de détails.
+</Callout>
+
+## Sécurité du jeton OAuth [#token-security]
+
+<Callout variant="caution">
+Votre client MCP stocke un jeton d’accès OAuth après votre connexion. Toute personne qui copie ce jeton peut l’utiliser pour accéder à New Relic en votre nom jusqu’à son expiration, depuis n’importe quel appareil. Traitez les jetons stockés par votre client MCP comme un mot de passe.
+</Callout>
+
+Les jetons d’accès expirent 5 minutes après leur émission. Votre client MCP en obtient automatiquement un nouveau en utilisant un jeton d’actualisation, vous n’avez donc rien à faire. Vous devez vous reconnecter après 24 heures, ou si un administrateur révoque votre accès.
+
+Le jeton agit en votre nom et n’accorde jamais plus que ce que vos rôles autorisent.
+
+### Révoquer l’accès MCP [#revoke-access]
+
+Si vous soupçonnez qu’un jeton a été compromis, utilisez l’une de ces options. Les deux empêchent le client MCP de renouveler son jeton, l’accès prend donc fin lorsque le jeton d’accès actuel expire, dans un délai d’environ 5 minutes.
+
+* **Révoquer un utilisateur :** supprimez l’utilisateur dans la [gestion des utilisateurs](/docs/accounts/accounts-billing/new-relic-one-user-management/user-management-ui-and-tasks/).
+* **Révoquer tous les utilisateurs de l’organisation :** désactivez le bouton bascule **New Relic MCP Server** dans le [gestionnaire de contrôle des fonctionnalités](/docs/accounts/accounts-billing/new-relic-one-user-management/feature-control-manager/). Tant que le bouton bascule est désactivé, les utilisateurs ne peuvent pas non plus autoriser de nouvelles connexions MCP.
+
+### Examiner l’activité [#review-activity]
+
+Vous pouvez requêter ces événements pour examiner l’activité. Pour plus de requêtes d’audit, consultez [NrAuditEvent](/docs/accounts/accounts/account-maintenance/query-account-audit-logs-nrauditevent/).
+
+* Pour voir qui s’est connecté à New Relic, et à partir de quelle adresse IP, exécutez cette requête dans le compte de reporting de votre organisation. Elle affiche les connexions de tous les clients, et pas seulement de MCP. Elle n’affiche pas les connexions qui réutilisent une session de navigateur existante.
+
+  ```sql
+  SELECT timestamp, actorEmail, actorIpAddress, description FROM NrAuditEvent WHERE actionIdentifier = 'user.login' SINCE 7 days ago
+  ```
+
+* Pour voir les requêtes NRQL qui ont été envoyées via le serveur MCP New Relic, exécutez cette requête. Le serveur MCP étiquette ces requêtes avec la valeur `productComponent` `New Relic AI MCP Server`. Les requêtes effectuées directement avec un jeton copié pourraient ne pas avoir cette étiquette.
+
+  ```sql
+  SELECT timestamp, user, query FROM NrdbQuery WHERE productComponent = 'New Relic AI MCP Server' SINCE 7 days ago
+  ```
+
+## Prochaines étapes [#next-steps]
+
+Prêt à connecter vos clients MCP pris en charge aux données d&apos;observabilité de New Relic ?
+
+1. Choisissez votre client MCP pris en charge parmi nos [environnements pris en charge](#supported-tools).
+2. Suivez notre [guide d&apos;installation](/docs/agentic-ai/mcp/setup) pour une configuration étape par étape.
+3. Explorez les outils disponibles dans notre [répertoire d&apos;outils](/docs/agentic-ai/mcp/tool-reference).
+4. Commencez à interroger vos données New Relic en utilisant le langage naturel.
+5. [Résoudre les problèmes courants](/docs/agentic-ai/mcp/troubleshoot).

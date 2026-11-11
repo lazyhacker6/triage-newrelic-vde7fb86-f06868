@@ -1,0 +1,107 @@
+---
+title: Instrumentación fácil de Go
+tags:
+  - Agents
+  - Go agent
+  - Installation
+metaDescription: How to use a script to get code suggestions to instrument your Golang apps and services.
+freshnessValidatedDate: '2024-08-20T00:00:00.000Z'
+translationType: machine
+---
+
+Go es un lenguaje compilado con un entorno de ejecución opaco, lo que le impide soportar la instrumentación automática como otros lenguajes. Por este motivo, el agente Go de New Relic está diseñado como un SDK. Dado que el agente Go es un SDK, requiere más trabajo manual para configurarlo que el agente para idiomas que admiten instrumentación automática.
+
+En un esfuerzo por facilitar la instrumentación, el equipo del agente de Go creó la herramienta de instrumentación fácil de Go. Esta herramienta hace la mayor parte del trabajo por usted al sugerir cambios en su código fuente que instrumentan su aplicación con el agente Go de New Relic.
+
+## Cómo funciona [#how-it-works]
+
+Esta herramienta no interfiere con el funcionamiento de su aplicación y no realiza ningún cambio directamente en su código. Esto es lo que pasa:
+
+* Analiza su código y sugiere cambios que permiten al agente Go capturar telemetry data.
+* Revisa los cambios en el archivo `.diff` y decide qué cambios agregar a tu código fuente.
+
+Como parte del análisis, esta herramienta puede invocar `go get` u otros comandos de la cadena de herramientas del lenguaje Go que pueden modificar su archivo `go.mod` , pero no su código fuente real.
+
+## ¿Qué está instrumentado? [#what-is-instrumented]
+
+El alcance de lo que esta herramienta puede instrumentar en su aplicación se limita a estas acciones:
+
+* Capturar errores en cualquier función envuelta o trazada por una transacción
+* Detecta cualquier instrumentación de New Relic existente y sugiere cambios en tu código fuente basados en el código de New Relic ya existente
+* Seguimiento de funciones definidas localmente que se invocan en el método `main()` de la aplicación con una transacción
+* Seguimiento de funciones asincrónicas y literales de funciones con un segmento asincrónico
+* Agregar middleware a la biblioteca compatible para el seguimiento
+* Inyectar rastreo distribuido en tráfico externo
+
+### Bibliotecas apoyadas [#supported-libraries]
+
+* biblioteca estándar
+* net/http
+* gin
+* gRPC
+* gochi
+* mysql
+* slog
+
+## Instalacion [#go-easy-install]
+
+Antes de comenzar con los pasos de instalación a continuación, cerciorar de tener instalada una versión de Go que esté dentro de la ventana de soporte para el [ciclo de vida actual del lenguaje de programación Go](https://endoflife.date/go).
+
+Instalar la instrumentación Go easy:
+
+```sh
+go install github.com/newrelic/go-easy-instrumentation@latest
+```
+
+<CollapserGroup>
+  <Collapser id="setup-go-path" title="Configuración de su GOPATH">
+    Para instalar `go-easy-instrumentation` cerciorar de que `GOPATH` bin esté en su `PATH`.
+
+    <CollapserGroup>
+      <Collapser id="unix-gopath" title="Mac o Linux">
+        En su terminal, bashrc o zshrc, la siguiente línea agrega la ruta a su bin `GOPATH` a su `PATH`:
+
+        ```sh
+        export PATH=$PATH:$(go env GOPATH)/bin
+        ```
+      </Collapser>
+
+      <Collapser id="windows-gopath" title="Windows">
+        En una terminal de Windows o una ventana de PowerShell, la siguiente línea agregará la ruta a su bin `GOPATH` a su `PATH`:
+
+        ```sh
+        go env -w GOPATH=c:\go-work
+        ```
+      </Collapser>
+    </CollapserGroup>
+  </Collapser>
+</CollapserGroup>
+
+<Callout title="generación de sugerencias">
+  La herramienta de instrumentación sencilla de Go proporciona sugerencias para instrumentar su aplicación Go. Revise cuidadosamente el archivo diff generado para verificar la corrección de la instrumentación.
+</Callout>
+
+## Generar sugerencias de instrumentación [#generate-suggestions]
+
+Esta herramienta funciona mejor con Git. Le recomendamos verificar que su aplicación esté en una rama sin cambios no preparados antes de aplicar cualquiera de los cambios sugeridos. Una vez verificado esto, siga estos pasos para generar, revisar y aplicar los cambios que instalan el agente Go de New Relic en una aplicación:
+
+1. Ejecute el siguiente comando CLI para crear un archivo llamado `new-relic-instrumentation.diff` en su directorio de trabajo:
+   ```sh
+   go-easy-instrumentation instrument ../my-application/
+   ```
+2. Abra el archivo `.diff` y verifique o corrija el contenido.
+3. Cuando esté satisfecho con las sugerencias de instrumentación, almacene el archivo y luego aplique los cambios:
+   ```sh
+   mv new-relic-instrumentation.diff ../my-application/
+   cd ../my-application
+   git apply new-relic-instrumentation.diff
+   ```
+
+Una vez aplicados los cambios, la aplicación debería ejecutar con el agente New Relic Go instalado. Si la instalación del agente no funciona como usted desea, puede recuperarla fácilmente empleando comandos Git comunes. Por ejemplo, podrías probar una de las siguientes opciones:
+
+* Almacena los cambios con `git stash`
+* Revertir el código a una confirmación anterior
+
+## ¿Que sigue? [#what-is-next]
+
+Si tiene alguna sugerencia o encuentra problemas, cree un [problema en Github](https://github.com/newrelic/go-easy-instrumentation).

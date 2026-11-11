@@ -1,0 +1,208 @@
+---
+title: IniciarExecutarFluxoDeTrabalho
+tags:
+  - workflow automation
+  - workflow
+  - StartWorkflowRun
+  - workflow automation API
+metaDescription: Start a workflow run for a specified workflow definition.
+freshnessValidatedDate: '2026-10-27T00:00:00.000Z'
+translationType: machine
+---
+
+Use a mutação `workflowAutomationStartWorkflowRun` para iniciar uma execução de workflow para uma definição de workflow especificada.
+
+<Callout variant="important">
+Para limites de execuções simultâneas de workflow e etapas por execução, consulte [Limites do sistema de workflow](/docs/workflow-automation/limitations-and-faq/workflow-limits).
+</Callout>
+
+## Parâmetro de entrada [#input-parameters]
+
+Os seguintes parâmetros estão disponíveis para esta API.
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+Parâmetro
+</th>
+
+<th>
+Tipo de dados
+</th>
+
+<th>
+Descrição
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`scope.id`
+</td>
+
+<td>
+Corda
+</td>
+
+<td>
+(Obrigatório) Seu ID da conta.
+</td>
+</tr>
+
+<tr>
+<td>
+`scope.type`
+</td>
+
+<td>
+Enum
+</td>
+
+<td>
+(Opcional) O tipo de escopo (`ACCOUNT`).
+</td>
+</tr>
+
+<tr>
+<td>
+`definition.name`
+</td>
+
+<td>
+Corda
+</td>
+
+<td>
+(Obrigatório) O nome da definição de workflow a ser executada.
+</td>
+</tr>
+
+<tr>
+<td>
+`definition.scopeType`
+</td>
+
+<td>
+Corda
+</td>
+
+<td>
+(Opcional) O tipo de escopo da definição de workflow (`ACCOUNT` ou `ORGANIZATION`).
+</td>
+</tr>
+
+<tr>
+<td>
+`definition.version`
+</td>
+
+<td>
+Interno
+</td>
+
+<td>
+(Opcional) A versão da definição de workflow a ser executada.
+</td>
+</tr>
+
+<tr>
+<td>
+`workflowInputs`
+</td>
+
+<td>
+Matriz
+</td>
+
+<td>
+(Opcional) Pares de valor principal para passar como entradas para o workflow.
+</td>
+</tr>
+
+<tr>
+<td>
+`idempotencyKey`
+</td>
+
+<td>
+Corda
+</td>
+
+<td>
+(Opcional) Um UUID que garante a idempotência da solicitação. O servidor rejeita valores que não são UUID (por exemplo, `f47ac10b-58cc-4372-a567-0e02b2c3d479`).
+</td>
+</tr>
+
+<tr>
+<td>
+`options.logLevel`
+</td>
+
+<td>
+Enum
+</td>
+
+<td>
+(Opcional) Controla o logging durante a execução. Valores: `NONE` (padrão), `INFO`, `DEBUG`, `TRACE`.
+</td>
+</tr>
+</tbody>
+</table>
+
+### Opção logLevel [#loglevel-option]
+
+A opção `logLevel` controla a quantidade de informações que o workflow gera durante a execução.
+
+* `NONE` (padrão): não gera saídas de log.
+* `INFO`: gera informações no nível da etapa.
+* `DEBUG`: adiciona um atributo aos logs de início da etapa com todas as entradas da etapa de ação, usando o formato `workflowAutomation.inputs.<inputName>: <inputValue>`.
+* `TRACE`: além da saída de `DEBUG`, adiciona um atributo aos logs de início da etapa com todas as saídas da etapa de ação, usando o formato `workflowAutomation.outputs.<outputName>: <outputValue>`.
+
+## Solicitação de amostra [#sample-request]
+
+Utilize o [criador de consulta](https://one.newrelic.com/nerdgraph-graphiql?state=b8f3b3a9-8d3e-c03e-5da4-34b98a57ff8f) para criar e editar um fluxo de trabalho. Consulte [o explorador de API do NerdGraph](/docs/apis/nerdgraph/get-started/nerdgraph-explorer).
+
+```graphql
+mutation {
+  workflowAutomationStartWorkflowRun(
+    definition: {name: "json-parsing", version: 1}
+    workflowInputs: [
+      {key: "checkOperational", value: "false"}
+      {key: "checkNonOperational", value: "true"}]
+    scope: {id: "12345678"}
+    idempotencyKey: "45e65924-5316-479c-a977-f6adfa17e07a"
+    options: {logLevel: INFO}
+  ) {
+    runId
+  }
+}
+```
+
+## Resposta de amostra [#sample-response]
+
+A mutação retorna:
+
+* `runId`: O identificador exclusivo para a execução do fluxo de trabalho. Use este ID com as APIs `WorkflowRunInfo`, `SignalWorkflowRun` ou `StopWorkflowRun`.
+
+## Tópicos relacionados [#related-topics]
+
+<DocTiles>
+<DocTile title="Informações da execução do fluxo de trabalho" path="/docs/workflow-automation/workflow-automation-apis/workflow-run-info">
+Monitore o status e os logs da execução do seu fluxo de trabalho
+</DocTile>
+
+<DocTile title="Sinalizar execução do fluxo de trabalho" path="/docs/workflow-automation/workflow-automation-apis/signal-workflow-run">
+Enviar sinais para fluxos de trabalho em execução aguardando entrada
+</DocTile>
+
+<DocTile title="Parar execução do fluxo de trabalho" path="/docs/workflow-automation/workflow-automation-apis/stop-workflow-run">
+Cancelar uma instância de fluxo de trabalho em execução
+</DocTile>
+
+<DocTile title="Obter definição do fluxo de trabalho" path="/docs/workflow-automation/workflow-automation-apis/get-workflow-definition">
+Visualizar a definição do fluxo de trabalho antes de executar
+</DocTile>
+</DocTiles>

@@ -1,0 +1,113 @@
+---
+title: Temporal Cloud integration
+tags:
+   - Temporal Cloud integration
+   - Temporal Cloud monitoring
+   - New Relic integrations
+metaDescription: Install our Temporal Cloud dashboards and see your Temporal Cloud data in New Relic.
+freshnessValidatedDate: never
+---
+
+Our Temporal Cloud integration monitors the performance of your Temporal Cloud data, helping you diagnose issues in your Workflows, Namespaces and durable applications. 
+
+<Steps>
+  <Step>
+    ## Install the infrastructure agent [#infra]
+
+    To use the Temporal Cloud integration, you need to first [install the infrastructure agent](/docs/infrastructure/install-infrastructure-agent/get-started/install-infrastructure-agent-new-relic/) on the same host. The infrastructure agent monitors the host itself, while the integration you'll install in the next step extends your monitoring with Temporal-specific data such as database and instance metrics.
+  </Step>
+
+  <Step>
+    ## Configure `nri-flex` for Temporal Cloud [#configure-flex]
+
+    Temporal Cloud metrics are accessible via `https://metrics.temporal.io/v1/metrics`, you will need to [authenticate with a Temporal Cloud API Key that has metrics read authorization](https://docs.temporal.io/production-deployment/cloud/metrics/openmetrics/api-reference#authentication).
+
+    <Callout
+      title="Note"
+      variant="tip"
+    >
+      Flex requires a [New Relic account](/docs/accounts/accounts-billing/account-setup/create-your-new-relic-account) and is compatible with the following operating systems/platforms:
+
+      1. Linux
+      2. Windows
+      3. Kubernetes
+
+         For more information on compatible distros and versions, see the [Infrastructure agent compatibility page](/docs/infrastructure/new-relic-infrastructure/getting-started/compatibility-requirements-new-relic-infrastructure).
+    </Callout>
+
+    1. Create file with named `nri-flex-temporal-cloud-config.yml` in this path:
+
+       ```shell
+       touch /etc/newrelic-infra/integrations.d/
+       ```
+
+    2. Below is a `nri-flex` configuration file. Be sure to copy and paste its contents into your previously created `nri-flex-temporal-cloud-config.yml` file, and remember to update your Temporal Cloud API Key:
+
+       ```yml
+       # nri-flex configuration for Temporal Cloud OpenMetrics Endpoint
+       # Place this file in /etc/newrelic-infra/integrations.d/
+       #
+       # Prerequisites:
+       # 1. Create a Service Account in Temporal Cloud UI (Settings > Service Accounts)
+       # 2. Assign the "Metrics Read-Only" Account Level Role to the service account
+       # 3. Generate an API key for the service account
+       # 4. Set the TEMPORAL_API_KEY environment variable or replace the placeholder below
+       #
+
+       integrations:
+         - name: nri-flex
+           interval: 60s
+           timeout: 30s
+           config:
+             name: TemporalCloudMetrics
+             apis:
+               # Collect all Temporal Cloud metrics
+               - name: TemporalCloud
+                 event_type: TemporalCloudSample
+                 url: https://metrics.temporal.io/v1/metrics
+                 headers:
+                   Authorization: Bearer ${TEMPORAL_API_KEY}
+                   Accept: application/openmetrics-text
+                 prometheus:
+                   enable: true
+                 custom_attributes:
+                   integration: temporal-cloud
+                   source: openmetrics
+       ```
+
+    3. Use our instructions [to restart your infrastructure agent](/docs/infrastructure/install-infrastructure-agent/manage-your-agent/start-stop-restart-infrastructure-agent/):
+
+       ```bash
+       sudo systemctl restart newrelic-infra.service
+       ```
+
+    4. Wait a few minutes until data starts folowing into your [New Relic account](https://one.newrelic.com/).
+  </Step>
+
+  <Step>
+    ## Find your data [#find-your-data]
+
+    You can choose our pre-built dashboard template named Temporal Cloud to monitor your Temporal Cloud metrics. Follow these steps to use our pre-built dashboard template:
+
+    1. From [one.newrelic.com](https://one.newrelic.com/), go to the **+ Integrations & Agents** page.
+    2. Click on **Dashboards**.
+    3. In the search bar, type **Temporal Cloud**.
+    4. The Temporal Cloud dashboard should appear. Click on it to install it.
+
+    Your Temporal Cloud dashboard is considered a custom dashboard and can be found in the Dashboards UI. For docs on using and editing dashboards, see [our dashboard docs](/docs/query-your-data/explore-query-data/dashboards/introduction-dashboards/).
+
+    Here is a NRQL query to check the Temporal Cloud frontend service requests grouped by namespace and operation:
+
+    ```sql
+    FROM TemporalCloudSample SELECT latest(`temporal_cloud_v1_frontend_service_request_count.gauge`) FACET temporal_namespace, operation
+    ```
+  </Step>
+</Steps>
+
+## What's next?
+
+To learn more about building NRQL queries and generating dashboards, check out these docs:
+
+* [Introduction to the query builder](/docs/query-your-data/explore-query-data/query-builder/introduction-query-builder) to create basic and advanced queries.
+* [Introduction to dashboards](/docs/query-your-data/explore-query-data/dashboards/introduction-dashboards) to customize your dashboard and carry out different actions.
+* [Manage your dashboard](/docs/query-your-data/explore-query-data/dashboards/manage-your-dashboard) to adjust your dashboards display mode, or to add more content to your dashboard.

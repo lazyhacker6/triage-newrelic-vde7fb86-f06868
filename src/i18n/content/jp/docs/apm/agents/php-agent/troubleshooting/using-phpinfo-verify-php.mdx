@@ -1,0 +1,41 @@
+---
+title: phpinfoを使ったPHPの検証
+type: troubleshooting
+tags:
+  - Agents
+  - PHP agent
+  - Troubleshooting
+metaDescription: Use phpinfo to verify that New Relic's PHP agent was installed correctly.
+freshnessValidatedDate: never
+translationType: human
+---
+
+## 問題
+
+New Relicは、PHPエージェントをインストールした後、Webサーバーを再起動してから数分以内にはデータを報告しません。
+
+## 解決策
+
+エージェントが正常にインストールされたことを確認するには、`phpinfo()`を使用してください。
+
+1. ウェブサイト内に、以下の内容を含むシンプルな`.php`ウェブページを作成してください。
+
+   ```php
+   <?php phpinfo(); ?>
+   ```
+
+2. ウェブbrowserでこのページにアクセスし、モジュールのアルファベット順リストをスクロールして`newrelic`を見つけてください。このリストに`newrelic`が表示されない場合は、PHPの標準バージョンを使用していないか、New RelicをインストールしてからWebサーバー（またはその他のPHPホスト）を再起動していない可能性があります。
+
+3. ウェブサーバーを再起動して、モジュールリストに`newrelic`が表示されるかどうか確認してください。
+
+4. モジュールリストに`newrelic`が表示されない場合は、[拡張機能ディレクトリを確認して](/docs/php/php-kb-104)、[PHPの非標準バージョン](/docs/php/php-agent-installation-non-standard-php)がインストールされているかどうかを確認してください。
+
+5. モジュールリストに`newrelic`が表示される場合は、`license.key`エントリに最初と最後の数文字が表示されていることを確認してください。<InlinePopover type="licenseKey" />
+
+6. `license.key`が表示されない場合は、[読み込まれた設定ファイルのディレクトリを確認してください。](/docs/agents/php-agent/troubleshooting/checking-loaded-configuration-files-directory)
+
+<img alt="Screenshot showing phpinfo()" src="/images/apm_diagram_php-nr-license.webp" />
+
+<figcaption>
+<DNT>**Sample `phpinfo()` File**</DNT>PHPエージェントとプロキシデーモンの両方を設定してから数分以内にNew Relic [APM <DNT>**Summary**</DNT>ページ](/docs/apm/applications-menu/monitoring/apm-overview-page)にデータが表示されない場合は、phpinfo()ファイルのNew Relicセクションを確認して、New Relicがインストールされていることを確認してください。
+</figcaption>

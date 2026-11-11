@@ -1,0 +1,542 @@
+---
+title: Configurar el paquete complementario ABAP de New Relic
+metaDescription: 'Configure the New Relic ABAP add-on after installation: connect monitored systems, set up API endpoints, define monitoring groups, and verify your configuration.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Después de instalar el complemento ABAP, use el menú <DNT>**`/NEWR/INSTALL`**</DNT> para conectar los sistemas SAP a New Relic, configurar los extremos de API, definir los grupos de monitoreo y verificar la configuración.
+
+## Use el menú /NEWR/INSTALL [#menu-newr-install]
+
+1. Inicie sesión en el cliente de producción del sistema de monitoreo central.
+2. Escriba `/n` en el campo de comando y presione <DNT>**Enter**</DNT> para ir a <DNT>**SAP Easy Access root menu**</DNT>.
+3. Escriba `/n/NEWR/INSTALL` en el campo de comandos para abrir el menú <DNT>**`/NEWR/INSTALL`**</DNT>.
+
+Antes de configurar, asegúrese de lo siguiente:
+
+* El instalador tiene la autorización adecuada para realizar la configuración.
+* El parámetro `/NEWR/*` se agrega al objeto de autorización `S_TCODE` en el `profile/role` del instalador.
+
+<Callout variant="tip">
+Si actualiza desde una versión anterior, consulte [Actualizar desde una versión anterior](/docs/sap-solutions/upgrade/install-upgrade-package) para determinar qué pasos son necesarios.
+</Callout>
+
+## Conectar sistemas [#connect-systems]
+
+<Callout variant="important">
+Complete cualquier paso de configuración pendiente antes de continuar.
+</Callout>
+
+En el menú `/NEWR/INSTALL`, abra la carpeta <DNT>**Install New Release and Patch**</DNT> y complete los siguientes pasos.
+
+### Configuración de destino RFC estándar
+
+Emplee la transacción `SM59` para configurar conexiones <DNT>**RFC**</DNT> y <DNT>**HTTPS**</DNT> para sistemas monitoreados en las instalaciones:
+
+* Para la configuración de RFC, consulte [Destino RFC estándar](/docs/sap-solutions/install-and-configure/additional-configuration/#standard-rfc-destination) y [Establecer el destino HTTP en New Relic cloud](/docs/sap-solutions/install-and-configure/additional-configuration/#set-http-destination-to-new-relic-cloud).
+
+### Configuración de RFC de SAP Cloud/Business Technology Platform (BTP)
+
+Emplee la transacción `SM59` para configurar destinos HTTP para sistemas alojados en BTP:
+
+* Para la autenticación BTP/CALM, consulte [Destino RFC de Cloud (BTP)](/docs/sap-solutions/install-and-configure/additional-configuration/#cloud-btp-rfc-destination).
+* Si monitorea un <DNT>**SAP Cloud Connector**</DNT>, configure un destino RFC de tipo <DNT>**G**</DNT> (HTTP externo) mediante el puerto <DNT>**8443**</DNT> (puerto de administración HTTPS predeterminado de Cloud Connector). La cuenta de usuario debe tener las autorizaciones y la contraseña requeridas.
+
+La siguiente tabla enumera los roles de usuario de <DNT>**SAP Cloud Connector**</DNT> y sus autorizaciones:
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+Rol de usuario
+</th>
+
+<th>
+Autorización
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`sccadmin`
+</td>
+
+<td>
+Administre el Cloud Connector (todas las operaciones y configuraciones)
+</td>
+</tr>
+
+<tr>
+<td>
+`sccsubadmin`
+</td>
+
+<td>
+* Administre todas las configuraciones relacionadas con las subcuentas.
+* Realice tareas relacionadas con el soporte, como establecer niveles de traza o crear un volcado de subprocesos.
+* Acceda a algunas configuraciones entre subcuentas, como las configuraciones de certificados del sistema.
+</td>
+</tr>
+
+<tr>
+<td>
+`sccdisplay`
+</td>
+
+<td>
+Acceda a la UI de administración de Cloud Connector en modo de solo lectura.
+</td>
+</tr>
+
+<tr>
+<td>
+`sccsupport`
+</td>
+
+<td>
+* Acceda a la UI de administración de Cloud Connector en modo de solo lectura.
+* Realice tareas relacionadas con el soporte, como establecer niveles de traza o crear un volcado de subprocesos.
+</td>
+</tr>
+
+<tr>
+<td>
+`sccmonitoring`
+</td>
+
+<td>
+Acceda a las API de monitoreo. Utilizado principalmente por la infraestructura de SAP Solution Manager.
+</td>
+</tr>
+</tbody>
+</table>
+
+### Configure la conexión a la base de datos remota
+
+Si no completó este paso durante la preinstalación, complételo ahora.
+
+* Abra la transacción de SAP `DBACOCKPIT` para verificar las conexiones a <DNT>**HANA databases**</DNT> remoto.
+* Cree una conexión de base de datos para cada base de datos HANA remota que desee monitorear.
+* Para obtener instrucciones detalladas, consulte [Crear conexión de base de datos](/docs/sap-solutions/install-and-configure/additional-configuration/#create-database-connection).
+
+### Configurar conexiones a los extremos de API de New Relic
+
+Puede configurar varias cuentas de New Relic en esta sección.
+
+1. Haga clic en <DNT>**New Entries**</DNT>.
+
+2. Ingresa los detalles de tu cuenta de New Relic:
+
+   * <DNT>**New Relic Account ID**</DNT> (opcionalmente con el prefijo SAP-)
+   * <DNT>**API Ingest Key**</DNT>
+   * <DNT>**Metric Endpoint**</DNT> (consulte [Extremos de red](/docs/sap-solutions/before-you-begin/#network-endpoints))
+   * <DNT>**Event Endpoint**</DNT>
+   * <DNT>**Log Endpoint**</DNT>
+   * <DNT>**Trace Endpoint**</DNT>
+
+3. Haga clic en <DNT>**Save**</DNT>.
+
+<img title="Configure API endpoints" alt="A screenshot displaying the New Relic API endpoint configuration" src="/images/new-entry-1.webp" width="1000" />
+
+### Copy template tables from client 000
+
+Haga clic en el icono de ejecución (símbolo de reloj) para copiar las tablas de plantilla de <DNT>**client 000**</DNT>. Verifique que aparezca un mensaje de éxito.
+
+### Referencia de grupos de monitoreo
+
+La siguiente tabla enumera los proveedores de datos en cada grupo de monitoreo y los tipos de sistema a los que se aplican.
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+Grupo de monitores
+</th>
+
+<th>
+Proveedores de datos incluidos
+</th>
+
+<th>
+Aplicado al tipo de sistema
+</th>
+
+<th>
+Notas especiales
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+DOCUMENTO DE NEGOCIOS
+</td>
+
+<td>
+Cambiar evento de documento para objetos comerciales
+</td>
+
+<td>
+Sistemas ECC y S/4 HANA
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+BTP\_APIM
+</td>
+
+<td>
+BTP IntegrationSuite API Management
+</td>
+
+<td>
+BTP
+</td>
+
+<td>
+Requiere suscripciones a API Management y API Portal Services
+</td>
+</tr>
+
+<tr>
+<td>
+BTP\_IS
+</td>
+
+<td>
+Log de mensajes de BTP IntegrationSuite a través de la API de la plataforma BTP
+</td>
+
+<td>
+BTP
+</td>
+
+<td>
+Requiere una suscripción al servicio Process Integration Runtime
+</td>
+</tr>
+
+<tr>
+<td>
+CALM
+</td>
+
+<td>
+Sujetos de monitoreo de CloudALM, como monitoreo de estado, integración y monitoreo de excepciones
+</td>
+
+<td>
+BTP/CloudALM
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+CALM\_LMS
+</td>
+
+<td>
+Monitoreo de paisaje, verificación de conexión de API
+</td>
+
+<td>
+BTP/CloudALM
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+CF
+</td>
+
+<td>
+Cloud Foundry
+</td>
+
+<td>
+BTP/CloudALM
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+Indicador clave de rendimiento de base de datos
+</td>
+
+<td>
+indicadores de rendimiento clave para base de datos, como disponibilidad, espacio, etc.
+</td>
+
+<td>
+Todos los sistemas, excepto la base de datos HANA
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+Base de datos HANA
+</td>
+
+<td>
+Los proveedores de datos de la base de datos HANA se conectan directamente a la base de datos HANA
+</td>
+
+<td>
+Toda la base de datos de HANA
+</td>
+
+<td>
+Requiere conexión a la base de datos
+</td>
+</tr>
+
+<tr>
+<td>
+ANFITRIÓN
+</td>
+
+<td>
+Métricas del host como CPU, memoria, uso del disco
+</td>
+
+<td>
+Todos los sistemas ABAP
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+IDOC
+</td>
+
+<td>
+Evento IDOC
+</td>
+
+<td>
+Sistemas ECC y S/4 HANA
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+Base de datos máxima
+</td>
+
+<td>
+métrica para MAXDB base de datos
+</td>
+
+<td>
+Sistemas con MAXDB
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+MS\_SQL
+</td>
+
+<td>
+métrica para base de datos de Microsoft SQL Server
+</td>
+
+<td>
+Sistemas con Microsoft SQL Server
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+Oracle
+</td>
+
+<td>
+métrica para Oracle base de datos
+</td>
+
+<td>
+Sistemas con base de datos Oracle
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+SAP\_APPL
+</td>
+
+<td>
+evento, Logs, métrica y traza para monitoreo de aplicaciones SAP tales como RFCs, Jobs, Transactions, etc.
+</td>
+
+<td>
+Todos los sistemas ABAP
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+SAP\_CC
+</td>
+
+<td>
+SAP Cloud Connector
+</td>
+
+<td>
+SAP Cloud Connector
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+SAP\_ST03N
+</td>
+
+<td>
+Workload de rendimiento de SAP
+</td>
+
+<td>
+Todos los sistemas ABAP
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+SISTEMA SAP
+</td>
+
+<td>
+métrica para Sistema SAP e instancia de servidor de aplicaciones, monitoreo como usuario, rendimiento del Sistema, etc.
+</td>
+
+<td>
+Todos los sistemas ABAP
+</td>
+
+<td />
+</tr>
+
+<tr>
+<td>
+COSTUMBRE
+</td>
+
+<td>
+Cualquier proveedor de datos agregado por los clientes
+</td>
+
+<td />
+
+<td />
+</tr>
+</tbody>
+</table>
+
+<Callout variant="tip">
+Administre la lista de <DNT>**Monitoring Groups**</DNT> navegando a <DNT>**Expert Mode**</DNT> &gt; <DNT>**Installation Setups**</DNT> &gt; <DNT>**Monitoring Group Maintenance**</DNT>. También puede agregar nuevos grupos de monitoreo desde esta sección. Para obtener una lista completa de los proveedores de datos en cada grupo de monitoreo, consulte la [Referencia de proveedores de datos](/docs/sap-solutions/monitor/data-providers-reference).
+</Callout>
+
+### Definir los sistemas monitoreados
+
+1. Haga clic en <DNT>**New Entries**</DNT> e ingrese el <DNT>**SAP System ID**</DNT> y el número de <DNT>**Client**</DNT>.
+
+2. En <DNT>**Data Provider Installation Information**</DNT>, proporcione lo siguiente:
+
+   * <DNT>**RFC Destination**</DNT>
+   * <DNT>**SAP Software Component**</DNT>
+   * <DNT>**Database Vendor**</DNT>
+   * <DNT>**DB Connection Name**</DNT> (Solo bases de datos HANA)
+   * <DNT>**New Relic Account ID**</DNT> (opcional) —si se proporciona, los datos de este sistema van solo a esa cuenta, anulando la cuenta en la variante de trabajo del administrador de recopilación. Si se deja en blanco, el sistema usa la cuenta de la variante de trabajo del administrador de recopilación.
+
+3. Haga clic en <DNT>**Monitoring Group**</DNT> y seleccione <DNT>**Yes**</DNT> para confirmar.
+
+4. Seleccione los grupos de monitoreo requeridos y haga clic en el icono de generar.
+
+5. Haga clic en <DNT>**BACK**</DNT> o presione <DNT>**F3**</DNT> para continuar.
+
+<img title="Define monitored system" alt="A screenshot displaying the monitored system configuration details" src="/images/details-of-added-entry.webp" width="600" />
+
+### Cuentas de BTP/CALM
+
+Cuando el monitoreo de BTP está activo, agregue las cuentas de BTP/CALM como sistemas monitoreados. Utilice los siguientes valores:
+
+* <DNT>**SAP System ID**</DNT>: use un seudónimo o alias. No use términos reservados como `CALM` o `BTP`.
+* <DNT>**Client**</DNT>: dejar en blanco.
+* <DNT>**Destination**</DNT>: ingrese el destino HTTP de autenticación.
+* <DNT>**Software Component**</DNT>: dejar en blanco.
+* <DNT>**Database Vendor**</DNT>: dejar en blanco.
+* <DNT>**DB Connection Name**</DNT>: dejar en blanco.
+* <DNT>**New Relic Account ID**</DNT>: ingrese la cuenta específica de New Relic designada para recibir los datos.
+* <DNT>**API Host**</DNT>: Ingrese el nombre de host de la API. Esto corresponde al valor `url` en la clave de servicio.
+
+En la siguiente pantalla, haga clic en <DNT>**Monitoring Group**</DNT>. Elija los grupos de monitoreo adecuados para el sistema y haga clic en <DNT>**Finish**</DNT>.
+
+### Verificar destinos RFC
+
+Use esta opción para verificar los destinos de RFC para los extremos de API de New Relic y cada sistema monitoreado. Esta prueba excluye el destino de RFC designado como <DNT>**NONE**</DNT>.
+
+<img title="Configure New Relic" alt="A screenshot displaying the SAP install new release and patch" src="/images/configure-newrelic.webp" width="500" />
+
+## Generar configuración [#generate-configurations]
+
+### Generar configuraciones para nuevos proveedores de datos
+
+* Ejecute esta opción para generar todos los proveedores de datos nuevos para una nueva versión o parche. Para instalaciones nuevas, este único paso genera todos los proveedores de datos.
+* En la primera pantalla, confirme los detalles de la versión y el parche. Si los campos de versión y parche de la instalación están en blanco, la configuración ya está establecida.
+* Para regenerar las configuraciones, navegue hasta <DNT>**Maintain Monitored Systems**</DNT> y seleccione <DNT>**Re-generate Data Provider Configurations**</DNT>. También puede seleccionar <DNT>**Reset Installation Flag (For Re-install only)**</DNT> para borrar la marca de instalación actual y regenerar.
+
+<Callout variant="tip">
+Para los proveedores de datos basados en CALM, consulte [Generar entradas de registro para proveedores de datos de CALM](/docs/sap-solutions/monitor/data-providers-reference).
+</Callout>
+
+<img title="Maintain Monitored Systems" alt="A screenshot displaying the SAP maintain monitored systems" src="/images/maintain-monitored-systems.webp" width="500" />
+
+### Verificar la integridad de la instalación
+
+Seleccione <DNT>**Verify Installation Completeness**</DNT>. Si algún componente muestra un indicador rojo, haga clic en el botón de ejecución en la columna <DNT>**Action Needed**</DNT> para resolver el problema.
+
+## Verifique la configuración [#verify-configuration]
+
+1. Abra la carpeta <DNT>**Data Provider Registry Maintenance**</DNT>.
+2. Haga clic en <DNT>**Data Provider Registry**</DNT> o emplee la transacción `/n/NEWR/REGISTRY`.
+3. Seleccione un <DNT>**Data Provider Name**</DNT> y haga clic en <DNT>**Configure**</DNT> para verificar los ajustes de configuración, o haga clic en <DNT>**Test**</DNT> para verificar la funcionalidad del proveedor.
+4. Haga clic en <DNT>**RuntimeStatus**</DNT> y elimine todas las entradas en la pantalla de estado de Runtime.
+
+<img title="Data Provider Registry" alt="A screenshot displaying the SAP data provider registry" src="/images/data-provider-registry-1.webp" width="1000" />
+
+## Próximos pasos
+
+Después de verificar la configuración, [programe los trabajos de recopilación](/docs/sap-solutions/install-and-configure/schedule-jobs).

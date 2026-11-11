@@ -1,0 +1,274 @@
+---
+title: Planifier les recherches NRQL
+tags:
+  - NRQL
+  - Scheduled searches
+  - Query scheduling
+  - Automated queries
+  - Email notifications
+  - Logs
+metaDescription: 'Schedule automated NRQL queries to receive regular updates on your data via email. Transform repetitive, manual queries into proactive, automated workflows.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+En tant qu&apos;utilisateur de New Relic, vous pouvez exécuter la même requête NRQL à plusieurs reprises pour monitorer des modèles critiques, vérifier des conditions spécifiques ou générer des rapports réguliers. Par exemple, vous devez vérifier quotidiennement les transactions ayant échoué, monitorer le taux d&apos;erreur hebdomadaire ou suivre les indicateurs de performance horaires de vos applications. Ce processus manuel est chronophage et il est facile de manquer des informations importantes détaillées lorsque vous ne monitoring pas activement.
+
+Les recherches NRQL planifiées résolvent ce problème en automatisant vos requêtes répétitives. Vous pouvez programmer l&apos;exécution automatique des requêtes et recevoir les résultats par e-mail, ce qui vous permettra de rester informé des tendances critiques sans monitoring manuelle constante.
+
+## Ce que vous pouvez faire [#features]
+
+Les recherches NRQL planifiées vous permettent de :
+
+* **Automatisez les requêtes répétitives**: convertissez les requêtes manuelles en flux de travail automatisés qui s’exécutent selon votre planification.
+* **Commencez de n’importe où**: créez une recherche planifiée depuis l’Administration ou directement depuis l’interface utilisateur de Logs.
+* **Restez informé de manière proactive**: recevez des notifications par e-mail avec les résultats de vos requêtes directement dans votre boîte de réception.
+* **Définir les conditions de notification**: choisissez de recevoir une notification à chaque exécution, ou uniquement lorsque vos résultats remplissent une condition que vous définissez en fonction du nombre de résultats dans votre requête.
+* **Planifiez de manière flexible**: utilisez des planifications d’expressions cron personnalisées pour définir le moment d’exécution des requêtes.
+* **Choisissez votre format de sortie**: exportez les résultats sous forme de fichiers CSV ou JSON joints aux notifications par e-mail.
+* **Collaborez avec votre équipe**: envoyez les résultats de recherche planifiés à plusieurs destinataires d&apos;e-mails.
+* **Gérez tout de manière centralisée**: affichez, modifiez, et gérez toutes vos recherches planifiées depuis un emplacement unique dans l’interface utilisateur d’administration, quel que soit l’endroit où vous les avez créées.
+
+## Tarifs [#pricing]
+
+Les recherches NRQL planifiées n’ont pas de tarification distincte. Vous ne payez que le coût de requête standard pour l’exécution de la requête NRQL sous-jacente, en fonction du modèle de tarification de votre compte.
+
+## Prérequis [#prerequisites]
+
+Pour utiliser les recherches NRQL planifiées, vous avez besoin de :
+
+* **Accès au compte**: Accès au compte sur lequel vous souhaitez programmer des recherches.
+* **Accès aux données**: Autorisations appropriées pour interroger les données que vous souhaitez planifier. Par exemple, si vous planifiez une requête sur des données log, vous devez avoir accès à ces logs.
+
+### Autorisations [#permissions]
+
+Par défaut, les rôles standards <DNT>**All product admin**</DNT> et <DNT>**Standard user**</DNT> incluent déjà les accès <DNT>**Read**</DNT> et <DNT>**Modify**</DNT> aux recherches planifiées, et seul <DNT>**All product admin**</DNT> inclut l&apos;accès <DNT>**Delete**</DNT>. Ces rôles incluent également déjà la capacité <DNT>**User API Keys (for self)**</DNT> &gt; <DNT>**Modify**</DNT> (`account.create.own_api_keys`), dont une recherche planifiée a besoin pour s&apos;exécuter correctement.
+
+Si vous souhaitez créer une nouvelle destination d’e-mail lors de la configuration de la notification d’une recherche planifiée, vous avez également besoin de l’accès <DNT>**Applied Intelligence**</DNT> &gt; <DNT>**Destinations**</DNT> :
+
+* <DNT>**Read**</DNT>: vous permet de sélectionner une destination existante.
+* <DNT>**Modify**</DNT>: vous permet de créer une nouvelle destination.
+
+Si vous souhaitez [créer un rôle personnalisé](/docs/accounts/accounts-billing/new-relic-one-user-management/account-user-mgmt-tutorial/#roles) et lui attribuer des capacités <DNT>**Scheduled Search**</DNT> spécifiques, utilisez l’une des méthodes suivantes :
+
+* **NerdGraph**: [créez un rôle personnalisé à l’échelle du compte via NerdGraph](/docs/apis/nerdgraph/examples/nerdgraph-manage-groups/#account-scoped-role), et ajoutez les ID de permission du tableau suivant à l’éventail `permissionIds`.
+* **UI**: [créez un nouveau rôle personnalisé](/docs/accounts/accounts-billing/new-relic-one-user-management/account-user-mgmt-tutorial/#roles), ou modifiez-en un existant, pour ajouter la capacité <DNT>**Scheduled Search**</DNT> à partir de la section <DNT>**Scheduled Search and Reports**</DNT>.
+
+<Callout variant="important">
+Certaines capacités accordent un accès plus large que d&apos;autres. Par exemple, <DNT>**Delete**</DNT> accorde également l&apos;accès en lecture et en modification. Si vous souhaitez uniquement accorder une capacité plus restreinte, sélectionnez cette capacité spécifique au lieu de <DNT>**Delete**</DNT>.
+</Callout>
+
+Le tableau suivant répertorie chaque capacité, ses ID d&apos;autorisation, et ce qu&apos;elle accorde :
+
+<table>
+<thead>
+<tr>
+<th>
+Capacité
+</th>
+
+<th>
+ID de permission
+</th>
+
+<th>
+Description
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+<DNT>**Scheduled Search**</DNT> &gt; <DNT>**Read**</DNT>
+</td>
+
+<td>
+`scheduled_search.read.schedule`
+</td>
+
+<td>
+Afficher les recherches planifiées
+</td>
+</tr>
+
+<tr>
+<td>
+<DNT>**Scheduled Search**</DNT> &gt; <DNT>**Modify**</DNT>
+</td>
+
+<td>
+* `scheduled_search.modify.schedule`
+* `scheduled_search.read.schedule`
+</td>
+
+<td>
+Affichez, créez, et modifiez les recherches planifiées
+</td>
+</tr>
+
+<tr>
+<td>
+<DNT>**Scheduled Search**</DNT> &gt; <DNT>**Delete**</DNT>
+</td>
+
+<td>
+* `scheduled_search.delete.schedule`
+* `scheduled_search.read.schedule`
+* `scheduled_search.modify.schedule`
+</td>
+
+<td>
+Afficher, créer, modifier et supprimer des recherches planifiées
+</td>
+</tr>
+
+<tr>
+<td>
+<DNT>**User API Keys (for self)**</DNT> &gt; <DNT>**Modify**</DNT>
+</td>
+
+<td>
+`account.create.own_api_keys`
+</td>
+
+<td>
+Requis pour exécuter une recherche planifiée. New Relic l’utilise pour créer une clé API utilisateur en votre nom, pour maintenir votre contexte utilisateur. Sans cela, l’exécution échoue.
+</td>
+</tr>
+
+<tr>
+<td>
+<DNT>**Applied Intelligence - Destinations**</DNT> &gt; <DNT>**Read**</DNT>
+</td>
+
+<td>
+`applied_intelligence.read.destination`
+</td>
+
+<td>
+Requis pour sélectionner une destination e-mail existante.
+</td>
+</tr>
+
+<tr>
+<td>
+<DNT>**Applied Intelligence - Destinations**</DNT> &gt; <DNT>**Modify**</DNT>
+</td>
+
+<td>
+* `applied_intelligence.create.destination`
+* `applied_intelligence.update.destination`
+* `applied_intelligence.read.destination`
+</td>
+
+<td>
+Requis pour créer une nouvelle destination e-mail.
+</td>
+</tr>
+</tbody>
+</table>
+
+## Planifier une nouvelle recherche [#create-schedule]
+
+New Relic vous guide à travers ce flux directement dans le produit. Chaque étape ci-dessous décrit ce qui doit y être fait et tout ce qui n’est pas évident à l’écran.
+
+<Steps>
+<Step>
+**Accédez au flux de création de recherche planifiée**:
+
+Choisissez le point d’entrée qui correspond à votre workflow. Les deux mènent au même flux de configuration.
+
+<Tabs>
+<TabsBar>
+<TabsBarItem id="from-admin">Depuis l’administration</TabsBarItem> <TabsBarItem id="from-logs-ui">Depuis l’interface de Logs</TabsBarItem>
+</TabsBar>
+
+<TabsPages>
+<TabsPageItem id="from-admin">
+Allez à <DNT>**[one.newrelic.com](https://one.newrelic.com) &gt; Administration &gt; Scheduled Searches**</DNT> et cliquez sur <DNT>**Schedule a search**</DNT>.
+</TabsPageItem>
+
+<TabsPageItem id="from-logs-ui">
+Depuis l&apos;[UI de Logs](/docs/logs/ui-data/use-logs-ui/#workflow-search), utilisez l&apos;une de ces options :
+
+* Dans le coin supérieur droit, cliquez sur le menu <Icon name="fe-more-horizontal" /> et sélectionnez <DNT>**Schedule a search**</DNT>.
+* Sous le graphique de tendance de la requête, cliquez sur l&apos;icône d&apos;horloge.
+
+Si vous avez déjà composé et exécuté une requête, elle est reprise dans le flux de configuration. Sinon, vous pouvez rédiger votre requête à l&apos;étape suivante.
+</TabsPageItem>
+</TabsPages>
+</Tabs>
+
+<Callout variant="tip">
+Vous pouvez créer une recherche planifiée depuis l&apos;Administration, ou l&apos;interface utilisateur de Logs, mais vous ne pouvez afficher, modifier, ou supprimer les recherches planifiées existantes qu&apos;à partir de <DNT>**Administration &gt; Scheduled Searches**</DNT>.
+</Callout>
+</Step>
+
+<Step>
+**Configurez votre requête**:
+
+Rédigez et testez votre requête NRQL, puis continuez.
+</Step>
+
+<Step>
+**Configurer notification**:
+
+Configurez les éléments suivants :
+
+* Nommez la recherche, puis définissez une destination pour les résultats. Vous ne pouvez envoyer les résultats qu&apos;à des destinations e-mail.
+
+  * Si la destination existe, sélectionnez-la dans la liste.
+  * Si elle n’existe pas, ajoutez un ou plusieurs destinataires d’e-mails et nommez la destination.
+
+* Choisissez un objet, un message, et un format de sortie pour l’e-mail.
+
+* Définissez la condition de notification sous <DNT>**Send notification**</DNT>. La valeur par défaut est <DNT>**Always**</DNT>. Pour envoyer uniquement lorsque vos résultats atteignent un nombre que vous définissez, personnalisez-le ici.
+
+<Callout variant="caution">
+Les résultats de recherche planifiés sont joints à l’e-mail sous forme de fichiers CSV ou JSON et peuvent contenir des données sensibles. Passez en revue vos destinations d’e-mail pour confirmer que seuls les destinataires prévus sont inclus.
+</Callout>
+</Step>
+
+<Step>
+**Établissez un calendrier**:
+
+Choisissez ce qui suit :
+
+* Choisissez une fréquence : horaire, quotidienne, hebdomadaire, ou une expression cron personnalisée.
+* Sélectionnez un fuseau horaire pour la planification.
+
+Si vous utilisez une expression cron, voici quelques modèles courants à titre de référence :
+
+* `0 * * * *` - Chaque heure pile
+* `0 9 * * *` - Tous les jours à 9h00
+* `0 9 * * 1` - Tous les lundis à 9h00
+* `0 0 1 * *` - Le premier jour de chaque mois à minuit
+* `*/15 * * * *` - Toutes les 15 minutes
+* `0 9 * * 1-5` - Tous les jours de la semaine à 9h00
+
+<Callout variant="tip">
+L&apos;intervalle le plus court pris en charge est toutes les 10 minutes.
+</Callout>
+
+Si vous définissez une condition de notification au lieu d’envoyer à chaque exécution, New Relic vérifie la condition au temps d’exécution planifié exact. Il ne suit pas les fluctuations entre les exécutions, donc si vos résultats tombent en dessous du seuil de la condition avant la prochaine exécution, vous ne recevrez pas de notification pour cette exécution.
+</Step>
+
+<Step>
+**Vérifiez, confirmez, et planifiez la recherche**:
+
+Vérifiez votre configuration, puis planifiez la recherche. Elle apparaît sur la page <DNT>**Scheduled searches**</DNT>.
+</Step>
+</Steps>
+
+## Gérer les recherches planifiées [#manage]
+
+La page <DNT>**Scheduled searches**</DNT> de l’interface utilisateur d’administration répertorie toutes vos recherches automatisées, y compris celles que vous avez créées depuis l’interface utilisateur de Logs. Depuis le menu <Icon name="fe-more-horizontal" />, vous pouvez afficher, modifier, ou supprimer une recherche en fonction de vos [permissions](#permissions).
+
+## Sujets connexes [#related-topics]
+
+Pour des informations connexes, voir :
+
+* [Apprenez-en davantage sur les requêtes NRQL ](/docs/nrql/get-started/introduction-nrql-new-relics-query-language)pour créer des recherches automatisées plus sophistiquées.
+* [Configurez les destinations des e-mails d&apos;alerte](/docs/alerts-applied-intelligence/notifications/destinations) pour étendre vos options de notification.
+* [Découvrez l&apos;automatisation des workflows](/docs/alerts/get-notified/alert-event-workflows) pour des possibilités d&apos;automatisation plus avancées.

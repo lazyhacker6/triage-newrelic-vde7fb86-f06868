@@ -1,0 +1,92 @@
+---
+title: シンセティック・モニター・インデックス
+tags:
+  - Synthetics
+  - Synthetic monitoring
+  - Pages
+metaDescription: You can view a summary of your monitors' uptime and average performance and to access monitor details in New Relic's synthetic monitoring.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+外形監視ツールでは、モニター インデックスに合成モニターがリストされ、過去 24 時間の各モニターのパフォーマンスのスナップショットが表示されます。 特定のモニターを選択して[<DNT>**Summary**</DNT>ページを](/docs/synthetics/new-relic-synthetics/dashboards/synthetics-overview-dashboard-view-monitors-performance)表示し、そのパフォーマンスについてサイトの詳細を確認します。 または、[リストをフィルタリングして](#search-monitors)、類似のモニターのパフォーマンスをすばやく比較します。
+
+## モニターインデックスを見る [#viewing]
+
+合成モニターのリストを表示するには、 <DNT>**[one.newrelic.com &gt; Synthetic monitoring](https://one.newrelic.com/synthetics-nerdlets)**</DNT>にアクセスしてください。
+
+<img title="Entitiy monitor list" alt="entitiy_ping_monitor_page.png" src="/images/synthetic_screenshot-full_index-page.webp" />
+
+## モニタリング・メトリクスの理解 [#understanding]
+
+モニター インデックスを使用してモニターにアクセスし、モニターのパフォーマンスのスナップショットを表示します。インデックスには次のメトリックが含まれます。
+
+* [<DNT>**Alert status**</DNT>](/docs/alerts/new-relic-alerts/configuring-alert-policies/identify-entities-without-alert-policies) : モニター上のアラートのステータスを示します。
+
+  * 緑: 開催中のイベントはありません
+  * 赤：重大なアラートイベント開催中
+  * グレー：アラートを伴うアラート条件が定義されていない
+
+* <DNT>**Monitor status**</DNT>: <DNT>**Mute**</DNT>や<DNT>**Disabled**</DNT>などのステータスがモニターに適用されたことを示します。
+
+* <DNT>**Success rate**</DNT>: 成功に終わったモニター チェックの割合。すべてのステップを完了しないマルチステップ モニターは失敗とみなされます。
+
+* <DNT>**[Locations failing](/docs/synthetics/new-relic-synthetics/using-monitors/adding-editing-monitors#setting-location)**</DNT>: 指定された期間中に障害が発生した場所の数。
+
+* <DNT>**[Period](/docs/synthetics/new-relic-synthetics/using-monitors/adding-editing-monitors#setting-frequency)**</DNT>: モニター チェックが実行される頻度。
+
+* <DNT>**[Monitor type](/docs/synthetics/new-relic-synthetics/using-monitors/add-edit-monitors#setting-type)**</DNT>: 選択したモニターの種類。
+
+## インデックス機能の使用 [#using]
+
+モニターズインデックスは、以下の機能に対応しています。
+
+<table>
+  <thead>
+    <tr>
+      <th width={200}>
+        <DNT>
+          **If you want to...**
+        </DNT>
+      </th>
+
+      <th>
+        <DNT>
+          **Do this...**
+        </DNT>
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr id="sort-monitors">
+      <td>
+        モニターリストのソート
+      </td>
+
+      <td>
+        列のラベルを選択すると、そのラベルに基づいてリストがソートされます。 [metric](#understanding) 。ラベルをもう一度選択すると、ソート順が昇順から降順に変わります。
+      </td>
+    </tr>
+
+    <tr id="search-monitors">
+      <td>
+        モニターリストのフィルタリング
+      </td>
+
+      <td>
+        検索ボックスにキーワードを入力すると、名前、 [タグ](/docs/new-relic-one/use-new-relic-one/core-concepts/tagging-use-tags-organize-group-what-you-monitor) 、または [entitiy](/docs/new-relic-one/use-new-relic-one/core-concepts/what-entity-new-relic) タイプでフィルタリングされます。
+      </td>
+    </tr>
+
+    <tr id="create-monitors">
+      <td>
+        お気に入りに追加
+      </td>
+
+      <td>
+        モニターをお気に入りに追加するには、 <DNT>**star *star* icon**</DNT>アイコンを選択します。お気に入りのモニターはモニターリストの上部に表示されます。 お気に入りからモニターを削除するには、 <DNT>**star**</DNT>アイコンをもう一度選択します。
+      </td>
+    </tr>
+  </tbody>
+</table>

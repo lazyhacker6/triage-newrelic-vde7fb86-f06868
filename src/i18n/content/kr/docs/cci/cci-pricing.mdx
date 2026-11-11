@@ -1,0 +1,32 @@
+---
+title: '클라우드 비용 인텔리전스: 요금'
+metaDescription: 'Understand how Cloud Cost Intelligence is priced, including billing file ingest rates and how usage is measured.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+<DNT>Cloud Cost Intelligence</DNT> Advanced 컴퓨트 제품입니다. 가격은 cloud 제공업체가 게시하고 CCI가 처리하는 청구 내보내기 데이터의 볼륨(청구 파일 수집이라고 함)을 기반으로 합니다. CCI에 액세스하려면 사용자는 **전체 플랫폼 사용자 라이선스**를 보유해야 합니다.
+
+<Callout variant="tip">
+최신 요금 세부 정보를 확인하거나 볼륨 기반 옵션에 대해 논의하려면 뉴렐릭 계정 팀에 문의하세요.
+</Callout>
+
+## 청구 파일 인제스트 속도
+
+청구 파일 수집은 처리된 청구 데이터의 GB당 aCCU로 청구됩니다.
+
+GB당 요금은 cloud 제공업체마다 다르지만, 각 제공업체가 인프라 환경에 대해 생성하는 청구 데이터의 양도 다릅니다.
+
+GB당 기준으로 AWS의 요금이 가장 낮고, GCP는 AWS보다 높으며, Azure는 두 곳보다 높습니다.
+
+예를 들어, 세 제공업체 모두에서 비슷한 인프라 환경을 가지고 있다면, AWS, GCP 및 Azure에서 전반적으로 비슷한 총 수집 비용을 볼 수 있습니다 ― GB당 요금이 다르더라도 말입니다.
+
+## 청구 파일 수집이란 무엇인가요?
+
+청구 파일 수집은 cloud 제공업체(AWS, Azure 또는 GCP)가 지정된 스토리지 컨테이너에 게시하는 청구 내보내기 파일의 크기를 의미합니다. CCI는 이러한 파일을 가져와 비용 분석 및 인사이트를 구축합니다.
+
+<Callout variant="important">
+청구 파일 수집은 메트릭, 로그 및 트레이스와 같은 스트리밍 텔레메트리 데이터에 적용되는 뉴렐릭의 표준 [데이터 수집](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/data-ingest-billing/)과는 다릅니다. 이 두 가지는 별도로 측정되고 청구됩니다.
+</Callout>
+
+뉴렐릭 요금 체계에 대한 전반적인 개요는 [뉴렐릭 요금을](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/new-relic-one-pricing-billing/) 참조하세요.

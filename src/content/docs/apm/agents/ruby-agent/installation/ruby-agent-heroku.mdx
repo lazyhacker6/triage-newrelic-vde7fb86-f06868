@@ -1,0 +1,109 @@
+---
+title: Install the Ruby agent on Heroku
+tags:
+  - Agents
+  - Ruby agent
+  - Installation
+metaDescription: How to install the New Relic Ruby agent on Heroku using the New Relic add-on.
+redirects:
+  - /docs/agents/ruby-agent/installation/ruby-agent-heroku
+  - /docs/agents/ruby-agent/miscellaneous/ruby-agent-heroku
+  - /docs/agents/ruby-agent/installation-configuration/ruby-agent-heroku
+freshnessValidatedDate: 2026-08-05
+---
+
+Install the New Relic Ruby agent on Heroku using the New Relic add-on.
+
+## Prerequisites [#prerequisites]
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>Requirement</th>
+      <th>Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>**New Relic account**</td>
+      <td>A New Relic account is created automatically when you install the Heroku add-on.</td>
+    </tr>
+    <tr>
+      <td>**Heroku account**</td>
+      <td>A [Heroku](https://www.heroku.com/) account with your Ruby app already deployed.</td>
+    </tr>
+    <tr>
+      <td>**Ruby version**</td>
+      <td>See [Ruby agent requirements and supported frameworks](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks) for supported versions.</td>
+    </tr>
+  </tbody>
+</table>
+
+<Steps>
+  <Step>
+    ## Install the New Relic add-on [#install]
+
+    <Tabs>
+      <TabsBar>
+        <TabsBarItem id="heroku-website">Heroku website</TabsBarItem>
+        <TabsBarItem id="heroku-toolbelt">Heroku toolbelt</TabsBarItem>
+      </TabsBar>
+      <TabsPages>
+        <TabsPageItem id="heroku-website">
+          1. Go to [Heroku's Add-on page for New Relic](https://elements.heroku.com/addons/newrelic#pricing) and select a subscription plan.
+          2. Under **Select an app**, select your app.
+          3. Click **Submit Order Form**.
+        </TabsPageItem>
+        <TabsPageItem id="heroku-toolbelt">
+          Run the following command, replacing `$planlevel` with the [appropriate subscription plan](https://elements.heroku.com/addons/newrelic#pricing):
+
+          ```bash
+          heroku addons:create newrelic:$planlevel
+          ```
+        </TabsPageItem>
+      </TabsPages>
+    </Tabs>
+
+    Installing the add-on automatically creates a New Relic account and configures access for Heroku hosts.
+  </Step>
+
+  <Step>
+    ## Configure the agent [#configure]
+
+    Add the `newrelic_rpm` gem to your `Gemfile`:
+
+    ```ruby
+    gem 'newrelic_rpm'
+    ```
+
+    Set your app name using the Heroku toolbelt:
+
+    ```bash
+    heroku config:set NEW_RELIC_APP_NAME='Your Application Name'
+    ```
+
+    The license key is set automatically by the add-on. For all other configuration options, see [Ruby agent configuration](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration).
+  </Step>
+
+  <Step>
+    ## Verify data is flowing [#verify]
+
+    Restart your dyno and generate some traffic to your app:
+
+    ```bash
+    heroku restart
+    ```
+
+    Wait 2–3 minutes and open [one.newrelic.com > APM](https://one.newrelic.com/apm) to look for your app by name.
+
+    <Callout variant="tip">
+      App not appearing? See [No data appears (Ruby)](/docs/apm/agents/ruby-agent/troubleshooting/no-data-appears-ruby).
+    </Callout>
+  </Step>
+</Steps>
+
+## Related articles [#related-docs]
+
+* [Ruby agent requirements and supported frameworks](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks) — Supported Ruby versions.
+* [Ruby agent configuration](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration) — All available configuration settings.
+* [Heroku add-on for New Relic](https://elements.heroku.com/addons/newrelic) — Subscription plans and pricing.

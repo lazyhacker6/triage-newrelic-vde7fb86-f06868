@@ -1,0 +1,118 @@
+---
+title: Introduction to single page application (SPA) monitoring
+tags:
+  - Browser
+  - Single page app monitoring
+  - Get started
+translate:
+  - jp
+metaDescription: New Relic browser SPA monitoring examines your users' experience with the frontend logic for single-page apps or any apps that pull content dynamically.
+redirects:
+  - /docs/browser/single-page-app-monitoring/get-started/welcome-single-page-app-monitoring
+  - /docs/browser/new-relic-browser/browser-pro-features/spa-monitoring
+freshnessValidatedDate: never
+---
+
+New Relic <InlinePopover type="browser"/> offers single-page application (SPA) monitoring to give you deeper visibility and actionable insights into real user interactions with single-page apps.
+
+The SPA feature monitors [soft navigations](https://developer.chrome.com/docs/web-platform/soft-navigations-experiment#what_is_a_soft_navigation) automatically, and our SPA API allows you to modify the interactions. Developers and their teams can use the API to:
+
+* Track user journeys through URL paths on their SPA.
+* Monitor the throughput and performance that real users are experiencing.
+* Troubleshoot and resolve problems within the context of the page load.
+* [Query your data](/docs/using-new-relic/data/understand-data/query-new-relic-data) to assist with business decisions.
+* Bring better apps to the marketplace more quickly.
+
+## Enable SPA monitoring [#enable]
+
+SPA monitoring is enabled by default for new browser agent installations. The SPA-enabled version of the agent gives access to other powerful New Relic features, like distributed tracing. For more information, see [Enable browser monitoring](/docs/browser/new-relic-browser/installation/update-browser-agent/#agent-types).
+
+## Compatibility [#compatibility]
+
+For compatibility information about SPA-related features, see [SPA requirements](/docs/browser/new-relic-browser/getting-started/compatibility-requirements-browser-monitoring#spa).
+
+## Analyze throughput and performance data [#spa-data]
+
+`BrowserInteraction` events drives the UI page views tab whenever SPA is enabled. Both the initial page load (hard nav) and route changes (soft navs) are shown.
+
+<img
+  title="browser_SPA.png"
+  alt="browser_SPA.png"
+  src="/images/browser_screenshot-full_spa-pageview.webp"
+/>
+
+<figcaption>
+  <DNT>**[one.newrelic.com > All capabilities](https://one.newrelic.com/all-capabilities) > Browser > (select an app) > Page views:**</DNT> Use browser monitoring's SPA monitoring to examine the throughput and performance of your SPA-architecture app.
+</figcaption>
+
+SPA data monitored by browser monitoring includes:
+
+* Performance data and throughput for page loads and route changes
+* AJAX request data
+* Dynamic page updates, monitored using the [SPA API](/docs/browser/new-relic-browser/browser-agent-spa-api)
+
+With this data, you will gain a clear understanding of how your users experience your app's page loads and route changes, and be able to solve bottlenecks and troubleshoot errors. For more about how New Relic handles SPA data, see [Understand SPA data collection](/docs/browser/single-page-app-monitoring/use-spa-data/understand-spa-data-collection).
+
+## Browser SPA features [#features]
+
+Here is a summary of SPA monitoring features:
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>
+        <DNT>
+          **Single-page app monitoring**
+        </DNT>
+      </th>
+
+      <th>
+        <DNT>
+          **Take advantage of these features**
+        </DNT>
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        Robust views in browser's UI
+      </td>
+
+      <td>
+        When a user initiates an interaction event, New Relic tracks the time until the url path changes and the next frame is repainted.
+
+        When SPA monitoring is enabled, the [<DNT>**Page views**</DNT> page](/docs/browser/single-page-app-monitoring/browser-ui/view-spa-data-new-relic-browser) in browser shows event-driven data about application usage levels (throughput) and user experience (performance), including:
+
+        * Charts with drill-down details about initial page load performance, route changes, and historical performance
+        * Sort, search, and filter options, including custom attributes
+        * Additional AJAX breakdown data for all initial page loads and route changes
+
+          For an explanation of how SPA monitoring will impact your existing browser account's data usage, see [SPA and browser data usage](/docs/browser/single-page-app-monitoring/get-started/spa-monitoring-new-relic-data-usage).
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Data analysis with metrics and events
+      </td>
+
+      <td>
+        [Metrics and events](/docs/query-your-data/explore-query-data/data-explorer/introduction-data-explorer) supports two SPA-specific event types: [`BrowserInteraction`](/docs/insights/new-relic-insights/decorating-events/browser-default-attributes-insights#browserinteraction-attributes) and [`AjaxRequest`](/docs/insights/new-relic-insights/decorating-events/browser-default-attributes-insights#ajaxrequest-attributes), which may be associated with the former when using the SPA agent. You can query these events in the [query builder](/docs/query-your-data/explore-query-data/query-builder/use-advanced-nrql-mode-specify-data) to analyze your app's performance and make business decisions.
+
+        Previously, [`BrowserTiming`](/docs/insights/insights-data-sources/default-events-attributes/browser-default-events-attributes-insights#browsertiming-attributes) also existed but is now deprecated.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Customized data from API
+      </td>
+
+      <td>
+        Use [SPA API](/docs/browser/new-relic-browser/browser-agent-spa-api) to obtain the specific data you need, such as custom naming, custom timing, or other custom attributes.
+      </td>
+    </tr>
+  </tbody>
+</table>

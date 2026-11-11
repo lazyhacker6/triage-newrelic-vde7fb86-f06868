@@ -1,0 +1,222 @@
+---
+title: Configurar o New Relic MCP
+metaDescription: Step-by-step instructions to configure New Relic's Model Context Protocol server with your preferred AI development tools.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Este guia orienta você na configuração do servidor do Model Context Protocol (MCP) da New Relic com os clientes MCP suportados de sua preferência. Escolha seu ambiente abaixo para obter instruções específicas da plataforma.
+
+<Callout variant="important">
+O uso de quaisquer ferramentas de IA, incluindo, mas não se limitando às listadas nesta página, com os servidores MCP do New Relic AI significa que a sua IA executará ações na sua conta do New Relic em seu nome. Ao usar qualquer um dos métodos descritos aqui, crie e use contas apropriadas do New Relic que tenham os controles de acesso baseados em função (RBAC) desejados e as permissões de menor privilégio apropriadas para o seu caso de uso, requisitos e políticas internas.
+</Callout>
+
+Antes de iniciar a configuração do New Relic MCP, certifique-se de ter concluído os [pré-requisitos](/docs/agentic-ai/mcp/overview#prerequisites), incluindo a configuração de autenticação. Em seguida, siga as instruções específicas para o seu ambiente de desenvolvimento.
+
+## Filtrando ferramentas com include-tags [#filtering-tools]
+
+As ferramentas MCP do New Relic são organizadas e categorizadas usando tags internas (como `alerting`, `discovery` e `data-access`). Para obter detalhes, consulte as [ferramentas de filtro](/docs/agentic-ai/mcp/tool-reference##filter-tools)
+
+Você pode filtrar dinamicamente as ferramentas que seu agente de IA acessa enviando o cabeçalho `include-tags` `HTTP` com suas requests, conforme mostrado aqui:
+
+<Callout variant="important">
+**Aviso de região:** os exemplos de configuração neste tópico usam a URL de conexão MCP da região dos EUA (padrão): [https://mcp.newrelic.com/mcp/](https://mcp.newrelic.com/mcp/). Se a sua conta do New Relic estiver em uma região diferente, substitua este URL pelo endpoint regional apropriado em todos os arquivos de configuração e argumentos de linha de comando:
+
+* UE: [https://mcp.eu.newrelic.com/mcp/](https://mcp.eu.newrelic.com/mcp/)
+* JP: [https://mcp.jp.newrelic.com/mcp/](https://mcp.jp.newrelic.com/mcp/)
+</Callout>
+
+```json
+"servers": {
+    "new-relic-mcp-server": {
+        "url": "https://mcp.newrelic.com/mcp/",
+        "type": "http",
+        "headers": {
+            "include-tags": "discovery,alerting"
+        }
+    }
+}
+```
+
+Para obter a lista completa de tags disponíveis e as ferramentas associadas a cada uma, consulte a documentação [de referência da ferramentaNew Relic MCP](/docs/agentic-ai/mcp/tool-reference).
+
+<Callout variant="important">
+A menos que expressamente indicado de outra forma nesta Documentação, seus clientes MCP compatíveis devem ser configurados apenas com o método OAuth. A menos que indicado de outra forma, qualquer configuração com uma chave de API não funcionará conforme descrito nesta Documentação ou como pretendido.
+</Callout>
+
+## Configuração do código Claude [#claude-code]
+
+O Claude Code oferece suporte ao método de autenticação OAuth. O OAuth requer a versão 2.1.186 do Claude Code ou posterior. Se estiver em versões mais antigas, a autenticação deverá ser feita via `/mcp` no Claude em vez do login MCP do claude.
+
+1. Certifique-se de que o Claude Code esteja instalado e configurado.
+
+2. Adicione o servidor MCP usando a linha de comando:
+
+   ```shell
+   claude mcp add --transport http --scope user newrelic https://mcp.newrelic.com/mcp/
+   claude mcp login newrelic
+   ```
+
+   Ou edite `~/.claude.json` como mostrado aqui:
+
+   ```json
+   {
+     "mcpServers": {
+       "newrelic": {
+         "type": "http",
+         "url": "https://mcp.newrelic.com/mcp/"
+       }
+     }
+   }
+   ```
+
+3. Siga o fluxo OAuth do navegador para concluir a autenticação.
+
+Em caso de erros de conexão após a configuração, consulte [Erro de conexão inesperado no Claude Code](/docs/agentic-ai/mcp/troubleshoot#connection-error) e [Credenciais OAuth obsoletas no Claude Desktop](/docs/agentic-ai/mcp/troubleshoot#stale-creds).
+
+## Configuração do Codex [#codex]
+
+O Codex suporta o método de autenticação OAuth. O OAuth requer o Codex versão 0.154.0 ou superior.
+
+1. Certifique-se de ter o Codex instalado e configurado.
+
+2. Adicione o servidor MCP usando a linha de comando:
+
+   ```shell
+   codex mcp add newrelic --url https://mcp.newrelic.com/mcp/
+   ```
+
+   Ou edite `~/.codex/config.toml` como mostrado aqui:
+
+   ```shell
+   [mcp_servers.newrelic]
+   url = "https://mcp.newrelic.com/mcp/"
+   ```
+
+3. Siga o fluxo OAuth do navegador para concluir a autenticação.
+
+## Configuração da CLI Antigravity [#antigravity-cli]
+
+<Callout variant="important">
+Atualmente, apenas o método de chave de API é compatível com a CLI Antigravity. O suporte ao OAuth ainda não está disponível.
+</Callout>
+
+1. Certifique-se de ter o Antigravity CLI instalado em sua máquina.
+
+2. Configure o servidor MCP abrindo (ou criando) o arquivo de configuração:
+
+   * macOS/Linux: `~/.gemini/config/mcp_config.json`
+   * Windows: `%USERPROFILE%\.gemini\config\mcp_config.json`
+
+   Adicione a seguinte configuração:
+
+   ```json
+   {
+     "mcpServers": {
+       "newrelic": {
+         "serverUrl": "https://mcp.newrelic.com/mcp/",
+         "headers": {
+           "api-key": "NRAK-YOUR-KEY-HERE"
+         }
+       }
+     }
+   }
+   ```
+
+3. Inicie a CLI Antigravity:
+
+   ```shell
+   agy
+   ```
+
+4. Execute `/mcp` para verificar se o servidor da New Relic está conectado.
+
+## Configuração da CLI do Kiro [#kiro-cli]
+
+1. Certifique-se de ter a [ferramenta Kiro CLI instalada](https://kiro.dev/cli/) em sua máquina.
+2. Configure o servidor MCP abrindo (ou criando) o arquivo de configuração localizado em `~/.kiro/settings/mcp.json` e adicione a seguinte configuração:
+
+```json
+{
+  "mcpServers": {
+    "newrelic-mcp-server": {
+      "url": "https://mcp.newrelic.com/mcp/",
+      "oauth": {
+        "authorizationUrl": "https://oauth2.service.newrelic.com/oauth2/auth",
+        "tokenUrl": "https://oauth2.service.newrelic.com/oauth2/token",
+        "oauthScopes": ["observability:read", "offline", "offline_access"],
+        "usePKCE": true
+      },
+      "disabled": false
+    }
+  }
+}
+```
+
+3. Autenticar e conectar:
+
+   * Abra seu terminal e execute `kiro-cli`.
+   * Digite o comando `/mcp` e pressione Enter.
+   * Você verá o servidor New Relic listado com um URL. Abra esse endereço URL no seu navegador.
+   * Conclua o processo padrão de login do New Relic.
+   * Após a autenticação, o navegador confirmará o sucesso.
+
+## Configuração do computador Claude [#claude-desktop]
+
+O Claude Desktop requer o proxy `mcp-remote` para autenticação `OAuth`. Certifique-se de ter `Node.js` instalado em seu computador para que o npx funcione.
+
+1. Crie o diretório de configuração (se necessário):
+
+```shell
+mkdir -p "~/Library/Application Support/Claude"
+```
+
+2. Edite o arquivo de configuração: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) ou `%APPDATA%\Claude\claude_desktop_config.json` (Windows).
+
+   ```json
+   {
+     "mcpServers": {
+       "new-relic-mcp": {
+         "command": "npx",
+         "args": [
+           "-y",
+           "mcp-remote",
+           "https://mcp.newrelic.com/mcp/"
+         ]
+       }
+     }
+   }
+   ```
+
+3. Reinicie o Claude Desktop.
+
+## Configuração do VS Code [#vs-code]
+
+Você precisa do VS Code (versão 1.91 ou posterior).
+
+1. Adicione o servidor MCP editando `.vscode/mcp.json` conforme mostrado aqui:
+
+```json
+{
+  "servers": {
+    "new-relic-mcp": {
+      "url": "https://mcp.newrelic.com/mcp/",
+      "type": "http"
+    }
+  }
+}
+```
+
+2. Crie ou abra `mcp.json` em seu espaço de trabalho do VS Code:
+
+   * Se você não tiver um diretório `.vscode`, crie um na raiz do seu projeto.
+
+     * Dentro de `.vscode`, crie um arquivo chamado `mcp.json`.
+     * Adicione sua configuração de autenticação.
+
+3. Iniciar servidor:
+
+   * Certifique-se de que seu arquivo `mcp.json` esteja aberto no editor.
+   * Procure um link clicável (CodeLens) acima da configuração do seu servidor. Clique para iniciar o servidor MCP.
+
+Uma vez conectado, você pode interagir com New Relic AI usando comandos em linguagem natural. O servidor MCP irá gerenciar a autenticação e a recuperação de dados da sua conta New Relic.

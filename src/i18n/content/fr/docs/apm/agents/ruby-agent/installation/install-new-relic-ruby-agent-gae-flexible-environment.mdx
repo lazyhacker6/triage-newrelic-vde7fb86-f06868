@@ -1,0 +1,146 @@
+---
+title: Installez l’agent Ruby dans l’environnement flexible GAE
+tags:
+  - Agents
+  - Ruby agent
+  - Installation
+metaDescription: How to install the New Relic Ruby agent in a Google App Engine flexible environment.
+freshnessValidatedDate: '2026-08-05T00:00:00.000Z'
+translationType: machine
+---
+
+Installez l’agent Ruby de New Relic dans un [environnement flexible Google App Engine (GAE)](https://cloud.google.com/appengine/docs/flexible/ruby/) en utilisant soit le mode natif de GAE, soit un runtime Docker personnalisé.
+
+## Prérequis [#prerequisites]
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+Exigence
+</th>
+
+<th>
+Détails
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+**Compte New Relic**
+</td>
+
+<td>
+Vous avez besoin d’un [compte New Relic](https://newrelic.com/signup) et de votre <InlinePopover type="licenseKey" />.
+</td>
+</tr>
+
+<tr>
+<td>
+**Projet Google Cloud**
+</td>
+
+<td>
+Un projet Google Cloud Platform avec une application App Engine créée. Consultez les [procédures Google App Engine pour Ruby](https://cloud.google.com/appengine/docs/flexible/ruby/managing-projects-apps-billing#create).
+</td>
+</tr>
+
+<tr>
+<td>
+**SDK Google Cloud**
+</td>
+
+<td>
+La CLI `gcloud` installée et initialisée. Consultez la [documentation du SDK Google Cloud](https://cloud.google.com/sdk/docs/).
+</td>
+</tr>
+
+<tr>
+<td>
+**Version de Ruby**
+</td>
+
+<td>
+Consultez les [exigences de l’agent Ruby et des frameworks pris en charge](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks) pour connaître les versions prises en charge.
+</td>
+</tr>
+</tbody>
+</table>
+
+<Steps>
+<Step>
+## Installez la gem et configurez votre application [#install]
+
+Ajoutez la gem `newrelic_rpm` à votre `Gemfile`:
+
+```ruby
+gem 'newrelic_rpm'
+```
+
+Exécutez ensuite :
+
+```sh
+bundle install
+```
+
+<Tabs>
+<TabsBar>
+<TabsBarItem id="native-mode">Mode natif (Rails ou Sinatra)</TabsBarItem> <TabsBarItem id="docker-runtime">Environnement d’exécution Docker personnalisé</TabsBarItem>
+</TabsBar>
+
+<TabsPages>
+<TabsPageItem id="native-mode">
+Lorsque vous utilisez le mode natif GAE, vous fournissez le code de votre application et un `app.yaml`. GAE déploie automatiquement sur une image Docker préconstruite standard. Aucun Dockerfile supplémentaire n&apos;est nécessaire.
+</TabsPageItem>
+
+<TabsPageItem id="docker-runtime">
+Si votre application nécessite des bibliothèques ou des en-têtes spécifiques, utilisez un environnement d&apos;exécution personnalisé. Créez un `Dockerfile` et définissez `app.yaml` sur :
+
+```yaml
+runtime: custom
+env: flex
+```
+
+New Relic recommande la méthode d&apos;environnement d&apos;exécution personnalisé. Il recommande également que vous autorisiez Google App Engine à gérer les vérifications d&apos;état.
+</TabsPageItem>
+</TabsPages>
+</Tabs>
+</Step>
+
+<Step>
+## Configurer l&apos;agent [#configure]
+
+Téléchargez [`newrelic.yml`](https://github.com/newrelic/newrelic-ruby-agent/blob/dev/newrelic.yml) depuis le référentiel GitHub de New Relic et copiez-le dans le répertoire `config` de votre application.
+
+Définissez les deux valeurs requises :
+
+1. Définissez `license_key` sur votre <InlinePopover type="licenseKey" />.
+2. Définissez `app_name` sur un nom significatif pour votre application.
+
+Pour toutes les autres options de configuration, consultez la [configuration de l’agent Ruby](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration).
+</Step>
+
+<Step>
+## Déployez et vérifiez [#verify]
+
+Déployez votre application à l&apos;aide de la CLI `gcloud` :
+
+```bash
+gcloud app deploy
+```
+
+Patientez jusqu’à ce que le déploiement soit terminé. Envoyez au moins deux requests, puis attendez 2 à 3 minutes et ouvrez [one.newrelic.com &gt; APM](https://one.newrelic.com/apm) pour rechercher votre application par son nom.
+
+<Callout variant="tip">
+L’application n’apparaît pas ? Consultez [Aucune donnée n’apparaît (Ruby)](/docs/apm/agents/ruby-agent/troubleshooting/no-data-appears-ruby).
+</Callout>
+</Step>
+</Steps>
+
+## Articles connexes [#related-docs]
+
+* [Exigences de l’agent Ruby et des frameworks pris en charge](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks) — Versions de Ruby prises en charge.
+* [Configuration de l’agent Ruby](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration) : tous les paramètres de configuration disponibles.
+* [Documentation de Google App Engine pour Ruby](https://cloud.google.com/appengine/docs/flexible/ruby/) — Référence GAE flex.

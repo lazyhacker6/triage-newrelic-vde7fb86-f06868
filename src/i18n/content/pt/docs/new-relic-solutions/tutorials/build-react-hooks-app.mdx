@@ -1,0 +1,347 @@
+---
+title: Crie um aplicativo New Relic com ganchos React
+tags:
+  - New Relic solutions
+  - Build with New Relic
+metaDescription: Build a simple New Relic app with React hooks
+freshnessValidatedDate: never
+translationType: machine
+---
+
+<br />A partir da versão 2.49.1 do nosso CLI `nr1`, você pode criar aplicativos New Relic e visualizações personalizadas com [React hooks](https://react.dev/reference/react/hooks). Este guia fornece alguns exemplos de Nerdlet de React hooks em ação!
+
+## Antes de você começar
+
+O desenvolvimento de Nerdpacks requer uma conta New Relic e a CLI da New Relic, `nr1`.
+
+Se você ainda não o fez:
+
+* [Cadastre-se](https://newrelic.com/signup/) para uma conta New Relic
+* Instale [o Node.js.](https://nodejs.org/en/download/)
+* Conclua o [início rápido da CLI](https://one.newrelic.com/launcher/developer-center.launcher?pane=eyJuZXJkbGV0SWQiOiJkZXZlbG9wZXItY2VudGVyLmRldmVsb3Blci1jZW50ZXIifQ==)
+
+Agora você tem um Nerdpack chamado `my-awesome-nerdpack`. Este Nerdpack tem um Nerdlet e um launcher que você nomeou (embora este guia use o nome padrão do launcher, &quot;launcher&quot;, e o nome do Nerdlet, &quot;home&quot;). Você usa este Nerdpack ao longo deste guia.
+
+Por fim, certifique-se de que seu `nr1` esteja atualizado. Este guia requer uma versão mínima de 2.49.1:
+
+```sh
+nr1 update
+nr1 version
+[output] @datanerd/nr1/{purple}2.49.1{normal} darwin-x64 node-v14.15.1
+```
+
+<Callout variant="tip">
+  Se você usa VSCode, temos uma [extensão](https://marketplace.visualstudio.com/items?itemName=new-relic.nr1) e um [pacote de extensões](https://marketplace.visualstudio.com/items?itemName=new-relic.new-relic-extension-pack) que você pode usar para construir seu aplicativo.
+</Callout>
+
+```jsx fileName=index.js
+import React from 'react';
+
+export default class HomeNerdlet extends React.Component {
+  render() {
+    return <h1>Hello, home Nerdlet!</h1>;
+  }
+}
+```
+
+## Atualize e sirva seu aplicativo localmente
+
+Com `nr1`, você pode servir uma versão local do seu Nerdpack para a New Relic. Isso ajuda você a desenvolver seu aplicativo em um ambiente de produção antes de publicá-lo.
+
+Antes de alterar qualquer código, familiarize-se com a estrutura de diretórios do Nerdpack:
+
+```txt lineHighlight=3-10,12
+my-awesome-nerdpack/
+├───README.md
+├───launchers/
+│   └───launcher/
+│       └───nr1.json
+├───nerdlets/
+│   └───home
+│       ├───index.js
+│       ├───nr1.json
+│       └───styles.scss
+├───node_modules/
+├───nr1.json
+├───package-lock.json
+└───package.json
+```
+
+Os diretórios *launchers* e *nerdlets* contêm a lógica do seu aplicativo. É nesses diretórios que você atualiza a maior parte do seu código. Os arquivos *nr1.json* em todo o Nerdpack contêm metadados sobre seu Nerdpack, Nerdlets e inicializadores.
+
+<Callout variant="tip">
+  Leia [nossa documentação](/docs/new-relic-solutions/build-nr-ui/nerdpack-file-structure/) para saber mais sobre a estrutura de arquivos Nerdpack.
+</Callout>
+
+<Steps>
+  <Step>
+    Em *my-awesome-nerdpack/nerdlets/home/index.js*, altere a classe *HomeNerdlet* para uma função:
+
+    ```jsx fileName=index.js
+    import React from 'react';
+
+    function HomeNerdlet () {
+        return <h1>Hello, home Nerdlet!</h1>;
+    }
+
+    export default HomeNerdlet
+    ```
+  </Step>
+
+  <Step>
+    Em seguida, retorne um gráfico Billboard em vez de um cabeçalho:
+
+    ```jsx fileName=index.js
+    import React from 'react';
+    import { BillboardChart} from 'nr1'
+
+    function HomeNerdlet () {
+
+      const clickCount = {
+        metadata: {
+            id: '1',
+            name: 'Count',
+            viz: 'main',
+        },
+        data: [
+          { "y": 10 }
+        ]
+      }
+      return <BillboardChart data={[clickCount]}/>
+    }
+
+    export default HomeNerdlet
+    ```
+
+    <br />Por enquanto, você está mostrando um valor estático em seu gráfico Billboard, mas em etapas posteriores, você fornecerá um valor dinâmico usando o estado local da função.
+  </Step>
+
+  <Step>
+    Se ainda não o fez, sirva seu aplicativo a partir do diretório raiz do seu Nerdpack:
+
+    ```bash
+    nr1 nerdpack:serve
+    [output] Found and loaded {success}2 {plain}nr1.json files on MyAwesomeNerdpack ({purple}aad7ebb6-8901-43d0-a681-0719b2c60a11{plain}) Nerdpack.
+    [output]
+    [output] {purple}Nerdpack:
+    [output]  {success}✔  MyAwesomeNerdpack {plain}({purple}aad7ebb6-8901-43d0-a681-0719b2c60a11{plain}) {blue}nr1.json
+    [output]
+    [output] {purple}Launchers:
+    [output]  {success}✔  launcher {blue}launchers/launcher/nr1.json
+    [output]
+    [output] {purple}Nerdlets:
+    [output]  {success}✔  home {blue}nerdlets/home/nr1.json
+    [output]
+    [output] There is no certificate created yet.
+    [output]  {success}✔  {plain}New certificate created.
+    [output]
+    [output] Webpack bundle analyzer is enabled (you need to wait for the first build to finish)
+    [output]  └  You can head to {blue}http://127.0.0.1:27888
+    [output]
+    [output] {blue}NOTE: {plain}To verify how your assets will look in production, you need to
+    [output]       add "--mode=prod" when starting the development server.
+    [output]
+    [output] 🛠  Built artifact files for:ex.js...
+    [output]  ⁎  {purple}aad7ebb6-8901-43d0-a681-0719b2c60a11--home {plain}built {success}✔
+    [output]
+    [output]  {success}✔  {plain}Nerdpack built successfully!
+    [output]  {yellow}★  {plain}Starting as orchestrator...
+    [output]
+    [output]  {success}✔  {plain}Server ready! Test it at: {blue}https://one.newrelic.com/?nerdpacks=local
+    [output]  {blue}↩  {plain}Server will reload automatically if you modify any file!
+    [output]
+    [output]  {blue}ℹ  {plain}Additionally, you can test the following artifacts at:
+    [output]
+    [output] {purple}Launchers:
+    [output]  ⁎  {success}launcher {blue}https://onenr.io/0z7wkEkMnjL
+    [output]  {blue}ℹ  {plain}You can use "npm start -- --mode=prod" to run the development server in prod mode.
+    ```
+  </Step>
+
+  <Step>
+    Use o URL na parte inferior da saída para abrir seu inicializador:
+
+    ```bash
+    [output] {purple}Launchers:
+    [output]  *  {success}launcher {blue}https://onenr.io/0z7wkEkMnjL
+    [output]  {blue}ℹ  {plain}You can use "npm start -- --mode=prod" to run the development server in prod mode.
+    ```
+  </Step>
+
+  <Step>
+    Aqui, você vê seu Nerdlet com seu gráfico da Billboard mostrando o número “10”:
+
+    <img title="Static billboard chart in the browser" alt="Static billboard chart in the browser" src="/images/react-hooks-screenshot-static-billboard-local.webp" />
+  </Step>
+</Steps>
+
+Deixe seu servidor funcionando, pois ele recarregará automaticamente seu Nerdlet quando você modificar seus arquivos.
+
+## Use o gancho `useState()` no seu Nerdlet
+
+Anteriormente, você usava um valor estático para o gráfico da Billboard. Agora, você usa o estado local da sua função para armazenar um valor dinâmico e mostrar esse valor no gráfico.
+
+<Steps>
+  <Step>
+    Em *my-awesome-nerdpack/nerdlets/home/index.js*, chame `useState()` em seu componente de função:
+
+    ```jsx fileName=index.js
+    import React, {useState} from 'react';
+    import { BillboardChart} from 'nr1'
+
+    function HomeNerdlet () {
+      const [count, setCount] = useState(0);
+
+      const clickCount = {
+        metadata: {
+            id: '1',
+            name: 'Count',
+            viz: 'main',
+        },
+        data: [
+          { "y": 10 }
+        ]
+      }
+      return <BillboardChart data={[clickCount]}/>
+    }
+
+    export default HomeNerdlet
+    ```
+
+    <br />Aqui, você chama `useState()`. Esse gancho retorna dois valores, que você captura em uma matriz:
+
+    * `count`: O valor atual no estado local. Seu valor padrão é 0, o argumento que você passou para `useState()`.
+    * `setCount`: Uma função que você usa para atualizar `count`
+  </Step>
+
+  <Step>
+    Altere os dados do seu gráfico Billboard para usar `count`:
+
+    ```jsx fileName=index.js
+    import React, {useState} from 'react';
+    import { BillboardChart} from 'nr1'
+
+    function HomeNerdlet () {
+      const [count, setCount] = useState(0);
+
+      const clickCount = {
+        metadata: {
+          id: '1',
+          name: 'Count',
+          viz: 'main',
+        },
+        data: [
+          { "y": count }
+        ]
+      }
+      return <BillboardChart data={[clickCount]}/>
+    }
+
+    export default HomeNerdlet
+    ```
+
+    <br />No momento, o valor de count será `0` em cada renderização porque você nunca atualiza o estado. Você precisa de uma maneira de fazer isso.
+  </Step>
+
+  <Step>
+    Ao lado do seu gráfico, renderize um botão para incrementar `count`:
+
+    ```jsx fileName=index.js
+    import React, {useState} from 'react';
+    import { BillboardChart} from 'nr1'
+
+    function HomeNerdlet () {
+      const [count, setCount] = useState(0);
+
+      const clickCount = {
+        metadata: {
+            id: '1',
+            name: 'Count',
+            viz: 'main',
+        },
+        data: [
+          { "y": count }
+        ]
+      }
+      return (
+        <div>
+          <BillboardChart data={[clickCount]}/>
+          <button onClick={() => setCount(count + 1)}>
+            Increment count
+          </button>
+        </div>
+      );
+    }
+
+    export default HomeNerdlet
+    ```
+
+    <br />Aqui, você adicionou um botão ao seu Nerdlet que aumenta a contagem em 1 cada vez que você clica nele.
+  </Step>
+
+  <Step>
+    Vá para o Browser que está executando o Nerdlet para ver suas alterações:
+
+    <img title="Increment count with button click" alt="Increment count with button click" src="/images/react-hooks-screenshot-button-increment.webp" />
+
+    Clique no botão algumas vezes para aumentar a contagem.
+  </Step>
+</Steps>
+
+## Use o gancho `useEffect()` no seu Nerdlet
+
+Seu Nerdlet agora tem um gráfico Billboard e um botão. O gráfico mostra o número de vezes que você clicou no botão. Use `useEffect()` para incrementar automaticamente `count`.
+
+<Steps>
+  <Step>
+    Em *my-awesome-nerdpack/nerdlets/home/index.js*, crie um efeito:
+
+    ```jsx fileName=index.js
+    import React, {useState, useEffect} from 'react';
+    import { BillboardChart} from 'nr1'
+
+    function HomeNerdlet () {
+      const [count, setCount] = useState(0);
+
+      useEffect(() => {
+        setTimeout(() => {
+          setCount(() => count + 1);
+        }, 1000);
+      });
+
+      const clickCount = {
+        metadata: {
+            id: '1',
+            name: 'Count',
+            viz: 'main',
+        },
+        data: [
+          { "y": count }
+        ]
+      }
+      return (
+        <div>
+          <BillboardChart data={[clickCount]}/>
+        </div>
+      );
+    }
+
+    export default HomeNerdlet
+    ```
+
+    <br />`useEffect()` incrementa automaticamente o valor `count` a cada 1 segundo. Como você automatizou a contagem, também removeu o botão de incremento.
+  </Step>
+
+  <Step>
+    Vá para o seu Browser para ver as atualizações:
+
+    <img title="Auto increment with Effect Hook" alt="Auto increment with Effect Hook" src="/images/react-hooks-screenshot-auto-increment.webp" />
+  </Step>
+</Steps>
+
+## Resumo
+
+Neste guia, você aprendeu como:
+
+* Crie um Nerdpack New Relic local
+* Use ganchos em seu Nerdpack

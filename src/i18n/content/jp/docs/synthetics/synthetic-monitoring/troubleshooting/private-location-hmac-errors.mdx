@@ -1,0 +1,39 @@
+---
+title: プライベートロケーションHMACエラー
+type: troubleshooting
+tags:
+  - Synthetics
+  - Synthetic monitoring
+  - Troubleshooting
+metaDescription: How to troubleshoot HMAC-related errors created by New Relic Synthetics Job Manager.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+## 問題
+
+外形監視ジョブマネージャーのいずれかがチェックに失敗し、以下のエラーのいずれかを報告しています。
+
+```
+HMAC MISMATCH ERROR: HMAC mismatch between saved HMAC and calculated HMAC at job run time
+```
+
+```
+HMAC MISMATCH ERROR: HMAC expected but missing from Job metadata
+```
+
+これらのエラーは、 [検証されたスクリプトの実行](/docs/synthetics/new-relic-synthetics/private-locations/verified-script-execution-private-locations) のエラーを示しています。
+
+## 解決
+
+このチェックが失敗している場所の正しいパスワードを入力する必要があります。
+
+パスワードを入力する。
+
+1. <DNT>**[one.newrelic.com &gt; Synthetic monitoring](https://one.newrelic.com/synthetics-nerdlets)**</DNT> &gt; 障害が発生しているモニターを選択します。
+2. <DNT>**Settings &gt; Script**</DNT>に移動します。
+3. 場所のパスワード欄に、正しいパスワードを入力してください。
+
+<Callout variant="tip">
+  New Relic は、プライベートロケーションのパスワードを保存しません。パスワードがわからない場合は、プライベートロケーションを設定したチームの担当者を探してください。パスワードを回復することができない場合は、新しいプライベートロケーションを作成するしかありません。
+</Callout>

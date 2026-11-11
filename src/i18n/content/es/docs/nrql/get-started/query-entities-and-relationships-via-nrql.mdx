@@ -1,0 +1,34 @@
+---
+title: Entidades y relaciones a través de NRQL
+metaDescription: Learn how to use NRQL to query entity and relationship data alongside telemetry for faster troubleshooting and better system insights.
+freshnessValidatedDate: '2024-03-19T00:00:00.000Z'
+translationType: machine
+---
+
+Como [<DNT>Full platform user</DNT>](/docs/accounts/accounts-billing/new-relic-one-user-management/user-type/#user-type-capabilities), puede emplear **NRQL para consultar directamente datos de entidades y relaciones en NRDB** junto con sus telemetry data. Este acceso unificado admite la resolución de problemas y el análisis del sistema.
+
+Este documento cubre los siguientes temas:
+
+* Consulta de datos de entidades y relaciones con NRQL
+* Correlación de entidades con telemetría para un análisis exhaustivo
+* Explorar ejemplos prácticos, como el seguimiento de los cambios de estado y la búsqueda de relaciones entre la aplicación y el host
+
+## Beneficios clave
+
+Hemos centralizado sus datos al llevar las entidades y sus relaciones directamente a NRDB. Esto significa que puede usar NRQL para consultar datos de la entidad, datos de relaciones y telemetría juntos en un solo lugar.
+
+Así es como usted se beneficia:
+
+* **Acceda a todos los datos de la entidad directamente en NRDB:** NRDB ingiere y almacena los datos de la entidad y de las relaciones. Esto crea un almacenamiento de datos unificado, lo que lo convierte en el lugar central para esta información crítica junto con los telemetry data.
+* **Consulta de datos de entidad usando un NRQL familiar:** puede usar el NRQL con el que ya está familiarizado para consultar estos datos de entidad y relación. No necesita aprender nuevos lenguajes de consulta ni realizar uniones complejas en diferentes almacenes de datos.
+* **Analice los datos de la entidad dentro de su ventana de retención de 24 horas:** NRDB retiene estos datos de entidad y relación durante 24 horas, por lo que puede realizar un análisis oportuno y recuperar la información necesaria para comprender el comportamiento del sistema e identificar dependencias.
+
+<Callout variant="important">
+Los datos de relaciones de entidades se retienen durante 24 horas.
+</Callout>
+
+* **Correlacione entidades, relaciones y telemetría en una sola consulta:** puede vincular entidades, sus relaciones y sus telemetry data asociados (como métricas, eventos, logs y trazas). Esta capacidad de correlación le permite conectar el estado de la entidad, las relaciones y los datos de rendimiento en una sola consulta.
+
+## Próximos pasos
+
+Consulte nuestros [ejemplos de consultas NRQL para entidades y relaciones](/docs/nrql/nrql-examples/query-entities-via-nrql) para ver consultas prácticas que cubren casos de uso comunes, como correlacionar el uso de la CPU con los atributos del host, rastrear los cambios de estado de la entidad y encontrar aplicaciones relacionadas con los hosts.

@@ -1,0 +1,567 @@
+---
+title: Apollo ServerプラグインとNode.js
+tags:
+  - Agents
+  - Nodejs agent
+  - Extend your instrumentation
+metaDescription: The New Relic Apollo Server plugin instruments your Apollo Server applications to give visibility into your GraphQL payloads.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+<Callout variant="important">
+  Node.jsエージェントの14.0.0以降、Apollo Serverの顧客は`@newrelic/apollo-server-plugin`をインストールして使用する必要がなくなりました。計装はすべてのApollo Serverインスタンスに自動的に適用されます。
+
+  詳細については、[Apollo Server移行ガイド](/docs/apm/agents/nodejs-agent/installation-configuration/update-nodejs-agent/#apollo-server-migration-guide)をご覧ください。
+</Callout>
+
+New Relic Apollo Server プラグインは、Apollo Server アプリケーションを計測して、GraphQL ペイロードを可視化します。これは、遅い[GraphQL クエリ](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph)の原因を明らかにして診断するのに役立ちます。サポートされている Apollo サーバーのバージョンは 2.14 以降です。
+
+プラグインはクエリの全体的なタイミングを記録し、ルートの問題を明らかにするために[ディストリビューティッド（分散）トレーシング](/docs/understand-dependencies/distributed-tracing/get-started/how-new-relic-distributed-tracing-works)を使用します。この計装を使用して、問題が要求されたデータの解決に起因するのか、それとも他のサービスやデータベースで行われた作業に起因するのかを確認してください。
+
+## 互換性
+
+New Relicプラグインは、以下のApollo Serverモジュールで動作します。
+
+* `@apollo/server`
+* `@apollo/gateway`
+* `@apollo/subgraph`
+* `apollo-server` (&gt;= 2.14)
+* `apollo-server-express`
+* `apollo-server-hapi`
+* `apollo-server-koa`
+* `apollo-server-fastify`
+* `apollo-server-lambda`
+
+他のプラグインは、その基本的な実装に応じて動作する可能性がありますが、検証されていません。
+
+## 指標
+
+トランザクション内およびトランザクション間のGraphQLオペレーションの動作を把握するために、2つの新しいメトリクスが導入されました。これらの詳細については以下を参照するか、[ビジュアライゼーション](#visualizations)セクションにジャンプして、このデータの推奨される使用方法を確認してください。
+
+メトリクスのクエリとチャートの作成に関する詳細については、[リソース](#resources)セクションを参照してください。
+
+### オペレーションメトリクス
+
+`/GraphQL/operation/ApolloServer/[operation-type]/[operation-name]/[deepest-unique-path]`
+
+オペレーションメトリクスには、オペレーションタイプ、オペレーション名、および最深パスが含まれます。これらのメトリクスは、個々のクエリまたはミューテーションの所要時間を表します。これらを使用して、複数のクエリが含まれる可能性のある個々のトランザクションのコンテキスト外で、パフォーマンスを比較します。
+
+**オペレーションタイプ:** オペレーションがクエリかミューテーションかを示します。
+
+**オペレーション名:** 指定されている場合はオペレーション名、そうでない場合は`<anonymous>`。
+
+**最も深い一意のパス:** 各レベルで1つのフィールドのみが選択されたクエリの選択セットに含まれる最も深いパス。オペレーション名は再利用される可能性があるため、これは特定のオペレーションの一意性をさらに判断するのに役立ちます。詳細については、[トランザクション](#deepest-unique-path)セクションの説明を参照してください。
+
+### フィールド解決メトリクス
+
+`/GraphQL/resolve/ApolloServer/[parent-type].[field-name]`
+
+リゾルブメトリクスは、リクエストされた特定のGraphQLデータの解決に要した時間を記録します。これらを使用することで、受信クエリの速度低下の一因となっている可能性のある特定のレゾルバを見つけたり、異なる型で同じ名前を持つフィールドレゾルバを区別したり、異なる型にわたって適用されている同じレゾルバを特定したりすることができます。
+
+これらは、対応するセグメントやスパンとは名前がわずかに異なります。関係をより適切に視覚化するために、フィールドへのフルパスはセグメントとスパンで表されます（たとえば、`libraries.books.title`）。すべての使用状況とトランザクションにわたって集計された期間を把握するために、これらのメトリクスではフルパスを含まないフィールド名を使用します。
+
+### フィールドと引数のメトリクス
+
+`/GraphQL/field/ApolloServer/[parent-type].[field-name]` `/GraphQL/arg/ApolloServer/[parent-type].[field-name]/[arg-name]`
+
+フィールドメトリクスは、`config.apollo_server.field_metrics`が`true`の場合にのみキャプチャされます。フィールド解決メトリクスとは異なり、これはフィールドまたはリゾルバの引数が検出されるたびにキャプチャします。これらのメトリクスを使用して、GraphQLスキーマ内のフィールドがまだ使用されているか、削除しても安全かどうかを判断します。
+
+#### 過去1日以内にリクエストされたすべてのフィールドと引数
+
+```sql
+FROM Metric SELECT count(newrelic.timeslice.value) where appName = 'YOUR_APP_NAME' WITH METRIC_FORMAT 'GraphQL/{kind}/ApolloServer/{field}' where kind = 'arg' or kind = 'field' FACET kind, field limit max since 1 day ago
+```
+
+### 可視化 [#visualizations]
+
+以下のクエリはこれらのメトリクスを使用して、Apollo GraphQLアプリケーションの動作を理解するのに役立ちます。
+
+#### 上位10オペレーション
+
+最も遅い上位10件のオペレーションのリストを取得するには、オンデマンドで、またはダッシュボードの一部として次のクエリを使用します。
+
+```sql
+FROM Metric SELECT average(newrelic.timeslice.value) * 1000 WHERE appName = 'YOUR_APP_NAME' WITH METRIC_FORMAT 'GraphQL/operation/ApolloServer/{operation}' FACET operation LIMIT 10
+```
+
+**バー (Bar)**チャートタイプは、トランザクションの概要と同様の視覚化を提供します。
+
+**テーブル (Table)**チャートタイプは、オペレーションの内訳を表示するのにも役立ちます。並べ替えや視覚化の柔軟性をさらに高めるには、`METRIC_FORMAT`を使用してください。次のクエリは、オペレーションタイプ、オペレーション名、最深パス、および**AVG Duration (MS)**の列を生成します。
+
+```sql
+FROM Metric SELECT average(newrelic.timeslice.value) * 1000 as 'AVG Duration (MS)' WHERE appName = 'YOUR_APP_NAME' WITH METRIC_FORMAT 'GraphQL/operation/ApolloServer/{type}/{name}/{deepest-path}' FACET type, name, `deepest-path` LIMIT 20
+```
+
+#### 平均オペレーション時間
+
+オペレーションの平均所要時間の推移を追跡するには、`TIMESERIES`で同様のクエリを使用します。
+
+```sql
+FROM Metric SELECT average(newrelic.timeslice.value) WHERE appName = 'YOUR_APP_NAME' WITH METRIC_FORMAT 'GraphQL/operation/ApolloServer/{operation}' TIMESERIES FACET operation
+```
+
+これを**折れ線 (Line)**グラフタイプで表示すると、すべてのオペレーションを表示したり、個別に切り替えたりできます。
+
+#### 上位10リゾルバ
+
+最も遅い上位10のリゾルバのリストを取得するには、オンデマンドで、またはダッシュボードの一部として次のクエリを使用します。
+
+```sql
+FROM Metric
+SELECT average(newrelic.timeslice.value) * 1000 as 'Average Duration (MS)' WHERE appName = 'YOUR_APP_NAME' WITH METRIC_FORMAT 'GraphQL/resolve/ApolloServer/{type}.{field}' FACET field LIMIT 20
+```
+
+親タイプを含めたい場合は：
+
+```sql
+FROM Metric
+SELECT average(newrelic.timeslice.value) * 1000 as 'Average Duration (MS)' WHERE appName = 'YOUR_APP_NAME' WITH METRIC_FORMAT 'GraphQL/resolve/ApolloServer/{field}' FACET field LIMIT 20
+```
+
+**バー (Bar)**チャートタイプは、トランザクションの概要と同様の視覚化を提供します。**テーブル (Table)**チャートタイプは、フィールドと **Average Duration（MS）** の内訳を表示するのにも役立ちます。
+
+#### 平均リゾルバ時間
+
+リゾルバーの平均所要時間の推移を追跡するには、`TIMESERIES`で同様のクエリを使用します。
+
+```sql
+FROM Metric
+SELECT average(newrelic.timeslice.value) * 1000 as 'Average Duration (MS)' TIMESERIES WHERE appName = 'YOUR_APP_NAME' WITH METRIC_FORMAT 'GraphQL/resolve/ApolloServer/{field}' FACET field
+```
+
+これを**折れ線 (Line)**チャートタイプで表示すると、すべてのリゾルバを表示したり、個々のリゾルバを切り替えたりできます。
+
+### 資力 [#resources]
+
+* [NRQLでAPMメトリクスのタイムスライスデータを照会する](/docs/data-apis/understand-data/metric-data/query-apm-metric-timeslice-data-nrql/)
+
+* [メトリクスチャートの追加とカスタマイズ](/docs/nrql/get-started/introduction-nrql-new-relics-query-language/)
+
+## セグメントとスパン
+
+セグメントとスパン（ディストリビューティッド（分散）トレーシングが有効な場合）は、GraphQLオペレーション、フィールド解決、およびデータベースへのクエリの実行など、フィールド解決の一部として発生する追加のインストゥルメントされた作業に対してキャプチャされます。
+
+### オペレーションセグメント/スパン
+
+`/GraphQL/operation/ApolloServer/[operation-type]/[operation-name]/[deepest-unique-path]`
+
+オペレーションセグメントとスパンには、オペレーションタイプ、オペレーション名、および最も深い一意のパスが含まれます。これらは、トランザクションまたはトレース内の特定の呼び出しの個々の所要時間と属性を表します。
+
+各部分の詳細については、[トランザクション](#details)セクションを参照してください。
+
+**属性**
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>
+        **名前**
+      </th>
+
+      <th>
+        **説明**
+      </th>
+
+      <th>
+        **デフォルト**
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        `graphql.operation.type`
+      </td>
+
+      <td>
+        `query` または `mutation`
+      </td>
+
+      <td>
+        付属
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `graphql.operation.name`
+      </td>
+
+      <td>
+        操作に付けられた名前または `anonymous`
+      </td>
+
+      <td>
+        付属
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `graphql.operation.query`
+      </td>
+
+      <td>
+        引数が難読化された元のGraphQLクエリ
+      </td>
+
+      <td>
+        付属
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+クエリ属性（または任意の属性）を除外するには、属性名を`attributes`の除外リストに追加するか、セグメントおよびスパン属性の除外リストに個別に追加します。
+
+属性の包含と除外の詳細については、[属性のドキュメント](/docs/apm/agents/nodejs-agent/attributes/nodejs-agent-attributes/#configure-attributes)を参照してください。
+
+### フィールド解決セグメント/スパン
+
+`/GraphQL/resolve/ApolloServer/[path]`
+
+解決セグメントとスパンは、特定のトレースまたはトランザクション内で最適に区別するために、個々のフィールドの解決パスを使用します。例えば、単に`books`ではなく、パス`libraries.books`が使用されます。これらは、GraphQLオペレーションの一部としてリゾルブされる特定のフィールドの個々の所要時間と属性を表します。
+
+**属性**
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>
+        **名前**
+      </th>
+
+      <th>
+        **説明**
+      </th>
+
+      <th>
+        **デフォルト**
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        `graphql.field.name`
+      </td>
+
+      <td>
+        解決したフィールドの名前
+      </td>
+
+      <td>
+        付属
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `graphql.field.returnType`
+      </td>
+
+      <td>
+        解決されたフィールドの戻り値の型（`Book!`、`[String]`など）
+      </td>
+
+      <td>
+        付属
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `graphql.field.parentType`
+      </td>
+
+      <td>
+        このフィールドの親のタイプ（`[Book]`）
+      </td>
+
+      <td>
+        付属
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `graphql.field.path`
+      </td>
+
+      <td>
+        フィールド（`libraries.books`）の完全な解決パス
+      </td>
+
+      <td>
+        付属
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `graphql.field.args`
+      </td>
+
+      <td>
+        このリゾルバのGraphQLクエリまたはミューテーションに渡され、キーの値のペアとしてキャプチャされる引数
+      </td>
+
+      <td>
+        除外
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+args属性をキャプチャするには、`graphql.field.args.*`を`attributes`のインクルードリストに追加するか、セグメントおよびスパン属性のインクルードリストに個別に追加します。
+
+属性の包含と除外の詳細については、[属性のドキュメント](/docs/apm/agents/nodejs-agent/attributes/nodejs-agent-attributes/#configure-attributes)を参照してください。
+
+## トランザクション
+
+```graphql
+query {
+  libraries {
+    books {
+      title
+      author {
+        name
+      }
+    }
+  }
+}
+```
+
+`post /query/<anonymous>/libraries.books`
+
+トランザクションはウェブトランザクションとしてキャプチャされ、基盤となるフレームワーク（Express、Koaなど）に関連付けられ、実行されたGraphQLオペレーションに基づいて名前が付けられます。
+
+エージェントは、トランザクション名で一意のクエリ表現をグループ化するために、いくつかの詳細を使用します：HTTPメソッド、オペレーションタイプ、オペレーション名、および解決された最も深いパス（複数の場合は最初のもの）。
+
+トランザクションの生の表現は次のようになります。 `/WebTransaction/{framework-name}/POST//{operation-type}/{operation-name}/{deepest-unique-path}`
+
+Apollo ServerをExpressで使用する場合、次のようになります： `/WebTransaction/Expressjs/POST//query/<anonymous>/libraries.books`
+
+New Relic Oneのトランザクションは、最終的に次のように表示されます：`post /query/<anonymous>/libraries.books`。
+
+### 詳細 [#details]
+
+#### HTTPメソッド
+
+ウェブリクエストのHTTPメソッド。リクエストはGETまたはPOST経由で到達でき、他のウェブトランザクションと同様に表示されます。
+
+#### 操作の種類
+
+操作がクエリかミューテーションかを示す。
+
+#### オペレーション名
+
+指定された場合はオペレーション名、または`<anonymous>`。
+
+`query { libraries }` 名前が指定されなかったため、オペレーション名`<anonymous>`を使用します。
+
+`query GetLibraries { libraries }`のような名前付きクエリは、オペレーション名`GetLibraries`を使用します。
+
+#### 最深の一意のパス [#deepest-unique-path]
+
+各レベルで1つのフィールドのみが選択されたクエリの選択セットに含まれる最も深いパス。操作名は再利用される可能性があるため、操作の一意性をさらに判断するのに役立ちます。
+
+エージェントは、アプリケーションの遅延の原因に関する詳細を暗示したり隠したりする可能性のある恣意的な命名の決定を避けるために、（最も深いパスではなく）最も深い一意のパスを使用します。
+
+問い合わせに対して
+
+```graphql
+query {
+  libraries {
+    branch
+    booksInStock {
+      isbn,
+      title,
+      author
+    }
+    magazinesInStock {
+      issue,
+      title
+    }
+  }
+}
+```
+
+そのポイントより先で複数のフィールドが選択されているため、最も深い一意のパスは`libraries`に解決されます。その時点以降に実行されるリゾルバはすべて、トランザクションのパフォーマンス特性に影響を与える可能性があります。
+
+クエリがリゾルバーごとに1つのフィールドのみを選択する場合、各選択セットは一意であるため、フルパスが使用されます。
+
+クエリです。
+
+```graphql
+query {
+  libraries {
+    booksInStock {
+      title
+    }
+  }
+}
+```
+
+最も深い一意のパスでの結果：`libraries.booksInStock.title`。
+
+`id` および`__typename`フィールドは、名前付けの決定から自動的に除外されます。
+
+たとえば、フェデレーテッドサブグラフクエリ：
+
+```graphql
+query {
+  libraries {
+    branch
+    __typename
+    id
+  }
+}
+```
+
+最も深い一意のパスでの結果：`libraries.branch`。
+
+### ユニオン型とインラインフラグメント
+
+インラインフラグメントを使用するユニオン型の場合、クエリで結果の型が1つだけ指定されていると、トランザクション名は基になる選択されたフィールドを示すために`< ... >`括弧を使用します。
+
+次のようなスキーマの場合
+
+```graphql
+union SearchResult = Book | Author
+
+type Book {
+  title: String!
+}
+
+type Author {
+  name: String!
+}
+
+type Query {
+  search(contains: String): [SearchResult!]
+}
+```
+
+そして、次のクエリ：
+
+```graphql
+query example {
+  search(contains: "author") {
+    __typename
+    ... on Author {
+      name
+    }
+  }
+}
+```
+
+結果として次のトランザクション名になります：
+
+`post /query/example/search<Author>.name`
+
+ただし、クエリがBookとAuthorの両方を返す場合：
+
+```graphql
+query example {
+  search(contains: "author") {
+    __typename
+    ... on Author {
+      name
+    }
+    ... on Book {
+      title
+    }
+  }
+}
+```
+
+結果のトランザクション名は次のとおりです：
+
+`post /query/example/search`
+
+### エラー時のネーミング
+
+GraphQLリクエストの解析または検証時のエラーは、トランザクションの命名に影響を与える可能性があります。
+
+#### 検証エラー
+
+リクエストが解析されたものの検証に失敗した場合、エージェントは試行された内容に基づいてトランザクションに名前を付けます。たとえば、これは受信したGraphQLクエリ内のフィールドが存在しない場合に発生します。
+
+この状況では、エージェントは解析されたドキュメントを使用して、最も深い意図したパスの計算を含め、意図した各部分を示します。
+
+存在しないフィールド（`doesnotexist`）をクエリする例と、それがNR Oneでどのように表示されるかを以下に示します。
+
+```graphql
+query GetBooksByLibrary {
+  libraries {
+    books {
+      doesnotexist {
+        name
+      }
+    }
+  }
+}
+```
+
+`post /query/GetBooksByLibrary/libraries.books.doesnotexist.name`
+
+#### 構文解析エラー
+
+要求されたオペレーションを解析できない場合、エージェントは通常のオペレーション部分の代わりにワイルドカード（`*`）を使用してトランザクションに名前を付けます。この状況では、クエリは無効であり、手がかりとなる特定可能な要素がありません。
+
+閉じ`}`が欠落していて解析できない例と、それがNR Oneでどのように表示されるかを以下に示します。
+
+```graphql
+query GetBooksByLibrary {
+  libraries {
+    books {
+      title
+      author {
+        name
+      }
+    }
+  }
+// missing closing }
+```
+
+`post /*`
+
+このような状況では、エラーに関連付けられたオペレーションスパンの`query`属性が、特定の原因を突き止めるための最良の方法です。
+
+#### バッチクエリ
+
+Apollo Serverはバッチクエリをサポートしています。これらの状況では、ネーミングに影響を与える複数の操作が作用しています。
+
+トランザクションのグループ化を最適に識別するために、エージェントは追加の`/batch`インジケーターの後にオペレーション名を集約します。これらの名前はかなり長くなることがあります。
+
+以下に、バッチクエリの例と、それがNR Oneでどのように表示されるかを示します。
+
+```
+[
+  {
+    query: query GetBookForLibrary {
+      library(branch: "downtown") {
+        books {
+          title
+          author {
+            name
+          }
+        }
+      }
+    }
+  },
+  {
+    query: mutation {
+      addThing(name: "added thing!")
+    }
+  }
+]
+```
+
+`post /batch/query/GetBookForLibrary/library.books/mutation/<anonymous>/addThing`
+
+ここでは、`batch/`に続いて`query/GetBookForLibrary/library.books`と`mutation/<anonymous>/addThing`が表示されます。

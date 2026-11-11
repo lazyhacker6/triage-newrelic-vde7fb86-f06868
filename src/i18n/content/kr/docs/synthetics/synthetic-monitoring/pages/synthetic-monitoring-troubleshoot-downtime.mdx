@@ -1,0 +1,106 @@
+---
+title: '종합 모니터링: 다운타임 문제 해결'
+tags:
+  - Synthetics
+  - Synthetic monitoring
+  - Pages
+metaDescription: Use the Failures page to locate and troubleshoot downtime alert events. Jump to a results from each downtime alert event to understand the failure.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+<DNT>**Failures**</DNT> 페이지를 사용하여 다운타임 공지 이벤트 또는 기타 오류를 찾아 문제를 해결하세요. 다운타임 공지 이벤트는 모니터가 완전히 실행되지 않을 때마다 발생합니다. 예를 들어, GET 요청이 실패하면 ping 모니터가 &quot;다운&quot;되고, 펼쳐의 일부라도 실행에 실패하면 멀티미디어 브라우저 모니터가 &quot;다운&quot;됩니다. 흥미로운 다운타임을 찾은 후 이를 선택하여 [해당 다운타임 공지 이벤트의 자세한 결과를 확인](/docs/synthetics/new-relic-synthetics/using-monitors/viewing-monitor-results#understanding) 하고 문제를 해결하세요.
+
+## 실패 페이지 보기 [#viewing]
+
+모니터의 오류를 확인하려면: <DNT>**[one.newrelic.com &gt;Synthetic monitoring](https://one.newrelic.com/synthetics-nerdlets)**</DNT> &gt; (모니터 선택) &gt; <DNT>**Failures**</DNT>.
+
+<img title="Synthetic monitoring - Failures page" alt="Synthetic monitoring - Failures page" src="/images/synthetic_screenshot-full_failure-page.webp" />
+
+<figcaption>
+  오류 위에 마우스 커서를 올리면 해당 오류에 대한 빠른 정보를 얻을 수 있습니다. 점을 클릭하면 오류에 대한 자세한 보고서를 열 수 있습니다. [실패한 모니터를 다시 확인](/docs/synthetics/synthetic-monitoring/using-monitors/recheck-failed-monitors) 하려면 <DNT>**Run check**</DNT> 클릭할 수도 있습니다.
+</figcaption>
+
+## 개별 다운타임 보기 [#individual]
+
+개별 다운타임 공지이벤트를 선택하시면 더 자세히 보실 수 있습니다. 특정 오류 유형에 따라 다운타임 결과에는 서버 오류 메시지(예: <DNT>**Server replied with &quot;HTTP 500&quot; error**</DNT>)만 포함되거나 전체 또는 부분 [워터폴 보기가](/docs/synthetics/new-relic-synthetics/using-monitors/viewing-monitor-results#understanding) 포함될 수 있습니다.
+
+다운타임 결과에는 모니터링의 일부만 올바르게 실행되었을 때의 워터폴 차트가 포함됩니다. 예를 들어, [301 리디렉션은](http://en.wikipedia.org/wiki/HTTP_301) 오류가 발생한 웹 페이지로 연결될 수 있습니다. 브라우저는 리디렉션을 올바르게 실행하지만, 대상 웹 페이지에서 오류가 발생합니다. 다운타임 공지 이벤트 문제를 해결하려면 오류 메시지 또는 폭포를 사용하세요.
+
+## 페이지 기능 사용 [#using]
+
+<DNT>**Failures**</DNT> 페이지는 다음 기능을 지원합니다.
+
+<table>
+  <thead>
+    <tr>
+      <th width={200}>
+        <DNT>
+          **If you want to...**
+        </DNT>
+      </th>
+
+      <th>
+        <DNT>
+          **Do this...**
+        </DNT>
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr id="sort-list">
+      <td>
+        다운타임 목록 정렬
+      </td>
+
+      <td>
+        표 헤더에서 <DNT>**Time**</DNT> 또는 <DNT>**Message**</DNT> 선택하여 목록을 정렬하세요. 오름차순 정렬에서 내림차순 정렬로 변경하려면 <DNT>**Time**</DNT> 또는 <DNT>**Message**</DNT> 다시 선택하십시오.
+      </td>
+    </tr>
+
+    <tr id="filter-location">
+      <td>
+        위치별로 필터링
+      </td>
+
+      <td>
+        해당 위치에서 다운타임 공지 이벤트를 숨기려면 위치 라벨을 선택하세요. 해당 결과를 표시하려면 위치 레이블을 다시 선택하세요. 한 위치의 결과만 보려면 나머지 모든 위치를 숨기세요.
+      </td>
+    </tr>
+
+    <tr id="quickly-switch">
+      <td>
+        다른 모니터에 빠르게 액세스
+      </td>
+
+      <td>
+        1. 화면 상단에서 현재 모니터의 이름을 클릭하여 드롭다운 메뉴를 엽니다.
+
+        2. 최근 모니터 목록에서 선택하거나 검색 필드에 이름을 입력하여 특정 모니터를 검색합니다.
+
+           <img title="Switch synthetic monitor quickly" alt="Switch synthetic monitor quickly" src="/images/synthetic_screenshot-crop_new-monitor-quick.webp" />
+      </td>
+    </tr>
+
+    <tr id="time-frame">
+      <td>
+        기간 변경
+      </td>
+
+      <td>
+        [타임 피커를](/docs/query-your-data/explore-query-data/dashboards/manage-your-dashboard/#dash-time-picker) 사용하여 반환되는 다운타임 공지 이벤트 수를 조정하세요.
+      </td>
+    </tr>
+
+    <tr id="three-strikes">
+      <td>
+        추가 소음을 피하고 3번의 실패 후에 알림을 받습니다.
+      </td>
+
+      <td>
+        [삼진아웃 규칙](https://support.newrelic.com/s/hubtopic/aAX8W0000008b18/relic-solution-understanding-the-three-strikes-behavior-in-synthetics)에 대한 블로그 게시물을 읽어보십시오.
+      </td>
+    </tr>
+  </tbody>
+</table>

@@ -1,0 +1,284 @@
+---
+title: Sube archivos dSYM
+tags:
+  - Mobile monitoring
+  - New Relic Mobile iOS
+  - Configuration
+metaDescription: How to upload symbols for crash reports from iOS apps monitored with New Relic mobile monitoring.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Xcode almacena los archivos dSYM de la aplicación en la carpeta de la ruta del archivo dSYM. Esta es la carpeta de donde el agente de iOS obtiene los archivos dSYM que utiliza para simbolizar los informes de fallos. New Relic proporciona un script posterior a la compilación como parte del [proceso de instalación del agente de iOS](/docs/mobile-monitoring/new-relic-mobile-ios/installation/spm-installation/#configure-using-swift-package-manager). Este script convierte automáticamente el archivo dSYM al formato de archivo de mapa de New Relic y carga a New Relic los archivos necesarios para la simbolización de fallos.
+
+## scriptautomático [#Automatic]
+
+El agente de iOS incluye `run-symbol-tool`, un script de shell que se ejecuta desde una fase de compilación Run Script en Xcode. Después de cada compilación, ejecuta `run-symbol-tool.swift` en segundo plano, lo que convierte los archivos dSYM al formato de archivo de mapa de New Relic y los carga en New Relic.
+
+En Xcode 14, Apple cambió la configuración predeterminada en proyectos recién creados para deshabilitar el código de bits. La App Store ahora solo acepta envíos de aplicaciones con el código de bits desactivado. Consulte [las notas de la versión de Xcode 14](https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes). Si su proyecto todavía tiene el código de bits habilitado, debe desactivarlo. El script automático requiere que el código de bits esté deshabilitado.
+
+Apple genera archivos dSYM para aplicaciones habilitadas para Bitcode. Debe [descargar los archivos dSYM para aplicaciones habilitadas con Bitcode de Apple](/docs/mobile-monitoring/new-relic-mobile-ios/install-configure/retrieve-upload-dsyms-bitcode-enabled-apps) y cargarlos en New Relic a través de la [UI de monitoreo de móviles](#mobile-ui).
+
+Si ve un código de máquina ilegible en la [página<DNT>**Crashes**</DNT> ](/docs/mobile-monitoring/mobile-monitoring-ui/crashes/mobile-apps-crashes-dashboard), es posible que sus archivos dSYM no se hayan cargado correctamente. En algunos casos, es posible que necesites [cargar archivos dSYM manualmente](#manual-dsym).
+
+<Callout variant="important">
+Versión del agente de iOS 7.4.8 se eliminaron los script de carga de Python (`generateMap.py`, `generateMapPython2.py` y `newrelic_postbuild.sh`). Si la fase de compilación Run Script aún llama a `newrelic_postbuild.sh`, reemplácela con el script `run-symbol-tool` a continuación.
+</Callout>
+
+### Agregar la fase de compilación Run Script [#run-script]
+
+1. En Xcode, seleccione el proyecto en el navegador, luego seleccione el objetivo de la aplicación.
+
+2. Seleccione la pestaña <DNT>**Build Phases**</DNT> .
+
+3. Haga clic en <DNT>**+**</DNT> y elija <DNT>**New Run Script Phase**</DNT>.
+
+4. Agregue las siguientes líneas a la nueva fase. Reemplace `APP_TOKEN` con el token de la aplicación de New Relic.
+
+   ```shell
+   ARTIFACT_DIR="${BUILD_DIR%Build/*}"
+   SCRIPT=`/usr/bin/find "${SRCROOT}" "${ARTIFACT_DIR}" -type f -name run-symbol-tool | head -n 1`
+   /bin/sh "${SCRIPT}" "APP_TOKEN"
+   ```
+
+En Xcode 15.3 o superior, establezca <DNT>**User Script Sandboxing**</DNT> en <DNT>**No**</DNT> para que el script pueda leer los archivos dSYM y escribir su log. Consulte [Fallos en la carga automática de dSYM](/docs/mobile-monitoring/new-relic-mobile-ios/troubleshoot/dSYM-upload-tools).
+
+### Argumentos opcionales [#arguments]
+
+Agregue argumentos opcionales después del token de la aplicación, en cualquier orden:
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "250px" }}>
+Argumento
+</th>
+
+<th>
+Descripción
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`--debug`
+</td>
+
+<td>
+Escribe detalles adicionales en `upload_dsym_results.log`, como las rutas de dSYM, la URL de carga y los comandos de carga. La salida de depuración incluye el token de la aplicación.
+</td>
+</tr>
+
+<tr>
+<td>
+`-appVersion <version>`
+</td>
+
+<td>
+Establece la versión de la aplicación que se informa con los símbolos cargados. El script también acepta `--appVersion` y `--app-version`. Requiere la versión 7.7.5 o superior del agente de iOS. Consulte [Versión de la aplicación](#app-version).
+</td>
+</tr>
+</tbody>
+</table>
+
+Por ejemplo:
+
+```shell
+ARTIFACT_DIR="${BUILD_DIR%Build/*}"
+SCRIPT=`/usr/bin/find "${SRCROOT}" "${ARTIFACT_DIR}" -type f -name run-symbol-tool | head -n 1`
+/bin/sh "${SCRIPT}" "APP_TOKEN" -appVersion "1.4.2" --debug
+```
+
+### Version de aplicacion [#app-version]
+
+New Relic empareja los símbolos cargados con las compilaciones según la versión de la aplicación. El script usa el primer valor no vacío de esta lista:
+
+1. El argumento `-appVersion`
+2. La variable de entorno `NEWRELIC_APP_VERSION`
+3. La configuración de compilación `MARKETING_VERSION`
+4. El marcador de posición `1.2.3`
+
+Cuando el script utiliza el marcador de posición, registra una advertencia en `upload_dsym_results.log`.
+
+Algunos proyectos no configuran `MARKETING_VERSION`, como las aplicaciones versionadas con `agvtool` o las aplicaciones multiobjetivo que utilizan `GENERATE_INFOPLIST_FILE = YES`. Para estos proyectos, pase `-appVersion` o configure `NEWRELIC_APP_VERSION` para que los símbolos coincidan con las compilaciones.
+
+### Variables de entorno [#environment-variables]
+
+No necesita configurar estas variables para una carga estándar. Para configurar una, agregue una línea `export` sobre el script en la misma fase Run Script:
+
+```shell
+export NEWRELIC_APP_VERSION="1.4.2"
+ARTIFACT_DIR="${BUILD_DIR%Build/*}"
+SCRIPT=`/usr/bin/find "${SRCROOT}" "${ARTIFACT_DIR}" -type f -name run-symbol-tool | head -n 1`
+/bin/sh "${SCRIPT}" "APP_TOKEN"
+```
+
+El script admite estas variables de entorno:
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "250px" }}>
+Variable
+</th>
+
+<th>
+Descripción
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`NEWRELIC_APP_VERSION`
+</td>
+
+<td>
+Versión de la aplicación reportada con los símbolos cargados. Requiere la versión 7.7.5 o superior del agente de iOS. Consulte [Versión de la aplicación](#app-version).
+</td>
+</tr>
+
+<tr>
+<td>
+`DSYM_UPLOAD_URL`
+</td>
+
+<td>
+Host de carga. El valor predeterminado es `https://mobile-symbol-upload.newrelic.com`. El script ignora esta variable cuando el token de la aplicación tiene un prefijo de región, como los token de la UE o JP. Esos token siempre utilizan su host regional.
+</td>
+</tr>
+
+<tr>
+<td>
+`NEWRELIC_SYMBOL_ENDPOINT`
+</td>
+
+<td>
+Ruta para las cargas de archivos de mapa. El valor predeterminado es `map`.
+</td>
+</tr>
+
+<tr>
+<td>
+`NEWRELIC_DSYM_ENDPOINT`
+</td>
+
+<td>
+Ruta para las cargas de dSYM. El valor predeterminado es `symbol`.
+</td>
+</tr>
+
+<tr>
+<td>
+`NEWRELIC_SYMBOL_POST_KEY`
+</td>
+
+<td>
+Nombre del campo del formulario para las cargas de archivos de mapa. El valor predeterminado es `upload`.
+</td>
+</tr>
+
+<tr>
+<td>
+`NEWRELIC_DSYM_POST_KEY`
+</td>
+
+<td>
+Nombre del campo de formulario para las cargas de dSYM. El valor predeterminado es `dsym`.
+</td>
+</tr>
+</tbody>
+</table>
+
+### Cómo funciona el script [#how-it-works]
+
+Cuando se ejecuta, el script hace lo siguiente:
+
+* La carga se ejecuta en segundo plano, por lo que la compilación no espera a que termine. El script escribe los resultados en [`upload_dsym_results.log`](#auto-upload-fail-troubleshooting).
+* El script omite las compilaciones del simulador de iOS (`EFFECTIVE_PLATFORM_NAME` es `-iphonesimulator`).
+* Las compilaciones con Bitcode habilitado (`ENABLE_BITCODE = YES`) finalizan sin cargar y sin que falle la compilación.
+* El script convierte cada dSYM en `DWARF_DSYM_FOLDER_PATH` en un archivo de mapa, comprime los archivos de mapa y carga el archivo zip en el extremo `/map`.
+* Si un dSYM no se puede convertir, el script comprime ese dSYM en un archivo zip y lo carga en el extremo `/symbol` en su lugar. Si la carga del mapa en sí falla, el script registra el código de estado HTTP y no recurre a una carga de dSYM. En ese caso, [cargue el dSYM manualmente](#manual-dsym).
+* En la versión 7.7.2 y superior del agente de iOS, si un archivo de mapa comprimido supera los 200 MB, el script no lo carga. Solo envía el tamaño del archivo y la versión de la aplicación a New Relic. New Relic no puede simbolizar los bloqueos de esa compilación a menos que [cargue su dSYM manualmente](#manual-dsym).
+* El script elige la región de carga (US, EU o JP) a partir del token de la aplicación. Estos son los mismos hosts que se utilizan en los [comandos de carga manual](#manual-dsym).
+
+## Identificar dSYM faltantes [#IdentifyingMissingdSYMs]
+
+Cuando se carga una aplicación habilitada para Bitcode en Apple para la revisión del App Store o la distribución ad hoc, los dSYM se deben descargar manualmente de Apple y cargar en New Relic para permitir que los [informes de fallos móviles](/docs/mobile-monitoring/new-relic-mobile/getting-started/ios-agent-crash-reporting) se simbolicen correctamente. Estos dSYM se pueden descargar a través del organizador de archivos en Xcode unos minutos después de cargar la aplicación. En esta situación, siga los procedimientos para [encontrar el archivo y descargar los dSYM](/docs/mobile-monitoring/new-relic-mobile-ios/configuration/retrieve-dsyms-bitcode-apps#Archive).
+
+Si a una aplicación le falta un archivo dSYM, verá tres indicadores en la UI de monitoreo de móviles:
+
+* <DNT>**Banner notification**</DNT>: Aparece un banner de advertencia en la [página<DNT>**Crash report**</DNT> ](/docs/mobile-monitoring/mobile-monitoring-ui/crashes/mobile-apps-crash-report-dashboard). La advertencia dice:
+
+```
+We were unable to locate your dsym.
+```
+
+* <DNT>**Upload prompt**</DNT>: Desde la página <DNT>**Crash type summary**</DNT> se le indicará automáticamente que cargue un archivo dSYM si falta.
+* <DNT>**Machine code**</DNT>: El rastreo del bloqueo de la pila en la página <DNT>**Crash report**</DNT> muestra código de máquina y no un mensaje de error legible por humanos.
+
+## Cargar archivos dSYM a través de la UI de monitoreo de móviles [#mobile-ui]
+
+Puede cargar fácilmente los archivos dSYM directamente desde la UI de New Relic. Para ver los límites de tamaño, consulte [Limitaciones](#limitations). Para cargar los archivos dSYM:
+
+1. Vaya a <DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Mobile**</DNT>. Luego seleccione su aplicación de la lista.
+2. Ver <DNT>**Crashes**</DNT>.
+3. Seleccione un fallo específico del <DNT>**Total crashes**</DNT> en Fallos de grupo.
+4. Haga clic en <DNT>**Upload dSYM**</DNT>. Puede arrastrar y soltar sus dSYM directamente o seleccionar el archivo desde su computadora.
+
+## Cargar archivos dSYM manualmente [#manual-dsym]
+
+En algunas circunstancias, la carga automática de archivos dSYM de New Relic puede fallar. Por ejemplo, si hay una falla de red y la carga no se completa, [`upload_dsym_results.log`](#auto-upload-fail-troubleshooting) registra lo que salió mal. Para obtener información adicional sobre cómo New Relic maneja las cargas de dSYM, consulte la [Comunidad técnica en línea de New Relic](https://support.newrelic.com/s/hubtopic/aAX8W0000008Yv9/relic-solution-ios-dsym-upload-deepdive).
+
+Si la carga automática falla, puede cargar el archivo dSYM manualmente. Si tiene varios archivos dSYM, pueden estar dentro de un solo archivo zip. Para conocer los límites de tamaño, consulte [Limitaciones](#limitations). El valor de `YOUR_NEW_RELIC_APPLICATION_TOKEN` en los comandos a continuación es la misma clave utilizada para `+[NewRelic startWithApplicationToken:]` (en Objective-C) o `NewRelic.start(withApplicationToken:)` (en Swift).
+
+En los siguientes comandos, use rutas completas o `$HOME`. El shell no expande `~` entre comillas.
+
+Para cargar manualmente sus archivos dSYM:
+
+<CollapserGroup>
+<Collapser id="swift-manual-upload" title="Mediante script de Swift">
+Puede ejecutar `run-symbol-tool.swift` desde la línea de comando. Convierte los archivos dSYM en una carpeta, como la carpeta `dSYMs` de un archivo de Xcode, y los carga de la misma manera que el [script automático](#how-it-works). El script está en la misma carpeta que `run-symbol-tool` (por ejemplo, `NewRelic.xcframework/Resources`).
+
+```shell
+DWARF_DSYM_FOLDER_PATH="DSYM_FOLDER_PATH" /usr/bin/xcrun --sdk macosx swift "SCRIPT_PATH/run-symbol-tool.swift" "YOUR_NEW_RELIC_APPLICATION_TOKEN" -appVersion "APP_VERSION"
+```
+
+Reemplazar:
+
+* `DSYM_FOLDER_PATH` con la ruta completa a la carpeta que contiene los archivos `.dSYM` (por ejemplo, `$HOME/Library/Developer/Xcode/Archives/2026-10-22/MyApp.xcarchive/dSYMs`).
+* `SCRIPT_PATH` con la ruta completa a la carpeta que contiene `run-symbol-tool.swift`.
+* `APP_VERSION` con la versión de la compilación. `MARKETING_VERSION` no está configurado fuera de Xcode, por lo tanto, pase la versión explícitamente. Para las versiones del agente de la 7.4.12 a la 7.7.4, configure `MARKETING_VERSION="APP_VERSION"` antes del comando en lugar de pasar `-appVersion`.
+
+El script imprime su salida en la terminal.
+</Collapser>
+</CollapserGroup>
+
+## Resolución de problemas [#auto-upload-fail-troubleshooting]
+
+El script `run-symbol-tool` escribe `upload_dsym_results.log` en el directorio raíz del proyecto en cada compilación, independientemente de si la carga se realiza correctamente o falla. Cada compilación sobrescribe el log anterior. Para escribir más detalles en el log, agregue el [argumento `--debug` ](#arguments).
+
+Si el log de compilación muestra `upload_dsym_results.log: Operation not permitted`, consulte [Errores de carga automática de dSYM](/docs/mobile-monitoring/new-relic-mobile-ios/troubleshoot/dSYM-upload-tools).
+
+### dSYM faltantes [#troubleshooting-missing-dsyms]
+
+Si faltan archivos dSYM, es posible que deba verificar la configuración de compilación de Xcode para asegurarse de que se esté generando el archivo. El marco que se construye localmente tiene configuraciones de compilación separadas y es posible que también deban actualizarse.
+
+Configuración de compilación:
+
+```
+Debug Information Format : Dwarf with dSYM File
+Deployment Postprocessing: Yes
+Strip Linked Product: Yes
+Strip Debug Symbols During Copy : Yes
+```
+
+### Limitaciones [#limitations]
+
+Tenga en cuenta estos límites de tamaño:
+
+* Las cargas de dSYM comprimidas a través de la [UI de monitoreo de Mobile](#mobile-ui) o la [línea de comando](#manual-dsym) pueden ser de hasta 600 MB.
+* El script automático no carga archivos de mapa comprimidos de más de 200 MB. Consulte [Cómo funciona el script](#how-it-works).

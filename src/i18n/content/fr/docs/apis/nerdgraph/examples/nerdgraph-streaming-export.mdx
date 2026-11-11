@@ -1,0 +1,1985 @@
+---
+title: 'Tutoriel NerdGraph : diffusez vos données vers AWS Kinesis Firehose, Azure Event Hub ou GCP Pub/Sub'
+tags:
+  - APIs
+  - NerdGraph
+metaDescription: 'With the New Relic streaming export feature, you can send your data as it''s ingested to New Relic to AWS Kinesis Firehose, Azure Event Hub or GCP Pub/Sub.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Avec la fonctionnalité d’exportation en continu disponible via [Data Plus](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/data-ingest-billing/#data-plus), vous pouvez envoyer vos données vers AWS Kinesis Firehose, Azure Event Hub ou GCP Pub/Sub en créant des règles personnalisées à l’aide de [NRQL](/docs/query-your-data/nrql-new-relic-query-language/get-started/introduction-nrql-new-relics-query-language) pour spécifier quelles données doivent être exportées. Ce guide explique comment créer et mettre à jour des règles de streaming à l’aide de [NerdGraph](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph) et afficher les règles existantes. Vous pouvez utiliser l’ [explorateur NerdGraph](/docs/apis/nerdgraph/get-started/nerdgraph-explorer) pour effectuer ces appels. De plus, vous avez la possibilité de compresser les données avant de les exporter avec la fonctionnalité [de compression d’exportation](#compression).
+
+Voici quelques exemples de la façon dont vous pouvez utiliser la fonctionnalité d’exportation en continu :
+
+* Pour peupler un lac de données
+* Améliorer la formation IA/ML
+* Assurez une rétention à long terme pour des raisons de conformité, juridiques ou de sécurité
+
+Vous pouvez activer ou désactiver les règles d’exportation de streaming à tout moment. Cependant, sachez que l’exportation de streaming ne traite que les données actuellement ingérées. Si vous désactivez et réactivez ultérieurement la fonctionnalité, toutes les données ingérées pendant qu’elle était désactivée ne seront pas exportées. Pour exporter des données passées, vous devez utiliser la fonctionnalité d’ [exportation de données historiques](/docs/apis/nerdgraph/examples/nerdgraph-historical-data-export).
+
+## Exigences et limites [#requirements]
+
+Limites des données diffusées en continu : la quantité de données que vous pouvez diffuser par mois est limitée par le total de vos [données ingérées](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/data-ingest-billing/#usage-calculation) par mois. Si la quantité de vos données de streaming dépasse la quantité de données ingérées, nous pouvons suspendre votre accès et votre utilisation de l&apos;exportation en streaming.
+
+Exigences relatives aux autorisations :
+
+* Pro ou édition Entreprise avec option [Data Plus](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/data-ingest-billing/#data-plus)
+* Type d&apos;utilisateur : [core utilisateur ou full plateforme utilisateur](/docs/accounts/accounts-billing/new-relic-one-user-management/user-type)
+* L&apos;[autorisation de diffusion des données](/docs/accounts/accounts-billing/new-relic-one-user-management/user-permissions#data-platform)
+
+Vous devez avoir configuré un AWS Kinesis Firehose, un Azure Event Hub ou un GCP Pub/Sub pour recevoir les données New Relic. Si vous ne l’avez pas encore fait, vous pouvez suivre nos étapes ci-dessous pour [AWS](#firehose-setup), [Azure](#event-hub-setup) ou [GCP Pub/Sub](#gcp-pubsub-setup).
+
+Exigences NRQL :
+
+* Doit être une requête plate, sans agrégation. Par exemple, les formulaires `SELECT *` ou `SELECT column1, column2` sont pris en charge.
+* Applicable à tout ce qui se trouve dans la clause `WHERE` , à l&apos;exception des sous-requêtes.
+* La requête ne peut pas avoir de clause `FACET` , `COMPARE WITH` ou `LOOKUP`.
+* Les requêtes imbriquées ne sont pas prises en charge.
+* Prend en charge [les types de données stockés dans NRDB](/docs/data-apis/understand-data/new-relic-data-types/#timeslice-data), et non [les données d&apos;intervalle de temps métrique](/docs/data-apis/understand-data/new-relic-data-types/#timeslice-data).
+
+## Prérequis
+
+* Un [compte New Relic](https://newrelic.com/signup), et avec ce compte, vous pouvez accéder à votre clé d’utilisateur d’API que vous devez inclure avec les [requêtes et mutations](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph/).
+* Le type d’utilisateur et les rôles attribués peuvent affecter vos autorisations NerdGraph. Pour plus de détails, voir [Facteurs affectant l’accès](/docs/accounts/accounts-billing/account-structure/factors-affecting-access-features-data/#user-permissions).
+
+## Configurer un AWS Kinesis Firehose [#firehose-setup]
+
+Pour configurer l’exportation de données de streaming vers AWS, vous devez d’abord configurer Amazon Kinesis Firehose. Suivez ces étapes :
+
+<Steps>
+  <Step>
+    ### Créer un Firehose pour l&apos;exportation en streaming [#create-firehose]
+
+    Créez un Firehose dédié pour diffuser vos données New Relic vers :
+
+    1. Accédez à [Amazon Kinesis Data Firehose](https://aws.amazon.com/firehose/).
+    2. Créer un flux de livraison.
+    3. Nommez le flux. Vous utiliserez ce nom plus tard lors de l’enregistrement de la règle.
+    4. Utilisez <DNT>**Direct PUT or other sources**</DNT> et spécifiez une destination compatible avec le format d’événement JSON de New Relic (par exemple, S3, Redshift ou OpenSearch).
+  </Step>
+
+  <Step>
+    ### Créer une politique d&apos;accès en écriture IAM Firehose [#create-policy]
+
+    1. Accédez à la console IAM et connectez-vous avec votre utilisateur.
+    2. Dans la navigation de gauche, cliquez sur **Policies**, puis cliquez sur **Create policy**.
+    3. Sélectionnez le service Firehose, puis sélectionnez `PutRecord` et `PutRecordBatch`.
+    4. Pour `Resources`, sélectionnez le flux de diffusion, ajoutez l’ARN et sélectionnez la région de votre flux.
+    5. Saisissez votre numéro de compte AWS, puis saisissez le nom du flux de diffusion souhaité dans la zone Nom.
+    6. Créer la politique.
+  </Step>
+
+  <Step>
+    ### Créer un rôle IAM pour accorder l&apos;accès en écriture à New Relic [#iam-role]
+
+    Pour configurer le rôle IAM :
+
+    1. Accédez à l&apos;IAM et cliquez sur <DNT>**Roles**</DNT>.
+    2. Créez un rôle pour un compte AWS, puis sélectionnez <DNT>**for another AWS account**</DNT>.
+    3. Saisissez l&apos;ID du compte d&apos;exportation New Relic : `888632727556`.
+    4. Sélectionnez <DNT>**Require external ID**</DNT> et entrez l’ [ID de compte](/docs/accounts/accounts-billing/account-structure/account-id) du compte New Relic à partir duquel vous souhaitez exporter.
+    5. Cliquez sur <DNT>**Permissions**</DNT>, puis sélectionnez la politique que vous avez créée ci-dessus.
+    6. Ajoutez un nom de rôle, qui sera utilisé lors de l’enregistrement de l’exportation, et fournissez une description.
+    7. Créer le rôle.
+  </Step>
+</Steps>
+
+Lorsque vous avez terminé ces étapes, vous pouvez configurer vos règles d&apos;exportation à l&apos;aide de [NerdGraph](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph/).
+
+<CollapserGroup>
+  <Collapser id="create-stream-AWS Kinesis" title="Créer un flux">
+    Cette API vous permet de créer une règle d’exportation en streaming pour envoyer des données à AWS Kinesis Firehose.
+
+    #### Paramètres d&apos;entrée
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            paramètres
+          </th>
+
+          <th>
+            Type de données
+          </th>
+
+          <th>
+            Est-ce obligatoire ?
+          </th>
+
+          <th>
+            Description
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `accountId`
+          </td>
+
+          <td>
+            Entier
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Votre 
+
+            [ID de compte](/docs/accounts/accounts-billing/account-structure/account-id/)
+
+             New Relic.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.description`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Non
+          </td>
+
+          <td>
+            Une brève description de la règle. Utilisez ceci pour fournir toute information ou tout contexte supplémentaire concernant la règle d&apos;exportation.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.name`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Le nom de la règle d&apos;exportation.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.nrql`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Un NRQL pour sélectionner les données télémétriques à exporter.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.payloadCompression`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Non
+          </td>
+
+          <td>
+            [payloadCompression](#compression) accepte deux valeurs :
+
+            * `DISABLED`: par défaut, les charges ne seront pas compressées avant d’être exportées.
+            * `GZIP`: sélectionnez ceci pour compresser les charges avant qu’elles ne soient exportées.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `awsParameters.awsAccountId`
+          </td>
+
+          <td>
+            Identifiant
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Spécifie le 
+
+            [compte AWS](https://docs.aws.amazon.com/IAM/latest/UserGuide/console-account-alias.html)
+
+             qui possède le flux de livraison Firehose cible. Par exemple : 
+
+            `10000000000`
+
+            .
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `awsParameters.deliveryStreamName`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Spécifie le 
+
+            [nom du flux Kinesis](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_CreateStream.html)
+
+             utilisé pour la livraison des données. Par exemple : 
+
+            `firehose-test-stream`
+
+            .
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `awsParameters.region`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Spécifie la 
+
+            [région AWS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html)
+
+             où les ressources sont déployées. Par exemple : 
+
+            `us-east-1`
+
+            .
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `awsParameters.role`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Spécifie le 
+
+            [rôle IAM AWS](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html)
+
+             configuré pour New Relic. Ce sera toujours 
+
+            `firehose-role`
+
+            .
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    #### Demande d&apos;échantillon
+
+    ```graphql
+    mutation {
+      streamingExportCreateRule(
+        accountId: YOUR_NR_ACCOUNT_ID,
+        ruleParameters: {
+          description: "ADD_RULE_DESCRIPTION",
+          name: "PROVIDE_RULE_NAME",
+          nrql: "SELECT * FROM NodeStatus",
+          payloadCompression: DISABLED
+        },
+        awsParameters: {
+          awsAccountId: "YOUR_AWS_ACCOUNT_ID",
+          deliveryStreamName: "FIREHOSE_STREAM_NAME",
+          region: "SPECIFY_AWS_REGION",
+          role: "firehose-role"
+        }
+      ) {
+        id
+        status
+      }
+    }
+    ```
+
+    **Réponse**: vous recevez une réponse avec l’ID de la règle, et le statut. Le statut sera `CREATION_IN_PROGRESS` initialement, et la création de la règle peut prendre jusqu’à six minutes. <br />**Points à noter**: avant que la règle ne termine son enregistrement, vous ne pouvez pas initier d’autre action de mutation (comme `Enable`, `Disable`, ou `Update`) car la règle est verrouillée pour le processus de création. Si vous essayez une autre action de mutation avant que la règle ne termine le processus d’enregistrement, vous obtiendrez un message du type : « La règle d’exportation est actuellement en cours de mise à jour par une autre requête, veuillez patienter et réessayer plus tard. »
+
+    Vous pouvez utiliser `Delete` à tout moment.
+
+    La création peut être terminée et le statut peut être modifié à tout moment dans les six minutes environ nécessaires à la création de la règle. Le statut passera à `ENABLED`, `DISABLED` ou `CREATION_FAILED`.
+
+    Voir ces détails sur les valeurs :
+
+    * `ENABLED` signifie que la règle a été créée avec succès et que les données ont commencé à être diffusées.
+    * `CREATION_FAILED` signifie que la règle a échoué lors de la création. Cela peut se produire pour plusieurs raisons, mais est souvent dû à l’échec de la politique AWS ou de la validation Azure SAS.
+    * `DISABLED` signifie que la règle est créée mais n&apos;est pas encore activée pour des raisons telles que la limite du flux de filtrage atteinte ou l&apos;échec de la création de la règle de flux de filtrage. Si le statut reste `CREATION_IN_PROGRESS` après six minutes, cela signifie que la création de la règle a échoué en raison d&apos;une erreur système sur notre service. Vous pouvez supprimer la règle et essayer d&apos;en créer une nouvelle.
+  </Collapser>
+
+  <Collapser id="list-all-streams" title="Lister tous les flux">
+    Cette API vous permet de récupérer une liste complète de toutes les règles de flux associées à votre [ID de compte](/docs/accounts/accounts-billing/account-structure/account-id/).
+
+    #### Demande d&apos;échantillon
+
+    ```graphql
+    {
+      actor {
+        account(id: YOUR_NR_ACCOUNT_ID) {
+          streamingExport {
+            streamingRules {
+              aws {
+                awsAccountId
+                region
+                deliveryStreamName
+                role
+              }
+              createdAt
+              description
+              id
+              message
+              name
+              nrql
+              status
+              updatedAt
+              payloadCompression
+            }
+          }
+        }
+      }
+    }
+    ```
+  </Collapser>
+
+  <Collapser id="view-stream-rule-details" title="Afficher les détails de la règle de flux">
+    Cette API vous permet d’interroger des informations sur une règle de flux spécifique en fournissant l’ID de compte et l’ID de règle.
+
+    #### Demande d&apos;échantillon
+
+    ```graphql
+    {
+      actor {
+        account(id: YOUR_NR_ACCOUNT_ID) {
+          streamingExport {
+            streamingRule(id: "RULE_ID") {
+              aws {
+                awsAccountId
+                deliveryStreamName
+                region
+                role
+              }
+              createdAt
+              description
+              id
+              message
+              name
+              nrql
+              status
+              updatedAt
+              payloadCompression
+            }
+          }
+        }
+      }
+    }
+    ```
+  </Collapser>
+
+  <Collapser id="update-stream-AWS Kinesis" title="Mettre à jour un flux">
+    Cette API vous permet de modifier une règle d&apos;exportation de streaming existante.
+
+    #### Paramètres d&apos;entrée
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            paramètres
+          </th>
+
+          <th>
+            Type de données
+          </th>
+
+          <th>
+            Est-ce obligatoire ?
+          </th>
+
+          <th>
+            Description
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `id`
+          </td>
+
+          <td>
+            Identifiant
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            L’ID de la règle de streaming à mettre à jour.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.description`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Non
+          </td>
+
+          <td>
+            Une brève description de la règle. Utilisez ceci pour fournir toute information ou tout contexte supplémentaire concernant la règle d&apos;exportation.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.name`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Le nom de la règle d&apos;exportation.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.nrql`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Un NRQL pour sélectionner les données télémétriques à exporter.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.payloadCompression`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Non
+          </td>
+
+          <td>
+            [payloadCompression](#compression) accepte deux valeurs :
+
+            * `DISABLED`: par défaut, les charges ne seront pas compressées avant d’être exportées.
+            * `GZIP`: sélectionnez ceci pour compresser les charges avant qu’elles ne soient exportées.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `awsParameters.awsAccountId`
+          </td>
+
+          <td>
+            Identifiant
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Spécifie le 
+
+            [compte AWS](https://docs.aws.amazon.com/IAM/latest/UserGuide/console-account-alias.html)
+
+             qui possède le flux de livraison Firehose cible. Par exemple : 
+
+            `10000000000`
+
+            .
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `awsParameters.deliveryStreamName`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Spécifie le 
+
+            [nom du flux Kinesis](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_CreateStream.html)
+
+             utilisé pour la livraison des données. Par exemple : 
+
+            `firehose-test-stream`
+
+            .
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `awsParameters.region`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Spécifie la 
+
+            [région AWS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html)
+
+             où les ressources sont déployées. Par exemple : 
+
+            `us-east-1`
+
+            .
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `awsParameters.role`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Spécifie le 
+
+            [rôle IAM AWS](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html)
+
+             configuré pour New Relic. Ce sera toujours 
+
+            `firehose-role`
+
+            .
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    #### Demande d&apos;échantillon
+
+    ```graphql
+    mutation {
+      streamingExportUpdateRule(
+        id: RULE_ID,
+        ruleParameters: {
+          description: "ADD_RULE_DESCRIPTION",
+          name: "PROVIDE_RULE_NAME",
+          nrql: "YOUR_NRQL_QUERY",
+          payloadCompression: DISABLED
+        },
+        awsParameters: {
+          awsAccountId: "YOUR_AWS_ACCOUNT_ID",
+          deliveryStreamName: "FIREHOSE_STREAM_NAME",
+          region: "SPECIFY_AWS_REGION",
+          role: "firehose-role"
+        }
+      ) {
+        id
+        status
+      }
+    }
+    ```
+
+    **Réponse**: vous recevez une réponse avec l’ID de la règle, et le statut. <br />**Points à noter**: lors de la mise à jour, vous recevrez un message dans le champ de message : « La règle d’exportation est en cours de mise à jour, et le processus peut prendre quelques minutes pour se terminer. Veuillez vérifier à nouveau plus tard. » La mise à jour complète peut prendre jusqu’à six minutes.
+
+    Vous pouvez vérifier si la règle est mise à jour en appelant [streamingRule](view-stream-rule-details) pour récupérer la règle. Pendant la période de mise à jour de la règle, la règle est verrouillée, et aucune autre action de mutation ne peut agir sur la règle. Si vous essayez d’effectuer une autre action de mutation sur la même règle, vous recevrez un message indiquant : « La règle d’exportation est actuellement mise à jour par une autre requête, veuillez patienter, et réessayer plus tard. » Un utilisateur peut mettre à jour une règle de n’importe quel statut, à l’exception d’une règle supprimée.
+  </Collapser>
+
+  <Collapser id="enable-stream" title="Activer un flux">
+    Cette API vous permet d’activer une règle de flux existante, facilitant l’exportation continue de données pour un traitement en temps réel et une intégration avec d’autres services.
+
+    #### Paramètres d&apos;entrée
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            paramètres
+          </th>
+
+          <th>
+            Type de données
+          </th>
+
+          <th>
+            Est-ce obligatoire ?
+          </th>
+
+          <th>
+            Description
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `id`
+          </td>
+
+          <td>
+            Identifiant
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            L’ID de la règle de streaming à activer.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    #### Demande d&apos;échantillon
+
+    ```graphql
+    mutation {
+      streamingExportEnableRule(id: RULE_ID) {
+        id
+        status
+        message
+      }
+    }
+    ```
+
+    **Réponse**: si vous essayez d’activer une règle qui se trouve dans un autre état, cela renvoie le message d’erreur suivant : « La règle d’exportation ne peut pas être activée, ou désactivée en raison d’un statut non autorisé. » Vous ne pouvez pas activer la règle si la règle est verrouillée en raison d’une autre mutation en cours.
+
+    <Callout variant="important">
+      Vous ne pouvez activer la règle que lorsqu&apos;elle a le statut DISABLED.
+    </Callout>
+  </Collapser>
+
+  <Collapser id="disable-stream" title="Désactiver un flux">
+    Cette API vous permet de désactiver une règle de streaming existante, arrêtant l’exportation continue de données.
+
+    #### Paramètres d&apos;entrée
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            paramètres
+          </th>
+
+          <th>
+            Type de données
+          </th>
+
+          <th>
+            Est-ce obligatoire ?
+          </th>
+
+          <th>
+            Description
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `id`
+          </td>
+
+          <td>
+            Identifiant
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            L’ID de la règle de flux à désactiver.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    #### Demande d&apos;échantillon
+
+    ```graphql
+    mutation {
+      streamingExportDisableRule(id: RULE_ID) {
+        id
+        status
+        message
+      }
+    }
+    ```
+
+    **Réponse**: si vous essayez de désactiver une règle qui se trouve dans un autre état, cela renvoie un message d’erreur tel que : « The export rule can’t be enabled or disabled due to status not being allowed. » Vous ne pouvez pas désactiver la règle si elle est verrouillée en raison d’une autre mutation en cours.
+
+    <Callout variant="important">
+      Vous ne pouvez désactiver la règle que lorsqu’elle a le statut ENABLED.
+    </Callout>
+  </Collapser>
+
+  <Collapser id="delete-stream" title="Supprimer un flux">
+    Cette API vous permet de supprimer une règle de streaming, et d’arrêter toute exportation de données liée à cette règle.
+
+    #### Paramètres d&apos;entrée
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            paramètres
+          </th>
+
+          <th>
+            Type de données
+          </th>
+
+          <th>
+            Est-ce obligatoire ?
+          </th>
+
+          <th>
+            Description
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `id`
+          </td>
+
+          <td>
+            Identifiant
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            L’ID de la règle de streaming à supprimer.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    #### Demande d&apos;échantillon
+
+    ```graphql
+    mutation {
+      streamingExportDeleteRule(id: RULE_ID) {
+        id
+      }
+    }
+    ```
+
+    <Callout variant="important">
+      La suppression peut être effectuée sur une règle de n’importe quel statut, à moins qu’elle ne soit déjà supprimée. Une fois qu’une règle est supprimée, elle ne peut plus être réactivée. La règle peut toujours être consultée dans les premières 24 heures suivant sa suppression en appelant l’API [steamingRule](#view-stream-rule-details) avec l’ID de la règle. Après 24 heures, la règle ne pourra plus être recherchée via NerdGraph.
+    </Callout>
+  </Collapser>
+</CollapserGroup>
+
+## Configurer un Azure événement Hub [#event-hub-setup]
+
+Pour configurer l’exportation de données de streaming vers Azure, vous devez d’abord configurer un Event Hub. Suivez ces étapes :
+
+Vous pouvez également suivre le guide Azure [ici](https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-create).
+
+<Steps>
+  <Step>
+    ### Créer un événement Hubs espace de nommage [#create-event-hubs-namespace]
+
+    1. Depuis votre compte Microsoft Azure, accédez à Event Hubs.
+    2. Suivez les étapes pour créer un événement Hubs espace de nommage. Nous vous recommandons d&apos;activer le gonflage automatique pour vous assurer de recevoir toutes vos données.
+    3. Assurez-vous que l’accès public est activé, car nous utiliserons une stratégie d’accès partagé pour nous authentifier de manière sécurisée auprès de votre Event Hub.
+    4. Une fois votre événement Hubs espace de nommage déployé, cliquez sur <DNT>**Go to resource**</DNT>.
+  </Step>
+
+  <Step>
+    ### Créer un événement Hub [#create-event-hub]
+
+    1. Dans la colonne de gauche, cliquez sur <DNT>**Event Hubs**</DNT>.
+
+    2. Pour créer un Event Hub, cliquez sur <DNT>**+Event Hub**</DNT>.
+
+    3. Saisissez le nom de l’Event Hub souhaité. Enregistrez ceci, car vous en aurez besoin plus tard pour créer la règle d’exportation de streaming.
+
+    4. Pour <DNT>**Retention**</DNT>, sélectionnez <DNT>**Delete**</DNT> `Cleanup policy` et le `Retention time (hrs)` souhaité.
+
+       <Callout variant="important">
+         L&apos;exportation en streaming n&apos;est actuellement pas prise en charge pour les événements Hubs avec une politique de conservation <DNT>**Compact**</DNT> .
+       </Callout>
+
+    5. Une fois l’Event Hub créé, cliquez sur **Event Hub**.
+  </Step>
+
+  <Step>
+    ### Créer et joindre une politique d&apos;accès partagé [#event-hub-policy]
+
+    1. Dans la colonne de gauche, allez à <DNT>**Shared access policies**</DNT>.
+    2. Cliquez sur <DNT>**+Add**</DNT> en haut de la page.
+    3. Choisissez un nom pour votre politique d’accès partagé.
+    4. Cochez <DNT>**Send**</DNT> et cliquez sur <DNT>**Create**</DNT>.
+    5. Cliquez sur la politique créée, et copiez le <DNT>**Connection string–primary key**</DNT>. Enregistrez ceci, car vous en aurez besoin plus tard pour vous authentifier, et envoyer des données à votre hub d’événements.
+  </Step>
+</Steps>
+
+Lorsque vous avez terminé ces étapes, vous pouvez configurer vos règles d&apos;exportation à l&apos;aide de [NerdGraph](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph/).
+
+<CollapserGroup>
+  <Collapser id="create-stream-Azure Event Hub" title="Créer un flux">
+    Cette API vous permet de créer une règle d&apos;exportation de streaming pour envoyer des données à un Azure Event Hub.
+
+    #### Paramètres d&apos;entrée
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            paramètres
+          </th>
+
+          <th>
+            Type de données
+          </th>
+
+          <th>
+            Est-ce obligatoire ?
+          </th>
+
+          <th>
+            Description
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `accountId`
+          </td>
+
+          <td>
+            Entier
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Votre 
+
+            [ID de compte](/docs/accounts/accounts-billing/account-structure/account-id/)
+
+             New Relic.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.description`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Non
+          </td>
+
+          <td>
+            Une brève description de la règle. Utilisez ceci pour fournir toute information ou tout contexte supplémentaire concernant la règle d&apos;exportation.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.name`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Le nom de la règle d&apos;exportation.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.nrql`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Un NRQL pour sélectionner les données télémétriques à exporter.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.payloadCompression`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Non
+          </td>
+
+          <td>
+            [payloadCompression](#compression) accepte deux valeurs :
+
+            * `DISABLED`: par défaut, les charges ne seront pas compressées avant d’être exportées.
+            * `GZIP`: sélectionnez ceci pour compresser les charges avant qu’elles ne soient exportées.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `azureParameters.eventHubConnectionString`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Ce paramètre est la 
+
+            [chaîne de connexion](https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-get-connection-string)
+
+             qui fournit l&apos;accès à un Event Hub spécifique. Ressemble à : 
+
+            `Endpoint=sb://<NamespaceName>.servicebus.windows.net/;SharedAccessKeyName=<KeyName>;SharedAccessKey=<KeyValue>;EntityPath=<EventHubName>`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `azureParameters.eventHubName`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Ce paramètre spécifie le nom de l’Event Hub où les événements seront envoyés, et traités. Par exemple : 
+
+            `my-event-hub.`
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    #### Demande d&apos;échantillon
+
+    ```graphql
+    mutation {
+      streamingExportCreateRule(
+        accountId: YOUR_NR_ACCOUNT_ID,
+        ruleParameters: {
+          description: "ADD_RULE_DESCRIPTION",
+          name: "PROVIDE_RULE_NAME",
+          nrql: "SELECT * FROM NodeStatus",
+          payloadCompression: DISABLED
+        },
+        azureParameters: {
+          eventHubConnectionString: "YOUR_EVENT_HUB_SAS_CONNECTION_STRING",
+          eventHubName: "YOUR_EVENT_HUB_NAME"
+        }
+      ) {
+        id
+        status
+      }
+    }
+    ```
+
+    **Réponse**: vous recevez une réponse avec l’ID de la règle, et le statut. Le statut sera `CREATION_IN_PROGRESS` initialement, et la création de la règle peut prendre jusqu’à six minutes.
+  </Collapser>
+
+  <Collapser id="list-all-streams-azureeventhub" title="Lister tous les flux">
+    Cette API vous permet de récupérer une liste complète de toutes les règles de flux associées à votre [ID de compte](/docs/accounts/accounts-billing/account-structure/account-id/).
+
+    #### Demande d&apos;échantillon
+
+    ```graphql
+    {
+      actor {
+        account(id: YOUR_NR_ACCOUNT_ID) {
+          streamingExport {
+            streamingRules {
+              azure {
+                eventHubConnectionString
+                eventHubName
+              }
+              createdAt
+              description
+              id
+              message
+              name
+              nrql
+              status
+              updatedAt
+              payloadCompression
+            }
+          }
+        }
+      }
+    }
+    ```
+  </Collapser>
+
+  <Collapser id="view-stream-rule-details-azureeventhub" title="Afficher les détails de la règle de flux">
+    Cette API vous permet d’interroger des informations sur une règle de flux spécifique en fournissant l’ID de compte et l’ID de règle.
+
+    #### Demande d&apos;échantillon
+
+    ```graphql
+    {
+      actor {
+        account(id: YOUR_NR_ACCOUNT_ID) {
+          streamingExport {
+            streamingRule(id: "RULE_ID") {
+              azure {
+                eventHubConnectionString
+                eventHubName
+              }
+              createdAt
+              description
+              id
+              message
+              name
+              nrql
+              status
+              updatedAt
+              payloadCompression
+            }
+          }
+        }
+      }
+    }
+    ```
+  </Collapser>
+
+  <Collapser id="update-stream-Azure Event Hub" title="Mettre à jour un flux">
+    Cette API vous permet de modifier une règle d&apos;exportation de streaming existante.
+
+    #### Paramètres d&apos;entrée
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            paramètres
+          </th>
+
+          <th>
+            Type de données
+          </th>
+
+          <th>
+            Est-ce obligatoire ?
+          </th>
+
+          <th>
+            Description
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `id`
+          </td>
+
+          <td>
+            Identifiant
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            L’ID de la règle de streaming à mettre à jour.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.description`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Non
+          </td>
+
+          <td>
+            Une brève description de la règle. Utilisez ceci pour fournir toute information ou tout contexte supplémentaire concernant la règle d&apos;exportation.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.name`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Le nom de la règle d&apos;exportation.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.nrql`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Un NRQL pour sélectionner les données télémétriques à exporter.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.payloadCompression`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Non
+          </td>
+
+          <td>
+            [payloadCompression](#compression) accepte deux valeurs :
+
+            * `DISABLED`: par défaut, les charges ne seront pas compressées avant d’être exportées.
+            * `GZIP`: sélectionnez ceci pour compresser les charges avant qu’elles ne soient exportées.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `azureParameters.eventHubConnectionString`
+          </td>
+
+          <td>
+            Identifiant
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Ce paramètre est la chaîne de connexion qui fournit l’accès à un Event Hub spécifique. Ressemble à : 
+
+            `Endpoint=sb://<NamespaceName>.servicebus.windows.net/;SharedAccessKeyName=<KeyName>;SharedAccessKey=<KeyValue>;EntityPath=<EventHubName>`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `azureParameters.eventHubName`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Ce paramètre spécifie le nom de l’Event Hub où les événements seront envoyés, et traités. Par exemple : 
+
+            `my-event-hub.`
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    #### Demande d&apos;échantillon
+
+    ```graphql
+    mutation {
+      streamingExportUpdateRule(
+        id: RULE_ID,
+        ruleParameters: {
+          description: "ADD_RULE_DESCRIPTION",
+          name: "PROVIDE_RULE_NAME",
+          nrql: "YOUR_NRQL_QUERY",
+          payloadCompression: DISABLED
+        },
+        azureParameters: {
+          eventHubConnectionString: "YOUR_EVENT_HUB_SAS_CONNECTION_STRING",
+          eventHubName: "YOUR_EVENT_HUB_NAME"
+        }
+      ) {
+        id
+        status
+      }
+    }
+    ```
+
+    **Réponse**: vous recevez une réponse avec l’ID de la règle et le statut.
+  </Collapser>
+
+  <Collapser id="enable-stream-azureeventhub" title="Activer un flux">
+    Pour activer une règle de streaming existante, facilitant l’exportation continue de données pour un traitement en temps réel et une intégration avec d’autres services, consultez [cette section](#enable-stream).
+  </Collapser>
+
+  <Collapser id="disable-stream-azureeventhub" title="Désactiver un flux">
+    Pour désactiver une règle de streaming existante, arrêtant l’exportation continue de données, reportez-vous [ici](#disable-stream).
+  </Collapser>
+
+  <Collapser id="delete-stream-azureeventhub" title="Supprimer un flux">
+    Pour supprimer une règle de flux et arrêter toute exportation de données liée à cette règle, reportez-vous [ici](#delete-stream).
+  </Collapser>
+</CollapserGroup>
+
+## Configurez un GCP Pub/Sub [#gcp-pubsub-setup]
+
+Pour configurer l’exportation de données de streaming vers GCP, vous devez d’abord configurer un Pub/Sub. Suivez ces étapes :
+
+<Steps>
+  <Step>
+    ### Créer un sujet Pub/Sub [#create-pubsub-topic]
+
+    1. Depuis votre console GCP, accédez à la page Pub/Sub.
+    2. Cliquez sur **Create topic**.
+    3. Saisissez un ID de sujet et cliquez sur **Create**.
+  </Step>
+
+  <Step>
+    ### Configurez les autorisations sur Pub/Sub [#setup-permissions-pubsub]
+
+    1. Dans la colonne de droite du sujet créé, cliquez sur **More actions**.
+
+    2. Sélectionnez **View permissions**.
+
+    3. Cliquez sur **Add Principal**, et dans la nouvelle zone de principaux, entrez l’e-mail du compte de service que nous vous avons fourni :
+
+       * Région US (par défaut) : `us-prod-uds-streaming-export@h0c17c65df9291b526b433650e6a0a.iam.gserviceaccount.com`
+       * Région UE : `eu-prod-uds-streaming-export@h0c17c65df9291b526b433650e6a0a.iam.gserviceaccount.com`
+       * Région JP : `uds-jp-production@unifieddatastreams.iam.gserviceaccount.com`
+
+    4. Dans la section **Assign roles**, recherchez Pub/Sub Publisher, et cliquez sur **Save**.
+  </Step>
+</Steps>
+
+Lorsque vous avez terminé ces étapes, vous pouvez configurer vos règles d&apos;exportation à l&apos;aide de [NerdGraph](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph/).
+
+<CollapserGroup>
+  <Collapser id="create-stream-GCP-Pub-Sub" title="Créer un flux">
+    Cette API vous permet de créer une règle d’exportation en streaming pour envoyer des données à GCP Pub/Sub.
+
+    #### Paramètres d&apos;entrée
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            paramètres
+          </th>
+
+          <th>
+            Type de données
+          </th>
+
+          <th>
+            Est-ce obligatoire ?
+          </th>
+
+          <th>
+            Description
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `accountId`
+          </td>
+
+          <td>
+            Entier
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Votre 
+
+            [ID de compte](/docs/accounts/accounts-billing/account-structure/account-id/)
+
+             New Relic.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.description`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Non
+          </td>
+
+          <td>
+            Une brève description de la règle. Utilisez ceci pour fournir toute information ou tout contexte supplémentaire concernant la règle d&apos;exportation.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.name`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Le nom de la règle d&apos;exportation.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.nrql`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Un NRQL pour sélectionner les données télémétriques à exporter.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.payloadCompression`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Non
+          </td>
+
+          <td>
+            [payloadCompression](#compression) accepte deux valeurs :
+
+            * `DISABLED`: par défaut, les charges ne seront pas compressées avant d’être exportées.
+            * `GZIP`: sélectionnez ceci pour compresser les charges avant leur exportation.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `gcpParameters.gcpProjectId`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Ce paramètre représente l&apos;identifiant unique de votre projet GCP. Par exemple : 
+
+            `google-project-id`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `gcpParameters.pubsubTopicId`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Ce paramètre spécifie le sujet dans GCP Pub/Sub, utilisé pour envoyer, et recevoir des messages au sein de vos applications cloud. Par exemple : 
+
+            `pub-sub-topic-id.`
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    #### Demande d&apos;échantillon
+
+    ```graphql
+    mutation {
+      streamingExportCreateRule(
+        accountId: YOUR_NR_ACCOUNT_ID,
+        ruleParameters: {
+          description: "ADD_RULE_DESCRIPTION",
+          name: "PROVIDE_RULE_NAME",
+          nrql: "SELECT * FROM NodeStatus",
+          payloadCompression: DISABLED
+        },
+        gcpParameters: {
+          gcpProjectId: "project-id",
+          pubsubTopicId: "pub-sub-topic-id"
+        }
+      ) {
+        id
+        status
+      }
+    }
+    ```
+
+    **Réponse**: vous recevez une réponse avec l’ID de la règle, et le statut. Le statut sera `CREATION_IN_PROGRESS` initialement, et la création de la règle peut prendre jusqu’à six minutes.
+  </Collapser>
+
+  <Collapser id="list-all-streams-gcppubsub" title="Lister tous les flux">
+    Cette API vous permet de récupérer une liste complète de toutes les règles de flux associées à votre [ID de compte](/docs/accounts/accounts-billing/account-structure/account-id/).
+
+    #### Demande d&apos;échantillon
+
+    ```graphql
+    {
+      actor {
+        account(id: YOUR_NR_ACCOUNT_ID) {
+          streamingExport {
+            streamingRules {
+              gcp {
+                gcpProjectId
+                pubsubTopicId
+              }
+              createdAt
+              description
+              id
+              message
+              name
+              nrql
+              status
+              updatedAt
+              payloadCompression
+            }
+          }
+        }
+      }
+    }
+    ```
+  </Collapser>
+
+  <Collapser id="view-stream-rule-details-gcppubsub" title="Afficher les détails de la règle de flux">
+    Cette API vous permet d’interroger des informations sur une règle de flux spécifique en fournissant l’ID de compte et l’ID de règle.
+
+    #### Demande d&apos;échantillon
+
+    ```graphql
+    {
+      actor {
+        account(id: YOUR_NR_ACCOUNT_ID) {
+          streamingExport {
+            streamingRule(id: "RULE_ID") {
+              gcp {
+                gcpProjectId
+                pubsubTopicId
+              }
+              createdAt
+              description
+              id
+              message
+              name
+              nrql
+              status
+              updatedAt
+              payloadCompression
+            }
+          }
+        }
+      }
+    }
+    ```
+  </Collapser>
+
+  <Collapser id="update-stream-GCP Pub Sub" title="Mettre à jour un flux">
+    Cette API vous permet de modifier une règle d&apos;exportation de streaming existante.
+
+    #### Paramètres d&apos;entrée
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            paramètres
+          </th>
+
+          <th>
+            Type de données
+          </th>
+
+          <th>
+            Est-ce obligatoire ?
+          </th>
+
+          <th>
+            Description
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `id`
+          </td>
+
+          <td>
+            Identifiant
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            L’ID de la règle de streaming à mettre à jour.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.description`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Non
+          </td>
+
+          <td>
+            Une brève description de la règle. Utilisez ceci pour fournir toute information ou tout contexte supplémentaire concernant la règle d&apos;exportation.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.name`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Le nom de la règle d&apos;exportation.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.nrql`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Un NRQL pour sélectionner les données télémétriques à exporter.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.payloadCompression`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Non
+          </td>
+
+          <td>
+            [payloadCompression](#compression) accepte deux valeurs :
+
+            * `DISABLED`: par défaut, les charges ne seront pas compressées avant d’être exportées.
+            * `GZIP`: sélectionnez ceci pour compresser les charges avant qu’elles ne soient exportées.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `gcpParameters.gcpProjectId`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Ce paramètre représente l’identifiant unique de votre projet Google Cloud Platform (GCP). Par exemple : 
+
+            `google-project-id`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `gcpParameters.pubsubTopicId`
+          </td>
+
+          <td>
+            Chaîne
+          </td>
+
+          <td>
+            Oui
+          </td>
+
+          <td>
+            Ce paramètre spécifie le sujet dans Google Cloud Pub/Sub, utilisé pour envoyer et recevoir des messages au sein de vos applications cloud. Par exemple : 
+
+            `pub-sub-topic-id.`
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    #### Demande d&apos;échantillon
+
+    ```graphql
+    mutation {
+      streamingExportUpdateRule(
+        id: RULE_ID,
+        ruleParameters: {
+          description: "ADD_RULE_DESCRIPTION",
+          name: "PROVIDE_RULE_NAME",
+          nrql: "YOUR_NRQL_QUERY",
+          payloadCompression: DISABLED
+        },
+        gcpParameters: {
+          gcpProjectId: "project-id",
+          pubsubTopicId: "pub-sub-topic-id"
+        }
+      ) {
+        id
+        status
+      }
+    }
+    ```
+
+    **Réponse**: vous recevez une réponse avec l’ID de la règle et le statut.
+  </Collapser>
+
+  <Collapser id="enable-stream-gcppubsub" title="Activer un flux">
+    Pour activer une règle de streaming existante, facilitant l’exportation continue de données pour un traitement en temps réel et une intégration avec d’autres services, consultez [cette section](#enable-stream).
+  </Collapser>
+
+  <Collapser id="disable-stream-gcppubsub" title="Désactiver un flux">
+    Pour désactiver une règle de streaming existante, arrêtant l’exportation continue de données, reportez-vous [ici](#disable-stream).
+  </Collapser>
+
+  <Collapser id="delete-stream-gcppubsub" title="Supprimer un flux">
+    Pour supprimer une règle de flux et arrêter toute exportation de données liée à cette règle, reportez-vous [ici](#delete-stream).
+  </Collapser>
+</CollapserGroup>
+
+## Comprendre la compression des exportations [#compression]
+
+Vous pouvez choisir de compresser les données avant de les exporter. Cette fonctionnalité est désactivée par défaut. La compression peut aider à éviter de dépasser votre limite de données, et à réduire les coûts des données sortantes.
+
+Vous pouvez activer la compression en utilisant le champ `payloadCompression` sous `ruleParameters`. Ce champ peut avoir l&apos;une des valeurs suivantes :
+
+* `DISABLED`: la charge ne sera pas compressée avant d&apos;être exportée. Si non spécifié, `payloadCompression` prendra par défaut cette valeur.
+* `GZIP`: compresser les charges avec le format GZIP avant l&apos;exportation.
+
+GZIP est le seul format de compression actuellement disponible, mais nous pouvons choisir de rendre davantage de formats disponibles à l&apos;avenir.
+
+Lorsque la compression est activée sur une règle d&apos;exportation AWS existante, le message suivant de Kinesis Firehose peut contenir des données compressées et non compressées. Cela est dû à la mise en mémoire tampon dans Kinesis Firehose. Pour éviter cela, vous pouvez désactiver temporairement la règle d&apos;exportation avant d&apos;activer la compression ou créer un nouveau flux Kinesis Firehose pour que seules les données compressées circulent.
+
+Si vous rencontrez ce problème et que vous exportez vers S3 ou un autre système de stockage de fichiers, vous pouvez afficher la partie compressée des données en suivant ces étapes :
+
+1. Téléchargez manuellement l&apos;objet.
+2. Séparez l&apos;objet en deux fichiers distincts en copiant les données compressées dans un nouveau fichier.
+3. Décompressez le nouveau fichier de données compressé uniquement.
+
+Une fois que vous avez les données compressées, vous pouvez les télécharger à nouveau sur S3 (ou tout autre service que vous utilisez) et supprimer l&apos;ancien fichier.
+
+Veuillez noter que dans S3 ou un autre système de stockage de fichiers, les objets peuvent être constitués de plusieurs fichiers codés GZIP qui sont ajoutés consécutivement. Par conséquent, votre bibliothèque de décompression doit avoir la capacité de gérer de telles charges GZIP concaténées.
+
+### Décompression automatique dans AWS
+
+Une fois vos données arrivées dans AWS, vous souhaiterez peut-être disposer d&apos;options permettant de les décompresser automatiquement. Si vous diffusez ces données vers un bucket S3, il existe deux manières d&apos;activer la décompression automatique :
+
+<CollapserGroup>
+  <Collapser id="collapser-1" title="Point d'accès objet Lambda">
+    Les points d&apos;accès fonctionnent comme des méthodes distinctes par lesquelles les objets des compartiments S3 peuvent être consultés et téléchargés. AWS fournit une fonctionnalité appelée [points d&apos;accès Object Lambda](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingMetadata.html), qui exécutent une fonction Lambda sur chaque objet S3 accessible via le point d&apos;accès. Suivez ces étapes pour activer un tel point d’accès :
+
+    1. Accédez à [cette page](https://docs.aws.amazon.com/AmazonS3/latest/userguide/olap-examples.html#olap-examples-3), cliquez sur le lien vers le référentiel serverless (repository).
+
+    2. Cliquez sur <DNT>**Deploy**</DNT>.
+
+    3. [Configurez un point d’accès sur votre bucket S3](https://docs.aws.amazon.com/AmazonS3/latest/userguide/create-access-points.html).
+
+    4. [Créer un point d’accès Object Lambda](https://docs.aws.amazon.com/AmazonS3/latest/userguide/olap-create.html). Ce point d&apos;accès doit avoir ces paramètres :
+
+       * Le <DNT>**Supporting Access Point**</DNT> sur ce point d’accès Lambda devra être défini sur le point d’accès que vous avez configuré sur le bucket S3.
+       * Sous <DNT>**Transformation Configuration**</DNT>:
+       * Sélectionnez <DNT>**GetObject**</DNT>.
+       * Spécifiez la fonction Lambda DecompressGZFunction, ou une autre fonction nécessaire si vous utilisez un format de compression différent.
+  </Collapser>
+
+  <Collapser id="collapser-2" title="Fonction Metadata-setting Lambda">
+    AWS décompressera automatiquement les objets téléchargés depuis S3, si ces objets disposent du bon ensemble de métadonnées. Nous avons écrit une fonction qui applique automatiquement ces métadonnées à chaque nouvel objet téléchargé dans un ensemble d&apos;objets S3. Voici comment le configurer :
+
+    1. Naviguez [ici](https://github.com/newrelic/metadata-setting-lambda-function), clonez le référentiel localement et suivez les étapes fournies dans le fichier README pour générer un fichier ZIP contenant la fonction Lambda.
+    2. Créez un [rôle IAM](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html) pour la fonction.
+
+    * Lors de [la création du rôle](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html#roles-creatingrole-service-console), assurez-vous de définir le type d&apos;entité de confiance sur « services AWS», avec « Lambda» comme cas d&apos;utilisation.
+    * Ce rôle doit avoir une politique avec ces autorisations : `s3:PutObject` et `s3:GetObject`.
+
+    3. Dans AWS, accédez à la [page de fonction Lambda ](https://console.aws.amazon.com/lambda/home#/functions).
+
+    4. Cliquez sur <DNT>**Create function**</DNT>.
+
+    5. Sélectionnez l’environnement d’exécution Java 11.
+
+    6. Cliquez sur <DNT>**Change default execution role &gt; Use an existing role**</DNT>. Saisissez ici le rôle que vous avez créé à l’étape 2.
+
+    7. Faites défiler vers le bas et cliquez sur <DNT>**Create function**</DNT>.
+
+    8. Une fois la fonction créée, cliquez sur <DNT>**Upload from**</DNT> et sélectionnez <DNT>**.zip or .jar file**</DNT> dans la liste déroulante.
+
+    9. Cliquez sur <DNT>**Upload**</DNT> dans la boîte qui s’affiche et sélectionnez le fichier ZIP créé à l’étape 1.
+
+    10. Une fois le téléchargement terminé, cliquez sur <DNT>**Save**</DNT> pour quitter la boîte contextuelle.
+
+    11. Modifiez <DNT>**Runtime settings**</DNT> en ajoutant le gestionnaire. Dans notre fonction fournie, le gestionnaire est <DNT>`metadatasetter.App::handleRequest`</DNT>.
+
+    12. Il ne reste plus qu&apos;à activer cette fonction Lambda pour qu&apos;elle se déclenche lors de la création d&apos;un objet S3. Cliquez sur <DNT>**Add trigger**</DNT> pour commencer la configuration.
+
+    13. Dans la liste déroulante, sélectionnez <DNT>**S3**</DNT> comme source.
+
+    14. Saisissez le nom du bucket S3 auquel vous souhaitez appliquer les métadonnées dans le champ <DNT>**Bucket**</DNT> .
+
+    15. Supprimez la valeur par défaut <DNT>**All object create events**</DNT> des types d’événements. Dans la liste déroulante des types d&apos;événements, sélectionnez <DNT>**PUT**</DNT>.
+
+    16. Cochez la case <DNT>**Recursive invocation**</DNT> , puis cliquez sur <DNT>**Add**</DNT> en bas à droite.
+
+        La fonction Lambda va maintenant commencer à ajouter automatiquement les métadonnées de compression à tous les objets S3 nouvellement ajoutés.
+  </Collapser>
+</CollapserGroup>
+
+### Décompression automatique dans Azure
+
+Si vous exportez des données vers Azure, il est possible d’afficher les versions décompressées des objets stockés dans votre hub d’événements à l’aide d’une [tâche Stream Analytics](https://learn.microsoft.com/en-us/azure/event-hubs/process-data-azure-stream-analytics). Pour ce faire, suivez ces étapes :
+
+1. Suivez [ce guide](https://learn.microsoft.com/en-us/azure/event-hubs/process-data-azure-stream-analytics) jusqu&apos;à l&apos;étape 16.
+
+   * À l’étape 13, vous pouvez choisir d’utiliser le même hub d’événements comme sortie sans rien casser, mais cela n’est pas recommandé si vous avez l’intention de passer à l’étape 17 et de démarrer le travail, car cette approche n’a pas été testée.
+
+2. Dans le volet de gauche de votre tâche d’analyse de streaming, cliquez sur <DNT>**Inputs**</DNT>, puis cliquez sur l’entrée que vous avez configurée.
+
+3. Faites défiler vers le bas du volet qui apparaît à droite et configurez l&apos;entrée avec ces paramètres :
+
+   * Format de sérialisation des événements : JSON
+   * Codage : UTF-8
+   * Type de compression d&apos;événement : GZip
+
+4. Cliquez sur <DNT>**Save**</DNT> en bas du volet.
+
+5. Cliquez sur <DNT>**Query**</DNT> sur le côté de l’écran. En utilisant l&apos;onglet <DNT>**Input preview**</DNT> , vous devriez maintenant pouvoir interroger le hub d&apos;événements à partir de cet écran.
+
+### Décompression automatique dans GCP
+
+Dans GCP Cloud Storage, les objets se décompresseront automatiquement lors de leur téléchargement si les métadonnées sont définies sur Content-Encoding : gzip. Pour plus de détails, consultez la [documentation GCP](https://cloud.google.com/storage/docs/transcoding).

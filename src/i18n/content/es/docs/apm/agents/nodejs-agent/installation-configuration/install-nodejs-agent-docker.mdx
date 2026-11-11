@@ -1,0 +1,92 @@
+---
+title: Instale el agente Node.js para docker
+tags:
+  - Agents
+  - Nodejs agent
+  - Installation and configuration
+metaDescription: How to use New Relic's Node.js agent to instrument Node.js applications deployed in Docker containers.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Puede usar nuestro agente de Node.js para instrumentar aplicaciones de Node.js desplegadas en contenedores de Docker. Este documento explica cómo compilar, configurar y desplegar la aplicación de Node.js en Docker que ha instrumentado con New Relic.
+
+Si necesita ayuda general con la instalación del agente de Node.js, consulte nuestras [instrucciones principales de instalación](/docs/apm/agents/nodejs-agent/installation-configuration/install-nodejs-agent).
+
+## instrumentar tu contenedor [#instrument]
+
+<Callout variant="caution">
+No incluya su clave de licencia en su Dockerfile o imagen docker . Para obtener más información, consulte [nuestra documentación sobre seguridad de clave de licencia](/docs/accounts/install-new-relic/account-setup/license-key#license-key-security).
+</Callout>
+
+Al realizar algunos cambios de configuración y agregar variables de entorno de New Relic al Dockerfile existente, puede instrumentar la aplicación en Docker con nuestro agente de Node.js.
+
+1. Añade `newrelic` a tu `package.json`:
+
+   ```json
+   npm install newrelic --save
+   ```
+
+2. Inyecte el agente en el comando de inicio `node` para instrumentar la aplicación.
+
+<CollapserGroup>
+<Collapser id="docker-cjs" title="Aplicación que usa CommonJS">
+Según cómo ejecute la aplicación de Node.js, el método para inyectar el agente puede variar.
+
+* `ENTRYPOINT`
+
+  ```bash
+  ENTRYPOINT ["node", "-r", "newrelic", "YOUR_PROGRAM.js"]
+  ```
+
+* `CMD`
+
+  ```bash
+  CMD ["node", "-r", "newrelic", "YOUR_PROGRAM.js"]
+  ```
+
+* script de npm como `npm start`
+
+  ```bash
+  npm pkg set scripts.start="node -r newrelic your-program.js"
+  ```
+</Collapser>
+
+<Collapser id="docker-esm" title="Aplicación que usa ESM">
+Según cómo ejecute la aplicación de Node.js, el método para inyectar el agente puede variar.
+
+* `ENTRYPOINT`
+
+  ```bash
+  ENTRYPOINT ["node", "--import", "newrelic/esm-loader.mjs", "-r", "newrelic", "YOUR_PROGRAM.js"]
+  ```
+
+* `CMD`
+
+  ```bash
+  CMD ["node", "--import", "newrelic/esm-loader.mjs", "-r", "newrelic", "YOUR_PROGRAM.js"]
+  ```
+
+* script de npm como `npm start`
+
+  ```bash
+  npm pkg set scripts.start="node --import newrelic/esm-loader.mjs -r newrelic your-program.js"
+  ```
+</Collapser>
+</CollapserGroup>
+
+3. Cree su imagen docker como lo hace normalmente.
+
+4. Para ejecutar su aplicación docker con el agente habilitado, agregue su <InlinePopover type="licenseKey" />y [el nombre de la aplicación](/docs/agents/manage-apm-agents/app-naming/name-your-application) a su comando `docker run` como variables de entorno:
+
+   ```bash
+   docker run -e NEW_RELIC_LICENSE_KEY=YOUR_LICENSE_KEY \
+           -e NEW_RELIC_APP_NAME="YOUR_APP_NAME" \
+           YOUR_IMAGE_NAME:latest
+   ```
+
+<InstallFeedback />
+
+## Otras opciones de configuración [#configure]
+
+Además de configurar el nombre de la aplicación o la clave de licencia, puede establecer [otras opciones de configuración](/docs/agents/nodejs-agent/installation-configuration/nodejs-agent-configuration) al iniciar el contenedor con la opción `-e`.

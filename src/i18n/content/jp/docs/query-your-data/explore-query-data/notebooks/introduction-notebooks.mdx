@@ -1,0 +1,275 @@
+---
+title: ノートブックを使用してデータドリブン文書を作成する
+tags:
+  - Query your data
+  - Explore and query data
+  - Notebooks
+metaDescription: 'Use New Relic notebooks to create structured, data-driven documents that combine queries, visualizations, and descriptive text into shareable assets for investigations, post-mortems, and analytical insights.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+複雑な問題を調査したり、チームとインサイトを共有したりするとき、データから完全なストーリーをつなぎ合わせながら、さまざまなツール間を飛び回ったり、書き込みをコピーしたり、スクリーンショットを撮ったり、コンテキストを維持するのに苦労していることに気づくことがよくあります。 従来のダッシュボードは監視には最適ですが、調査を文書化したり、詳細な事後分析を作成したり、段階的な分析ワークフローを構築したりする必要がある場合には不十分です。
+
+ノートブックは、データを使って完全なストーリーを伝えるための動的かつ体系的な方法を提供することで、この問題を解決します。これらは構造化されたデータドリブン ドキュメントであり、書き込み、視覚化、わかりやすいテキストを 1 つの共有可能なアセットに組み合わせることができるため、分析中に複数のツールを切り替えたり、重要なコンテキストを失ったりする必要がなくなります。
+
+## 使用事例
+
+ノートブックを使用してワークフローを改善し、生データを実用的なストーリーに変換します。
+
+* **データの執筆、分析、および視覚化**: すべての観察データ (ログ、メトリクス、イベント) を執筆し、システムのパフォーマンスをより深く理解するために視覚化を作成します。
+* **事後分析と頻繁イベントの文書を作成する**: チームと協力して調査を文書化し、頻繁イベントの事後分析と根本原因分析のための明確で再利用可能な記録を作成します。
+* **再利用可能なワークフローとランブックを構築する**: 複雑な分析のためのステップバイステップのガイドを作成して共有します。
+* **コンテキストと物語を追加する**: Markdown を使用すると、クエリやグラフに詳細なタイトル、メモ、説明を簡単に追加して、断片的なデータ ポイントをまとまりのあるストーリーに変換できます。
+
+## ノートブックを使い始める
+
+ノートブックの基本を理解したところで、独自のノートブックの作成と管理を始める準備が整いました。New Relic UIでインタラクティブにノートブックを作成したり、[Terraform](https://registry.terraform.io/providers/newrelic/newrelic/latest/docs/resources/notebook)や[Notebooks API](/docs/query-your-data/explore-query-data/notebooks/blob-storage-api-for-notebooks)を使用してプログラムで管理したりできます。
+
+### ノートブックにアクセスする
+
+ノートブックにアクセスするには:
+
+1. **[one.newrelic.com](https://one.newrelic.com)**に移動します。
+2. ページの下部にあるドロワーから<DNT>**Query your data**</DNT>コンソールを開きます。
+3. 組織によって作成されたすべてのノートブックのリストを表示するには、クエリビルダーヘッダーの<DNT>**Notebooks**</DNT>をクリックします。
+
+<img title="Navigate to notebooks from query your data" alt="Screenshot showing a notebook in New Relic with NRQL queries and an area chart visualizing checkout process error rate" src="/images/notebooks-navigation.webp" />
+
+<figcaption>
+次に移動してノートブックに移動します <DNT>**Query your data &gt; Notebooks**</DNT>
+</figcaption>
+
+<CollapserGroup>
+<Collapser id="create-notebook" title="ノートブックを作成する">
+新しいノートブックを開始するには、次の 2 つの簡単な方法があります。
+
+### ノートブックのインデックスから始める
+
+1. インデックスの右上隅にある<DNT>**+ Create a notebook**</DNT>をクリックします。
+2. ノートブックに意味のある名前を付けます (名前は検索可能なので、サービス名やアプリケーション名などの関連するキーワードを使用します)。
+3. <DNT>**Create**</DNT>をクリックします。
+4. クエリ コンソール ドロワーに、最初のクエリを入力します。
+
+### クエリコンソールから開始する
+
+1. クエリ コンソール (プラットフォームの下部にある引き出し) を開きます。
+2. 必要なクエリと Markdown ブロックを作成します。
+3. <DNT>**Save**</DNT>をクリックします。
+4. ノートブックに名前を付けて、<DNT>**Save**</DNT>をクリックします。
+</Collapser>
+
+<Collapser id="manage-notebooks" title="ノートブックを管理する">
+### ノートブックの検索と並べ替え
+
+組織内の特定のノートブックを検索するには:
+
+1. **名前で検索**: ノートブック インデックスの上部にある検索バーを使用して、名前またはキーワードでノートブックを検索します。
+
+2. **ノートブックの並べ替え**: 並べ替えドロップダウンをクリックして、ノートブックを次の基準で整理します。
+
+   * 名前（AZまたはZA）
+   * 最終更新日（最新または古い順）
+   * 作成日（新しい順または古い順）
+   * お気に入り（スター付きのノートブックが最初に表示されます）
+
+3. **お気に入りでフィルタリング**: 星型フィルタをクリックすると、お気に入りのノートブックだけが表示されます。
+
+### ノートブックを複製する
+
+1. 複製したいノートブックを開きます。
+2. コンソールドロワーのタブ名の横にある矢印をクリックし、<DNT>**duplicate**</DNT>をクリックします。
+3. コンテキスト メニューから<DNT>**Duplicate**</DNT>をクリックします。
+4. ノートブックのコピーが新しいタブで開き、編集できるようになります。
+
+### ノートブックをお気に入りとしてマークする
+
+最も重要なノートブックをすばやく見つけるには、それらをお気に入りとしてマークすることができます。
+
+1. インデックス ページでノートブックの名前の横にある星のアイコンをクリックします。
+2. アイコンが黄色に変わり、ノートブックはインデックス リストの上部にグループ化されます。
+3. お気に入りから削除するには、星アイコンをもう一度クリックします。
+</Collapser>
+
+<Collapser id="delete-notebook" title="ノートブックを削除する">
+<Callout variant="caution">
+ノートブックの削除は永久的であり、元に戻すことはできません。削除されると、ノートブックとそのすべてのコンテンツはシステムから完全に削除されます。削除する前に、保存したいノートブックを必ず複製してください。
+</Callout>
+
+1. ノートブックのインデックス リストで、削除するノートブックの 3 つのドットのアクション メニューをクリックします。
+2. <DNT>**Delete**</DNT>オプションをクリックします。
+3. もう一度<DNT>**Delete**</DNT>をクリックして削除を確認します。
+</Collapser>
+</CollapserGroup>
+
+## ノートブックブロック
+
+ブロックはノートブックの基本的な構築単位です。これらは、分析と説明を構成するために追加する個別のセクションです。
+
+### クエリブロック
+
+クエリブロックを使用して[<DNT>NRQL</DNT>クエリ](/docs/nrql/nrql-syntax-clauses-functions/)を記述し、結果を視覚化します。標準のクエリビルダーで利用可能なすべての単一クエリの[チャートタイプ](https://docs.newrelic.com/docs/query-your-data/explore-query-data/use-charts/chart-types/)とカスタマイズは、ノートブックでサポートされています。
+
+### テキストブロック
+
+Markdown を使用して、リッチ テキスト、タイトル、コンテキスト、説明、わかりやすいテキストを追加して、調査のストーリーを伝えます。
+
+### ブロックアクション
+
+各[ブロックを](/docs/query-your-data/explore-query-data/notebooks/introduction-notebooks/)操作してドキュメントを整理できます。
+
+* <DNT>**Duplicate**</DNT>: ブロックのコピーを作成する
+* <DNT>**Delete**</DNT>: ノートブックからブロックを削除します
+* <DNT>**Move Up/Down**</DNT>: ノートブック内のブロックを並べ替えます
+* <DNT>**Move to Top/Bottom**</DNT> : ブロックを先頭または末尾にすばやく移動します
+
+## ノートブックの権限
+
+ノートブックの作成を開始する前に、権限の仕組みと、誰がノートブックにアクセスできるかを理解することが大切です。
+
+### 組織協会
+
+すべてのノートブックは、それが作成された組織に属するリソースです。この関連付けは永続的であり、変更することはできません。ノートブックは異なる組織間で共有できません。組織が削除されると、ノートブックも削除されます。ユーザーが別の組織に移動すると、以前の組織のノートブックにアクセスできなくなります。
+
+### 現在の権限モデル
+
+New Relic Notebooksは、アクセスを制御するためにCRUD機能を持つカスタムロールを使用します。アクセスには2つのレベルがあります：組織レベル（管理者が設定）とノートブックレベル（作成者がノートブックごとに設定）です。
+
+#### 組織レベルの権限
+
+これらは、New Relic管理UIのカスタムロールを介して付与されます。
+
+<table>
+<thead>
+<tr>
+<th>
+ロール
+</th>
+
+<th>
+機能
+</th>
+
+<th>
+許可される操作
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+**フルアクセス**
+</td>
+
+<td>
+`notebooks.create.notebook`<br />`notebooks.read.notebook`<br />`notebooks.update.notebook`<br />`notebooks.delete.notebook`
+</td>
+
+<td>
+組織内の任意のノートブックの作成、読み取り、編集、および削除
+</td>
+</tr>
+
+<tr>
+<td>
+**作成者**
+</td>
+
+<td>
+`notebooks.create.notebook`
+</td>
+
+<td>
+新しいノートブックの作成（自身のノートブックのみ）
+</td>
+</tr>
+</tbody>
+</table>
+
+#### ノートブックレベルのロール
+
+これらは特定のノートブックに割り当てられ、通常はノートブックの作成者によって行われます。
+
+<table>
+<thead>
+<tr>
+<th>
+ロール
+</th>
+
+<th>
+許可
+</th>
+
+<th>
+許可される操作
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+**オーナー**
+</td>
+
+<td>
+`notebook_owner`
+</td>
+
+<td>
+読み取り、編集、削除、および権限の管理 — 作成者に自動的に割り当てられます
+</td>
+</tr>
+
+<tr>
+<td>
+**編集者**
+</td>
+
+<td>
+`notebook_editor`
+</td>
+
+<td>
+ノートブックの編集
+</td>
+</tr>
+
+<tr>
+<td>
+**閲覧者**
+</td>
+
+<td>
+`notebook_reader`
+</td>
+
+<td>
+ノートブックの表示（読み取り専用）
+</td>
+</tr>
+</tbody>
+</table>
+
+#### 連携の仕組み
+
+1. 管理者がユーザーに組織レベルの**Creator** \[作成者]ロールを付与します — これにより、ユーザーはノートブックを作成できるようになります。
+2. ユーザーがノートブックを作成すると、自動的にその**Owner** \[所有者]になります。
+3. その後、所有者は特定のノートブックに対して**Editor** \[編集者]または**Reader** \[閲覧者]のロールを付与することで、他のユーザーとノートブックを共有できます。
+4. 組織全体のすべてのノートブックへのアクセスが必要なユーザー（管理者など）には、代わりに**Full access** \[フルアクセス]ロールが付与されます。
+
+## 次は何ですか？
+
+ノートブックの基本を理解したら、次のことができるようになります。
+
+* [ノートブックのブロック](/docs/query-your-data/explore-query-data/notebooks/add-queries-to-notebooks/)について詳しく学ぶ
+* [ノートブックの変数](/docs/query-your-data/explore-query-data/notebooks/notebook-variables)を使用して、動的でパラメータ化されたランブックを構築します。
+* [ノートブック用Blob Storage API](/docs/query-your-data/explore-query-data/notebooks/blob-storage-api-for-notebooks)を使用してプログラムでノートブックを管理するか、[Terraform `newrelic_notebook`リソース](https://registry.terraform.io/providers/newrelic/newrelic/latest/docs/resources/notebook)を使用してノートブックをコードとして作成およびバージョン管理できます。
+
+関連する機能もご覧ください:
+
+* 永続的なデータ視覚化を構築するための[Dashboards](/docs/query-your-data/explore-query-data/dashboards/introduction-dashboards)
+* 個別のクエリを作成するための[クエリビルダー](/docs/query-your-data/explore-query-data/query-builder/introduction-query-builder)
+* 視覚化オプションを理解するための[チャート](/docs/query-your-data/explore-query-data/use-charts/use-your-charts)

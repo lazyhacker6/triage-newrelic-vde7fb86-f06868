@@ -1,0 +1,132 @@
+---
+title: New Relic Ruby 에이전트 설치
+tags:
+  - Agents
+  - Ruby agent
+  - Installation
+metaDescription: Install New Relic's Ruby agent to start monitoring your Ruby application.
+freshnessValidatedDate: '2026-08-05T00:00:00.000Z'
+translationType: machine
+---
+
+루비 에이전트는 코드를 자동으로 계측하므로 애플리케이션 모니터링을 시작할 수 있습니다.
+
+<Callout variant="tip">
+Kubernetes에서 실행 중이십니까? [Kubernetes APM 자동 첨부](/docs/kubernetes-pixie/kubernetes-integration/installation/k8s-agent-operator/)를 참조하십시오.
+</Callout>
+
+## 전제 조건 [#prerequisites]
+
+시작하기 전에 이 요구 사항을 확인해 주십시오.
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+요구 사항
+</th>
+
+<th>
+세부
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+**New Relic 계정**
+</td>
+
+<td>
+[뉴렐릭 계정](https://newrelic.com/signup)과 <InlinePopover type="licenseKey" />이(가) 필요합니다. 시작하기 전에 준비해 주십시오.
+</td>
+</tr>
+
+<tr>
+<td>
+**루비 버전**
+</td>
+
+<td>
+지원되는 루비 버전에 대해서는 [루비 에이전트 요구사항 및 지원되는 프레임워크](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks)를 참조하십시오.
+</td>
+</tr>
+
+<tr>
+<td>
+**운영 체제**
+</td>
+
+<td>
+UNIX 계열 운영 시스템: Linux, Solaris, FreeBSD 및 macOS. 자세한 내용은 [루비 에이전트 요구 사항 및 지원되는 프레임워크](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks)를 참조하십시오.
+</td>
+</tr>
+</tbody>
+</table>
+
+<Steps>
+<Step>
+## 보석 설치 [#install]
+
+Gemfile에 루비 에이전트 gem을 추가하십시오:
+
+```ruby
+gem 'newrelic_rpm'
+```
+
+그런 다음 실행하십시오:
+
+```sh
+bundle install
+```
+
+<Callout variant="important">
+도커 컨테이너에서 에이전트를 사용하는 경우 각 컨테이너 내에 에이전트를 설치하십시오. 도커 기반 배포 예제는 [GAE 플렉서블 환경에 설치](/docs/apm/agents/ruby-agent/installation/install-new-relic-ruby-agent-gae-flexible-environment)를 참조하십시오.
+</Callout>
+
+**프레임워크별 참고 사항:**
+
+* **Rails**: Rails는 자동으로 `Bundler.require`을(를) 호출하므로 추가 단계 없이 시작 시 `newrelic_rpm`이(가) 필요합니다.
+* **Roda 또는 Sinatra**: 애플리케이션에서 수동으로 `require 'newrelic_rpm'`을(를) 호출해야 합니다.
+* **기타 Rack 앱**: 자동 브라우저 모니터링을 사용하려면 에이전트에서 제공하는 [Rack 미들웨어](/docs/agents/ruby-agent/frameworks/rack-middlewares#manual)를 수동으로 포함하십시오.
+</Step>
+
+<Step>
+## 에이전트 구성 [#configure]
+
+뉴렐릭 GitHub 저장소에서 [`newrelic.yml`](https://github.com/newrelic/newrelic-ruby-agent/blob/dev/newrelic.yml)을(를) 다운로드하여 애플리케이션의 `config` 디렉터리에 복사하십시오.
+
+라이브로 전환하기 전에 **반드시** 변경해야 하는 단 두 가지 설정은 다음과 같습니다:
+
+1. <InlinePopover type="licenseKey" />에 `license_key`을(를) 설정합니다.
+2. `app_name`을(를) 애플리케이션의 의미 있는 이름으로 설정해 주십시오.
+
+또는 CLI를 사용하여 구성 파일을 생성하십시오:
+
+```sh
+newrelic install --license_key="YOUR_LICENSE_KEY" "YOUR_APP_NAME"
+```
+</Step>
+
+<Step>
+## 데이터가 흐르고 있는지 확인 [#verify]
+
+1. 웹 서버를 다시 시작하십시오.
+
+2. 애플리케이션에 최소 두 개의 requests를 보내십시오.
+
+3. 2～3분 기다린 후, [one.newrelic.com &gt; APM](https://one.newrelic.com/apm)을 열고 이름으로 앱을 찾아보십시오.
+
+<Callout variant="tip">
+앱이 표시되지 않습니까? [데이터가 표시되지 않음(루비)](/docs/apm/agents/ruby-agent/troubleshooting/no-data-appears-ruby)을 참조하십시오.
+</Callout>
+</Step>
+</Steps>
+
+## 관련 기사 [#related-docs]
+
+* [루비 에이전트 요구 사항 및 지원되는 프레임워크](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks) — 지원되는 루비 버전, 운영 시스템 및 프레임워크.
+* [루비 에이전트 설정](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration) — 사용 가능한 모든 설정.
+* [루비 에이전트 업데이트](/docs/apm/agents/ruby-agent/installation/update-ruby-agent) — 최신 버전으로 업그레이드하는 방법입니다.
+* [Heroku의 루비 에이전트](/docs/apm/agents/ruby-agent/installation/ruby-agent-heroku) — Heroku 전용 설치 단계입니다.

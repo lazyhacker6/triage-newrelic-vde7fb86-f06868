@@ -1,0 +1,113 @@
+---
+title: ExcluirDefiniçãoDeFluxoDeTrabalho
+tags:
+  - workflow automation
+  - workflow
+  - Delete Workflow Definition
+  - workflow automation API
+metaDescription: Used to delete all the workflow definition versions with the specified name.
+freshnessValidatedDate: '2026-10-27T00:00:00.000Z'
+translationType: machine
+---
+
+Use a mutação `workflowAutomationDeleteWorkflowDefinition` para excluir todas as versões de uma definição de workflow com o nome especificado.
+
+<Callout variant="important">
+* Para excluir uma definição, não deve haver agendamentos que a utilizem. Se a definição estiver sendo usada atualmente por um agendamento, a exclusão falha e retorna um erro.
+* Todas as execuções de workflow em andamento continuam até a conclusão, mesmo se a definição for excluída.
+</Callout>
+
+## Parâmetro de entrada [#input-parameters]
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+Parâmetro
+</th>
+
+<th>
+Tipo de dados
+</th>
+
+<th>
+Descrição
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`definition.name`
+</td>
+
+<td>
+Corda
+</td>
+
+<td>
+(Obrigatório) O nome da definição de workflow a ser excluída. Todas as versões com este nome são excluídas.
+</td>
+</tr>
+
+<tr>
+<td>
+`scope.id`
+</td>
+
+<td>
+Corda
+</td>
+
+<td>
+(Obrigatório) Seu ID da conta.
+</td>
+</tr>
+
+<tr>
+<td>
+`scope.type`
+</td>
+
+<td>
+Enum
+</td>
+
+<td>
+(Obrigatório) O tipo de escopo (`ACCOUNT`).
+</td>
+</tr>
+</tbody>
+</table>
+
+## Solicitação de amostra [#sample-request]
+
+```graphql
+mutation {
+  workflowAutomationDeleteWorkflowDefinition(
+    definition: {name: "my-workflow"}
+    scope: {id: "12345678", type: ACCOUNT}
+  ) {
+    definition {
+      name
+    }
+  }
+}
+```
+
+## Tópicos relacionados [#related-topics]
+
+<DocTiles>
+<DocTile title="Obter cronogramas" path="/docs/workflow-automation/workflow-automation-apis/get-schedules">
+Verifique se o fluxo de trabalho é usado por algum agendamento antes de excluir
+</DocTile>
+
+<DocTile title="Excluir agendamento" path="/docs/workflow-automation/workflow-automation-apis/delete-schedule">
+Remova os agendamentos antes de excluir a definição do fluxo de trabalho
+</DocTile>
+
+<DocTile title="Obter definições de fluxo de trabalho" path="/docs/workflow-automation/workflow-automation-apis/get-workflow-definitions">
+Listar todas as definições de fluxo de trabalho na sua conta
+</DocTile>
+</DocTiles>

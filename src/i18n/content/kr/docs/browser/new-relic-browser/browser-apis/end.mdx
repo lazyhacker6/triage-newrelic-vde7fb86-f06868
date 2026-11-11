@@ -1,0 +1,60 @@
+---
+title: end (SPA API)
+type: apiDoc
+shortDescription: 현재 시간에서 SPA 상호 작용을 종료합니다.
+tags:
+  - Browser
+  - Browser monitoring
+  - Browser agent and SPA API
+metaDescription: SPA API call with browser to end the interaction at the current time.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+## 통사론
+
+```js
+newrelic.interaction().end()
+```
+
+현재 시간에서 SPA 상호 작용을 종료합니다.
+
+## 요구 사항
+
+* 브라우저 Pro+SPA 에이전트(v963 이상)
+
+* npm을 통해 수분 에이전트를 설치하고 선택한 기능으로 사용자 정의 에이전트를 구축하는 경우, `Agent` 를 생성할 때 `spa` 기능을 활성화해야 합니다. `features` 에 다음을 추가하세요.
+
+  ```js
+  import { Spa } from '@newrelic/browser-agent/features/spa';
+
+  const options = {
+    info: { ... },
+    loader_config: { ... },
+    init: { ... },
+    features: [
+      Spa
+    ]
+  }
+  ```
+
+  자세한 내용은 [npm 브라우저 설치 설명서를](https://www.npmjs.com/package/@newrelic/browser-agent#new-relic-browser-agent) 참조하세요.
+
+## 설명
+
+이 SPA 방식은 현재 시점에서 브라우저 세대를 종료합니다. 이 메서드가 호출된 후에 시작되는 모든 후속 네트워크 requests 현재 SPA 클래스의 일부로 포함되지 않습니다. SPA v2.1 이상에서는 이 방법을 사용하여 5초 창 동안 긴 작업을 모니터링하는 보류 상태의 상호작용을 종료할 수도 있습니다.
+
+## 반환 값
+
+이 메서드는 `interaction()` 에서 생성한 것과 동일한 API 객체를 반환합니다.
+
+## 예
+
+```js
+router.addRoute('/profile', () => {
+  startSlowBackgroundAjax(); // Start work that will continue past the end of the interaction
+  renderProfileComponents().then(() => { // Do work that is part of the interaction
+    newrelic.interaction().end(); // End the interaction once the important components an the page have finished rendering
+  });
+});
+```

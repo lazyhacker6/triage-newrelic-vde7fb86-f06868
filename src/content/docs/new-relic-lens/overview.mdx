@@ -1,0 +1,65 @@
+---
+title: New Relic Lens overview
+tags:
+  - New Relic Lens
+  - Query data
+  - SQL queries
+  - Cross-database joins
+  - Data analysis
+  - Multiple data sources
+metaDescription: "Learn about New Relic Lens, a unified query platform for querying multiple data sources using ANSI SQL and performing cross-database joins."
+freshnessValidatedDate: never
+---
+
+As a New Relic user, you may need to analyze your telemetry data alongside data stored across multiple databases, data warehouses, and spreadsheets. Manually exporting data from each source and combining it with your observability data offline takes time, can reduce productivity, or it may not meet your internal policies or requirements.
+
+<DNT>New Relic Lens</DNT> helps to address these challenges. <DNT>Lens</DNT> is a unified query platform within New Relic that lets you connect and query certain data sources directly from New Relic. Write a query in <DNT>Lens</DNT> using ANSI SQL and perform cross-database joins to help analyze and correlate data from various sources. Instead of pulling raw data into New Relic, <DNT>Lens</DNT> sends each part of the query to the data source where the data lives, so each source does its own processing and returns only the results. <DNT>Lens</DNT> then combines these results, minimizing data transfer and ingestion of raw data from external sources.
+
+<img
+  title="New Relic Lens Architecture"
+  alt="A schematic diagram of New Relic Lens architecture."
+  src="/images/nr-lens-arch.webp"
+/>
+
+## Capabilities [#capabilities]
+
+<DNT>Lens</DNT> gives you:
+
+* **Cross-database SQL queries**: Write ANSI SQL and join data across multiple sources in a single query.
+* **Built-in NRDB access**: Query telemetry, entity, and <DNT>materialized view</DNT> data through built-in <DNT>system connectors</DNT>, with no setup required.
+* **External data connectors**: Connect to cloud data warehouses, relational databases, document databases, spreadsheets, data lakes, and monitoring tools. See [Set up connectors](/docs/new-relic-lens/set-up-connectors) for the full list.
+* **Materialized views**: Save the results of complex, frequently run queries as [materialized views](/docs/new-relic-lens/materialized-views) to reduce costs and improve performance.
+* **Query from anywhere**: Run <DNT>Lens</DNT> queries in [Query Builder, Notebooks, or custom dashboards](/docs/new-relic-lens/query-data).
+
+## Use cases [#use-cases]
+
+<DNT>Lens</DNT> enables various data analysis scenarios:
+
+* **Budget analysis**: Compare New Relic utilization data from <DNT>NRDB</DNT> with budget data stored in <DNT>Snowflake</DNT> to track spending against allocated budgets.
+* **Workflow optimization**: Replace multiple manual export/import steps (from one database to another) with a single SQL query that joins all necessary data, reducing costs and improving efficiency.
+* **Aggregate data across regions**: Track user traffic across various geographical regions by unioning data from different data sources.
+* **Performance optimization with <DNT>materialized views</DNT>**: An executive dashboard combines data from 5+ databases and refreshes weekly. By storing the results from the multi-database `JOIN` query in a <DNT>materialized view</DNT>, you avoid running the computationally expensive query each time someone loads the dashboard. This can reduce query costs and improve page load speed.
+
+<Callout title="Alerts not supported" variant="important">
+  <DNT>Lens</DNT> doesn't support alerts. You can't create alert conditions based on <DNT>Lens</DNT> query results.
+</Callout>
+
+## Pricing [#pricing]
+
+<DNT>**Lens**</DNT> is available to paying customers, including paid non-profit accounts:
+
+* On the [<DNT>Data + User</DNT>](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/new-relic-one-pricing-billing/) pricing model, there's no extra cost.
+* On the [<DNT>Data + Core Compute</DNT>](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/new-relic-one-pricing-billing/) pricing model, [Core CCUs](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/new-relic-one-pricing-billing/#core-compute-capacity-unit) are consumed when you query `telemetry.<New Relic event>` tables, which <DNT>Lens</DNT> bills as an API call.
+
+## Setup at a glance [#at-a-glance]
+
+Setting up <DNT>Lens</DNT> involves the following steps:
+
+1. Check that you have [the necessary permissions](/docs/new-relic-lens/set-up-connectors#requirements)
+2. Set up a connector
+3. Verify your setup
+
+## Next: set up connectors [#next]
+
+[**Set up connectors →**](/docs/new-relic-lens/set-up-connectors)
+

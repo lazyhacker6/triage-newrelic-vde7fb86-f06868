@@ -1,0 +1,337 @@
+---
+title: Understand and manage data ingest
+tags:
+  - Ingest and manage data
+  - Manage data
+  - Data Ingest Governance
+metaDescription: 'How to understand and manage your New Relic data ingest.'
+redirects:
+  - /docs/telemetry-data-platform/manage-data/manage-data-coming-new-relic
+  - /docs/manage-data-coming-new-relic
+  - /docs/telemetry-data-platform/get-started/manage-data/manage-data-coming-in
+  - /docs/manage-data-coming-in
+  - /docs/telemetry-data-platform/get-data-new-relic/manage-data/manage-data-coming-new-relic
+  - /telemetry-data-platform/get-started/manage-data/manage-data-coming-in
+freshnessValidatedDate: never
+---
+
+You may want to manage your New Relic data ingest for several reasons, including:
+
+* Removing unwanted data
+* Managing [data ingest costs](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/data-ingest-billing)
+
+
+## Data ingestion UI [#ui]
+
+The <DNT>**Data ingestion**</DNT> tab is located in the [Data management UI](/docs/data-apis/manage-data/manage-your-data). It shows a summary of your data usage by source, helping you understand what data is being sent to New Relic.
+
+<img
+  title="Data ingestion UI"
+  alt="Data ingestion UI"
+  src="/images/accounts_screenshot-full_data-ingest-UI.webp"
+/>
+
+<figcaption>
+  From the [user menu](/docs/accounts/accounts-billing/general-account-settings/intro-account-settings), select <DNT>**Manage your data**</DNT>.
+</figcaption>
+
+### Key features
+
+The Data ingestion UI provides tools to help you monitor and analyze your data:
+
+<DNT>**Filters and controls:**</DNT>
+
+* <DNT>**Time range selector:**</DNT> Choose between **Auto**, **Daily**, **Weekly**, or **Monthly** views to analyze data ingestion trends over your preferred time period.
+
+<Callout variant="important">
+  The <DNT>**Auto**</DNT> view doesn't support the time picker. Because it shows your data in 5-minute intervals, it can display up to one day at a time. To see a longer time range, switch to the <DNT>**Daily**</DNT>, <DNT>**Weekly**</DNT>, or <DNT>**Monthly**</DNT> views.
+</Callout>
+
+* <DNT>**Data source filtering:**</DNT> Use the dropdown and search functionality to filter and find specific data sources.
+
+<DNT>**Visualizations:**</DNT>
+
+* <DNT>**Data source table:**</DNT> View all active data sources with their respective ingestion amounts. The table shows each source's contribution to your total data ingestion (such as **BrowserEventsBytes**, **CustomEventsBytes**, **ApmEventsBytes**).
+* <DNT>**Visual trend chart:**</DNT> Displays ingestion patterns over time with color-coded bands representing different data sources, making it easy to identify spikes or trends.
+* <DNT>**Usage by account:**</DNT> A pie chart showing the distribution of data ingestion across your accounts, displaying both the total volume and percentage breakdown.
+* <DNT>**Usage by data source:**</DNT> A pie chart breaking down your total ingestion by data source (for example, **BrowserEventsBytes** might show 95.17% of your total ingestion, **CustomEventsBytes** at 3.33%).
+
+For detailed definitions of the metrics shown, see [Data ingest sources](#sources-list).
+
+<Callout variant="important">
+  **Multi-tenant account filtering**
+
+  For organizations with multi-tenant accounts, you can filter data ingestion by organization or account using the **Select Organization** and **Select Account** dropdowns. This allows you to view data for all organizations and accounts, or narrow down to specific ones.
+</Callout>
+
+### Get more detail [#detail]
+
+To view additional details about a specific data source:
+
+1. Click the data source name in the table
+2. Use the additional filtering options that appear to drill down further into that specific data source
+
+<DNT>**Advanced options:**</DNT>
+
+* Click <DNT>**View NRQL**</DNT> to see the underlying query for any chart
+* See [Account settings](/docs/accounts/accounts-billing/general-account-settings/intro-account-settings/#video-tour) for a video tour of this and other administration UIs
+* For technical details about how charts display data and error messages, see [Chart details](#technical-details-chart)
+
+## Estimate future data ingest [#estimate]
+
+The <DNT>**Data Ingestion**</DNT> page includes predictive capabilities that help you forecast your organization's future data usage.
+
+To forecast usage:
+1. Navigate to the <DNT>**Daily view**</DNT> of the time series chart at the top of the page
+2. From the <Icon name="fe-more-horizontal"/> chart menu, select <DNT>**Predict Usage**</DNT>
+3. View the data usage forecast for 1 week in both the chart and the table
+
+To remove the forecast, select <DNT>**Remove prediction**</DNT> from the chart menu.
+
+<Callout variant="important">
+Forecasting is only available for <DNT>**Advanced Compute**</DNT> customers and only in the <DNT>**Daily view**</DNT> of the <DNT>**Data source time series chart**</DNT>.
+</Callout>
+
+## Manage ingest and avoid ingest spikes [#manage]
+
+How you manage your New Relic data will depend on a lot of factors specific to your organization and your needs. That said, here are some general tips for managing data ingest and avoiding unexpected spikes:
+
+* <DNT>**Assign team members.**</DNT> Assign team members who'll be in charge of reviewing your ingest on a cadence, and managing it. Ensure they understand the [data-related billing factors](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/data-ingest-billing), including what does and doesn't count towards billing.
+* <DNT>**Get to know your data.**</DNT> Spend some time getting acquainted with your data. Get to know its ebbs and flows, and understand where it's coming from.
+* <DNT>**Monitor when you make significant changes.**</DNT> When you first activate a new data-reporting tool, or when you upgrade an agent or integration, or when you make any big change in your system, you should monitor your ingest to ensure there's no unexpected spike in data.
+* <DNT>**Set up alerts.**</DNT> If you're concerned about specific scenarios causing sudden spikes in data, set up an alert condition to notify you if that occurs. For tips on that, see [Usage queries](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/usage-queries-alerts).
+
+### Reducing ingest [#adjust-ingest]
+
+Below are some tips for common approaches New Relic customers take to reduce the ingest of data that's not helpful to them.
+
+All New Relic solutions have various configuration options that give you control over how data is reported to New Relic. Below we have some popular methods for reducing data ingest, but to learn about all the options available, we recommend reading the docs for specific tools you're using.
+
+<CollapserGroup>
+  <Collapser
+    id="adjust-apm-ingest"
+    title="Manage APM ingest"
+  >
+    Options for adjusting <InlinePopover type="apm"/> data include:
+
+    * Configure the sampling rate for transaction events. See agent configurations for [Java](/docs/agents/java-agent/configuration/java-agent-configuration-config-file#Transaction_Events), [.Net](/docs/apm/agents/net-agent/configuration/net-agent-configuration), [Go](/docs/apm/agents/go-agent/configuration/go-agent-configuration#transaction-events-settings), [NodeJS](/docs/apm/agents/nodejs-agent/installation-configuration/nodejs-agent-configuration), [PHP](/docs/apm/agents/php-agent/configuration/php-agent-configuration), [Python](/docs/apm/agents/python-agent/configuration/python-agent-configuration), or [Ruby](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration).
+    * Adjust [distributed trace sampling](/docs/distributed-tracing/concepts/how-new-relic-distributed-tracing-works)
+    * Optimize [custom instrumentation](/docs/apm/agents/manage-apm-agents/agent-data/custom-instrumentation) and/or [custom metrics](/docs/apm/agents/manage-apm-agents/agent-data/collect-custom-metrics).
+    * Manage [logs-in-context](/docs/logs/logs-context/get-started-logs-context).
+  </Collapser>
+
+  <Collapser
+    id="adjust-infra-ingest"
+    title="Manage infrastructure ingest"
+  >
+    Options for adjusting infrastructure data include:
+
+    * Adjust [sampling rate](/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings#samples-variables) for network, storage, and system events.
+    * [Disable process metrics](/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/#enable-process-metrics).
+    * Adjust polling intervals:
+      * For cloud integrations: [Adjust polling](/docs/infrastructure/infrastructure-integrations/cloud-integrations/configure-polling-frequency-data-collection-cloud-integrations).
+      * For [on-host integrations](/docs/infrastructure/host-integrations/get-started/introduction-host-integrations): adjust an integration's configuration.
+    * [Control the reporting of specific attributes](/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/#include-matching-metrics).
+    * Manage [Kubernetes events integration](/docs/kubernetes-pixie/kubernetes-integration/kubernetes-events/install-kubernetes-events-integration/#install).
+  </Collapser>
+
+  <Collapser
+    id="adjust-log-ingest"
+    title="Manage log ingest"
+  >
+    Options for adjusting log data ingest include:
+
+    * [Automatic logs in context](/docs/logs/logs-context/disable-automatic-logging): Disable or enable via the UI or API, or adjust client-side configuration settings.
+    * [Log data forwarding](/docs/logs/forward-logs/enable-log-management-new-relic): Unfiltered logs can sometimes result in a large amount of log data being reported. You can adjust the log forwarder configuration to filter log events from the log-sending side.
+    * [Drop log data](/docs/logs/ui-data/drop-data-drop-filter-rules): Manage data ingest via the UI or API.
+  </Collapser>
+
+  <Collapser
+    id="drop-data"
+    title="Drop data"
+  >
+    On ingest, we apply data dropping rules so you won't be charged for data that's not useful. But you can also set your own [data dropping rules](/docs/accounts/accounts/data-management/drop-data-using-nerdgraph).
+  </Collapser>
+
+  <Collapser
+    id="npm"
+    title="Manage network monitoring data"
+  >
+    For unexpected increases in [network monitoring data](/docs/network-performance-monitoring/get-started/npm-introduction), you may consider adjusting the polling interval.
+  </Collapser>
+
+  <Collapser
+    id="disable"
+    title="Disable or remove monitoring tools"
+  >
+    If you have agents or integrations that you don't want at all, you can uninstall/delete those tools. For instructions, see the specific docs for that tool. Keep in mind that if you think there's a chance you might use that tool in the future, simply disabling it might be a better solution than uninstalling it completely.
+  </Collapser>
+</CollapserGroup>
+
+## Data ingestion sources [#sources-list]
+
+The [data ingestion UI](#data-ingest-ui) chart shows you a high level breakdown of your billable data usage. The table below explains those sources. In this table, "usage metric group" refers to the value of that source's `usageMetric` attribute value on the `NrConsumption` event.
+
+<CollapserGroup>
+  <Collapser
+    id="metrics"
+    title="Metrics"
+  >
+    In the data ingestion chart, <DNT>**Metrics**</DNT> is a combination of two types of metrics: [metric timeslice data](/docs/data-apis/understand-data/new-relic-data-types/#timeslice-data) and [dimensional metrics](/docs/data-apis/understand-data/new-relic-data-types/#dimensional-metrics).
+
+    Usage metric group: `MetricsBytes`.
+
+    Metric timeslice data averages to one-hour periods after eight days. After 90 days, the permanent metric data continues to be stored in one-hour periods. We currently store the raw metric data for 30 days.
+
+    You are only billed for the initial ingest volume. You are not billed for subsequent rollups.
+  </Collapser>
+
+  <Collapser
+    id="apm"
+    title="APM events"
+  >
+    This includes [APM events](/docs/insights/insights-data-sources/default-data/apm-default-events-insights), like `Transaction` and `TransactionError`.
+
+    Usage metric group: `ApmEventsBytes`.
+  </Collapser>
+
+  <Collapser
+    id="infra"
+    title="Infrastructure"
+  >
+    There are several types of [infrastructure monitoring-related data](/docs/infrastructure/manage-your-data/data-instrumentation/default-infrastructure-events).
+
+    ### Infrastructure hosts
+
+    This data is reported via the `SystemSample`, `NetworkSample`, and `StorageSample` events.
+
+    The usage metric group is `InfraHostBytes`.
+
+    Information related to your servers and virtual machines coming from infrastructure agents, including storage and network data.
+
+    ### Infrastructure processes
+
+    This data is stored in the `ProcessSample` event.
+
+    The usage metric group is `InfraProcessBytes`.
+
+    Data related to each process running on the hosts running the infrastructure agent. This feature is turned off by default. For more information, see [Process metrics](/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/#enable-process-metrics).
+
+    ### Infrastructure integrations
+
+    Usage metric group: `InfraIntegrationBytes`.
+
+    Performance data related to applications and services, typically managed by the customer, including data related to Docker containers, Windows services, Nagios checks, and cloud integrations such as managed services in AWS, Azure, and GCP.
+  </Collapser>
+
+  <Collapser
+    id="logging"
+    title="Logging"
+  >
+    Includes logs and any `Log_<value>` custom data partition that exists.
+
+    The usage metric group is `LoggingBytes`.
+
+    Log records are stored on the [`Log` data type](/docs/data-apis/understand-data/new-relic-data-types/#log-data) by default. Additional custom data partitions will create new data types, which are always prefixed with `Log_` and are counted as part of the overall set of log data stored.
+
+    With `LogExtendedRecord`, log messages longer than 4KB are split into multiple events that, when needed, are stitched together to display the original message; this reduces the size of message data. For more on how this data is stored, see [our log blobs docs](/docs/logs/log-management/ui-data/long-logs-blobs).
+  </Collapser>
+
+  <Collapser
+    id="custom-events"
+    title="Custom events"
+  >
+    This data is from your [custom events](/docs/insights/insights-data-sources/custom-data/report-custom-event-data).
+
+    The usage metric group is `CustomEventsBytes`.
+  </Collapser>
+
+  <Collapser
+    id="mobile"
+    title="Mobile events"
+  >
+    [Mobile events](/docs/insights/insights-data-sources/default-data/mobile-default-events-insights), including the general `Mobile` event, `MobileRequestError`, `MobileBreadcrumb`, `MobileSession`, `MobileHandledException`, `MobileCrash`, `MobileRequest`, and `MobileJavaScriptError`.
+
+    Usage metric group: `MobileEventsBytes`.
+  </Collapser>
+
+  <Collapser
+    id="mobile-session-replay"
+    title="Mobile session replay"
+  >
+    This is data from [Mobile session replay](/docs/mobile-monitoring/mobile-monitoring-ui/mobile-session-replay/introduction).
+
+    The usage metric group is `MobileSessionReplayBytes`.
+  </Collapser>
+
+  <Collapser
+    id="tracing"
+    title="Tracing"
+  >
+    This includes the [`Span` data type](/docs/data-apis/understand-data/new-relic-data-types/#trace-data) and OpenTelemetry's `SpanEvent`.
+
+    The usage metric group is `TracingBytes`.
+
+    `DistributedTraceSummary` events do not count towards ingest.
+  </Collapser>
+
+  <Collapser
+    id="browser"
+    title="Browser events"
+  >
+    These are [<InlinePopover type="browser"/> events](/docs/insights/insights-data-sources/default-data/browser-default-events-insights), including the namespaces of `Browser`, `Browser:EventLog`, `Browser:JSErrors`, and `PcvPerf` (PageView timing).
+
+    The usage metric group is `BrowserEventsBytes`.
+  </Collapser>
+
+  <Collapser
+    id="browser-session-replay"
+    title="Browser session replay"
+  >
+    This is data from [Browser session replay](/docs/browser/browser-monitoring/browser-pro-features/session-replay/get-started).
+
+    The usage metric group is `BrowserSessionReplayBytes`.
+  </Collapser>
+
+  <Collapser
+    id="lambda"
+    title="Lambda"
+  >
+    These are [AWS Lambda events](/docs/serverless-function-monitoring/aws-lambda-monitoring/ui-data/understand-lambda-data-structure).
+
+    The usage metric group is `ServerlessBytes`.
+  </Collapser>
+
+  <Collapser
+    id="security-bytes-ingest"
+    title="Security"
+  >
+    Events reported by the security features of New Relic are stored in the <DNT>**Security**</DNT> namespace. These are primarily vulnerability reports provided by the Vulnerability Management feature, but may be expanded to include additional products in the future.
+
+    Expected event volumes of this type are very low, as the occurrence of vulnerability reports are rare.
+
+    Security features still in public preview use a separate <DNT>**Security:Preview**</DNT> namespace and are not billable.
+
+    The usage metric group is `SecurityBytes`.
+  </Collapser>
+</CollapserGroup>
+
+## Optimize your data ingest [#optimize-ingest]
+
+We also have an [in-depth tutorial on how to optimize data ingest](/docs/new-relic-solutions/observability-maturity/operational-efficiency/intro-data-governance).
+
+## Stream ingested data [#stream]
+
+For more about streaming ingested data to other sources, see [Streaming export](/docs/apis/nerdgraph/examples/nerdgraph-streaming-export).
+
+## Data from multiple data center regions [#data-centers]
+
+If you have accounts in multiple data center regions, [learn more about how to understand your usage](/docs/accounts/accounts-billing/account-setup/choose-your-data-center#account-structure).
+
+## Technical details about the ingestion chart [#technical-details-chart]
+
+Some technical details about the ingest UI:
+
+* <DNT>**Displays are estimates.**</DNT> The ingest value shown on the ingest chart can vary slightly from the actual amount you may see when running your own query. This is because the calculation used for the chart is an estimate.
+* <DNT>**No chart data available.**</DNT> The data ingestion chart can display a slightly longer time frame than that covered by your data retention settings. For this reason, you may get message that there's no chart data available.
+* <DNT>**Chart time buckets.**</DNT> If an account has less than a terrabyte of data, we compute the volume over a 24-hour period; otherwise, we compute it for a 1-hour period.

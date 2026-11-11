@@ -1,0 +1,104 @@
+---
+title: Instalar componentes de monitoreo
+metaDescription: A detailed reference on how to setup out-of-the-box monitoring components for New Relic Monitoring for SAP Solutions
+freshnessValidatedDate: never
+translationType: machine
+---
+
+El monitoreo de New Relic para SAP incluye componentes de monitoreo listos para usar: dashboards, políticas de alertas y el IDOC Explorer.
+
+## Antes de que empieces
+
+Para realizar estas tareas, debe tener privilegios de administrador de New Relic en la cuenta.
+
+<Callout variant="important">
+Para el dashboard de <DNT>**SAP Cockpit**</DNT>, debe [crear una tabla de búsquedas](#create-lookup-table) denominada `NR_LKUP_SYSTEM` antes de la instalación.
+</Callout>
+
+## Ubicar componentes de monitoreo de SAP [#locate-components]
+
+1. Vaya a <DNT>**[one.newrelic.com](https://one.newrelic.com)**</DNT>. Si administra varias cuentas, seleccione la subcuenta que recopila datos de SAP.
+2. Seleccione <DNT>**+ Integrations &amp; Agents**</DNT> &gt; <DNT>**Apps &amp; Visualizations**</DNT>.
+3. Busca <DNT>**SAP**</DNT>. Los resultados muestran todas las aplicaciones, políticas de alertas y dashboards disponibles para el monitoreo de SAP.
+
+## Instalar el tablero
+
+### Crear tabla de búsquedas [#create-lookup-table]
+
+<Callout variant="tip">
+Solo se requiere para el dashboard <DNT>**SAP Cockpit**</DNT>.
+</Callout>
+
+El dashboard <DNT>**SAP Cockpit**</DNT> emplea un <DNT>**lookup table**</DNT> para <DNT>**SAP systems**</DNT> y sus entornos.
+
+1. Cree el <DNT>**lookup table**</DNT> con dos columnas: `SYS_ID` y `Env`, y guárdelo como un <DNT>**CSV file**</DNT>. A continuación se muestra un ejemplo del archivo de búsquedas:
+
+   ```csv
+   SYS_ID,Env
+   GD1,DEV
+   SD2,DEV
+   AQ1,Testing
+   AQ2,Testing
+   SP1,Prod
+   SP2,Prod
+   ```
+
+2. Vaya a <DNT>**Log &gt; Lookup Tables**</DNT>.
+
+3. Haga clic en <DNT>**Add a table**</DNT>.
+
+4. En la barra lateral <DNT>**Add a lookup table**</DNT>, nombre la tabla como <DNT>**NR\_LKUP\_SYSTEM**</DNT> y cargue el <DNT>**CSV file**</DNT>. Consulte [Tablas de búsquedas](/docs/logs/ui-data/lookup-tables-ui/) para obtener más información.
+
+5. Para verificar el contenido de la tabla, emplee el <DNT>**query builder**</DNT> con `FROM lookup(NR_LKUP_SYSTEM) SELECT *` y luego haga clic en <DNT>**Run**</DNT>.
+
+### Instalar los dashboards [#install-dashboards]
+
+1. Vaya a <DNT>**[one.newrelic.com](https://one.newrelic.com)**</DNT> &gt; <DNT>**Integrations &amp; Agents**</DNT> y busque <DNT>**New Relic Monitoring for SAP Solutions**</DNT>. Como alternativa, vaya a <DNT>**Dashboards &gt; Recommended Dashboards**</DNT>, haga clic en <DNT>**View all**</DNT> y busque SAP. Consulte [Dashboards](/docs/query-your-data/explore-query-data/dashboards/introduction-dashboards/) para obtener más información.
+
+2. Seleccione la pestaña <DNT>**Dashboards**</DNT> .
+
+3. Haga clic en un dashboard y seleccione la cuenta donde desea instalarlo. El dashboard se instala automáticamente.
+
+4. Instalar estos dashboards:
+
+   * <DNT>**SAP Dashboards**</DNT>
+   * <DNT>**SAP Cockpit**</DNT>
+   * <DNT>**SAP Data Collection Monitoring**</DNT>
+   * <DNT>**SAP Data Ingestion Estimate**</DNT>
+
+<Callout variant="tip">
+Después de instalar el dashboard <DNT>**SAP Cockpit**</DNT>, ábralo y confirme que la página de inicio refleje el estado correcto del sistema. Esto verifica que la tabla de búsquedas `NR_LKUP_SYSTEM` asigne los entornos a los sistemas correctamente.
+</Callout>
+
+### Agregar filtro dashboard [#add-dashboard-filter]
+
+1. Vaya a <DNT>**[one.newrelic.com](https://one.newrelic.com)**</DNT> &gt; <DNT>**Dashboards**</DNT> y seleccione un dashboard.
+2. Haga clic en los puntos suspensivos (<DNT>**…**</DNT>) en la esquina superior derecha de un widget.
+3. Seleccione <DNT>**Edit**</DNT> para abrir la pantalla de edición.
+4. Active o desactive el interruptor <DNT>**Filter the current dashboard**</DNT>.
+
+Habilite la vinculación de facetas para los widgets de tabla, gráfico circular y gráfico de barras para filtrar por <DNT>**SAP system**</DNT>, <DNT>**instance**</DNT>, <DNT>**IDOC status**</DNT>, <DNT>**jobs**</DNT> y más.
+
+## Instalar políticas de alertas
+
+1. Vaya a <DNT>**[one.newrelic.com](https://one.newrelic.com) &gt; Alerts &gt; Alert Policies**</DNT>.
+
+2. Busque y haga clic en <DNT>**New Relic Monitoring for SAP Solutions alert policy**</DNT>.
+
+   <img title="New Relic Monitoring for SAP Solutions alert policy" alt="A screenshot displaying the connection setup for New Relic Monitoring for SAP Solutions alert policy" src="/images/new-relic-monitoring-for-sap-solutions-alert-policy.webp" width="" />
+
+3. En la pestaña <DNT>**Alert condition**</DNT>, seleccione la cuenta y cambie <DNT>**alert policy**</DNT> a <DNT>**Enable**</DNT>. Consulte [Gestionar las políticas](/docs/alerts/organize-alerts/create-edit-or-find-alert-policy/) para obtener instrucciones sobre cómo gestionar las políticas.
+
+4. Regrese y busque <DNT>**Nr4sap default alert policy**</DNT>. Active el <DNT>**alert condition**</DNT> que desea habilitar.
+
+## Instalar el Explorador de IDOC
+
+1. Vaya a <DNT>**[one.newrelic.com](https://one.newrelic.com) &gt; Integrations &amp; Agents**</DNT>.
+
+2. Seleccione <DNT>**Apps &amp; Visualizations**</DNT> y busque <DNT>**IDOC Explorer**</DNT>.
+
+3. Seleccione <DNT>**Manage access**</DNT>. Elija la cuenta para acceder a la aplicación.
+
+   <img title="IDOC Explorer" alt="A screenshot displaying the manage access settings for IDOC Explorer" src="/images/idoc-explorer.webp" />
+
+4. Haga clic en <DNT>**Update**</DNT>. El <DNT>**IDOC Explorer**</DNT> aparece cuando ve <DNT>**IDOC entities**</DNT>.

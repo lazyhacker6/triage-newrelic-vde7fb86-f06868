@@ -1,0 +1,217 @@
+---
+title: 'Primeiros passos com o NRQL: a linguagem de dados'
+tags:
+  - Query your data
+  - 'NRQL: New Relic query language'
+  - Get started
+metaDescription: 'Learn how to query your New Relic data with NRQL, our SQL-like query language.'
+freshnessValidatedDate: '2026-08-28T00:00:00.000Z'
+translationType: machine
+---
+
+A New Relic Query Language (NRQL) é uma linguagem semelhante ao SQL para consultar seus dados do New Relic. A mesma linguagem de consulta que alimenta os gráficos e dashboards integrados do New Relic está disponível para você, para que possa criar as visualizações e os alertas de que sua equipe precisa.
+
+Aqui está um vídeo para ajudar a introduzir o uso do NRQL, mostrando como encontrar uma consulta em um [dashboard](/docs/query-your-data/explore-query-data/dashboards/introduction-dashboards) e modificá-la no [criador de consulta](/docs/query-your-data/explore-query-data/query-builder/introduction-query-builder). Para obter informações mais detalhadas sobre consultas, incluindo uma lista de cláusulas, funções e exemplos de consultas, consulte nossa [referência do NRQL](/docs/query-your-data/nrql-new-relic-query-language/get-started/nrql-syntax-clauses-functions).
+
+<Video id="ad6hZPHAsME" type="youtube" />
+
+## O que você pode fazer com a NRQL [#nrql-overview]
+
+Use a NRQL para:
+
+* Crie gráficos que mostrem as taxas de transferência de transações, a taxa de erros ou a latência ao longo do tempo
+* Responder a uma pergunta específica para efeitos de resolução de problemas ou análise de negócios
+* Investigue um problema de desempenho consultando os eventos e atributos específicos envolvidos
+* Configure [alertas baseados em NRQL](/docs/alerts-applied-intelligence/new-relic-alerts/alert-conditions/create-nrql-alert-conditions) que são acionados quando uma métrica ultrapassa um limite
+* Faça consultas de API para seus dados do New Relic, por exemplo, usando nossa API [NerdGraph](/docs/apis/graphql-api/tutorials/nerdgraph-graphiql-nrql-tutorial).
+
+A NRQL funciona tanto para consultas básicas (buscando linhas brutas de dados de evento) quanto para resultados calculados, como funis baseados em como os usuários interagem com seu site ou aplicativo.
+
+<Callout variant="tip">
+  O New Relic usa o NRQL internamente para alimentar os gráficos e dashboards na plataforma New Relic. Essa mesma linguagem de consulta está disponível para você.
+</Callout>
+
+## Tipos de dados consultáveis [#what-you-can-query]
+
+NRQL permite consultar quase todos os tipos de nossos dados de telemetria, incluindo:
+
+* [Dados de eventos](/docs/using-new-relic/data/understand-data/new-relic-data-types#event-data) de todos os produtos New Relic. Exemplos incluem:
+
+  * [Evento APM](/docs/insights/insights-data-sources/default-data/apm-default-events-insights), como `Transaction`
+  * [Monitoramento de evento do Browser](/docs/insights/insights-data-sources/default-data/browser-default-events-insights), como `PageView`
+  * [Monitoramento de evento Mobile](/docs/insights/insights-data-sources/default-data/mobile-default-events-insights), como `Mobile`
+  * [Evento de infraestrutura](/docs/infrastructure/manage-your-data/data-instrumentation/default-infrastructure-events), como `ProcessSample`
+  * [Evento sintético](/docs/insights/insights-data-sources/default-data/synthetics-default-events-insights), like `SyntheticCheck`
+  * Evento personalizado, como aqueles reportados pela [API de eventos](/docs/insights/insights-data-sources/custom-data/introduction-event-api)
+
+* O [tipo de dados`Metric` ](/docs/data-apis/understand-data/new-relic-data-types/#dimensional-metrics)(métrica relatada pela API métrica e fontes de dados que usam essa API)
+
+* O [tipo de dados`Span` ](/docs/using-new-relic/data/understand-data/new-relic-data-types#trace-data)(dados distributed tracing )
+
+* O [tipo de dados`Log` ](/docs/using-new-relic/data/understand-data/new-relic-data-types#log-data)(dados de nossos recursos de gerenciamento de logs)
+
+<Callout variant="tip">
+  Alguns dados, como relacionamentos entre entidades monitoradas, não estão disponíveis via NRQL, mas estão disponíveis usando nossa [API NerdGraph](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph).
+</Callout>
+
+## Onde usar NRQL [#where]
+
+A NRQL está disponível em toda a plataforma:
+
+<Tabs>
+  <TabsBar>
+    <TabsBarItem id="query-builder-nrql-intro">
+      O criador de consulta
+    </TabsBarItem>
+
+    <TabsBarItem id="nrql-alerts-nrql-intro">
+      Alerta baseado em NRQL
+    </TabsBarItem>
+
+    <TabsBarItem id="nerdgraph-api-nrql-intro">
+      API NerdGraph
+    </TabsBarItem>
+  </TabsBar>
+
+  <TabsPages>
+    <TabsPageItem id="query-builder-nrql-intro">
+      <img title="new-relic-view-chart-nrql-query.png" alt="A screenshot of a NRQL query chart" src="/images/queries-nrql_screenshot-crop_view-query-for-chart.webp" />
+
+      <figcaption>
+        Acesse o criador de consulta por meio da gaveta <DNT>Query your data</DNT> na parte inferior de qualquer página New Relic para executar consultas e criar gráficos personalizados.
+      </figcaption>
+
+      Você pode executar uma consulta NRQL no [criador de consulta](/docs/chart-builder/use-chart-builder/get-started/introduction-chart-builder) na [plataforma](/docs/new-relic-one/use-new-relic-one/get-started/introduction-new-relic-one). Esta consulta NRQL mostra uma contagem de spans de [distributed tracing](/docs/understand-dependencies/distributed-tracing/get-started/introduction-distributed-tracing) facetados por seus nomes de entidade.
+    </TabsPageItem>
+
+    <TabsPageItem id="nrql-alerts-nrql-intro">
+      [Alertas baseados em NRQL](/docs/alerts-applied-intelligence/new-relic-alerts/alert-conditions/create-nrql-alert-conditions/) são o principal tipo de alerta no New Relic. Para criar um, acesse <DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Alerts &gt; Alert conditions (Policies) &gt; (select a policy) &gt; Add a condition**</DNT>, clique em <DNT>**NRQL**</DNT> e depois em <DNT>**Next, define thresholds**</DNT>.
+    </TabsPageItem>
+
+    <TabsPageItem id="nerdgraph-api-nrql-intro">
+      <img title="Nerdgraph API example" alt="A screenshot of the Nerdgraph API" src="/images/apis-and-data_screenshot-crop_NerdGraph-internal-docs.webp" />
+
+      Você também pode usar o NRQL com a nossa [API NerdGraph](/docs/apis/graphql-api/tutorials/nerdgraph-graphiql-nrql-tutorial). Isso permite executar [consultas assíncronas](/docs/apis/nerdgraph/examples/async-queries-nrql-tutorial) que não estão disponíveis na interface.
+    </TabsPageItem>
+  </TabsPages>
+</Tabs>
+
+## Estrutura de consulta NRQL [#nrql-rules]
+
+O NRQL segue uma sintaxe estruturada baseada em cláusulas. Aqui está uma consulta NRQL que conta todas as transações na última hora:
+
+```sql
+SELECT count(*) FROM Transaction SINCE 1 hour ago
+```
+
+Aqui está um detalhamento de todas as cláusulas disponíveis:
+
+```sql
+<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#state-select">SELECT</a> <a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#functions">function(attribute)</a> [<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-as">AS</a> 'label'][, ...] 
+  <a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-from">FROM</a> data type
+  [<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-where">WHERE</a> attribute [comparison] [AND|OR ...]][AS 'label'][, ...]
+  [<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-facet">FACET</a> attribute | function(attribute)]
+  [<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-limit">LIMIT</a> number]
+  [<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-since">SINCE</a> time]
+  [<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-until">UNTIL</a> time]
+  [<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-timezone">WITH TIMEZONE</a> timezone]
+  [<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-compare">COMPARE WITH</a> time]
+  [<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-timeseries">TIMESERIES</a> time]
+```
+
+Aqui estão as regras que o NRQL segue:
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>
+        <DNT>
+          **NRQL rule**
+        </DNT>
+      </th>
+
+      <th>
+        Detalhes
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        Valores obrigatórios
+      </td>
+
+      <td>
+        A cláusula [`SELECT`](#state-select) e a cláusula [`FROM`](#sel-from) são obrigatórias. Todas as outras cláusulas são opcionais. Você pode iniciar sua consulta com `SELECT` ou `FROM`.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Tamanho da string de consulta
+      </td>
+
+      <td>
+        A string de consulta deve ter menos de 4 KB.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Sensibilidade a maiúsculas e minúsculas
+      </td>
+
+      <td>
+        Os nomes dos tipos de dados e os nomes dos atributos diferenciam maiúsculas de minúsculas. As [cláusulas e funções da NRQL](/docs/nrql/nrql-syntax-clauses-functions/) não diferenciam maiúsculas de minúsculas.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Sintaxe para strings
+      </td>
+
+      <td>
+        O NRQL usa aspas simples para designar strings. O exemplo a seguir mostra a sintaxe:
+
+        ```sql
+        ... WHERE traceId = '030a573f0df02c57'
+        ```
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Nomes de eventos personalizados e atributos fora do padrão
+      </td>
+
+      <td>
+        Os eventos que reportamos por padrão têm nomes que contêm caracteres alfanuméricos, dois pontos (`:`) e sublinhados (`_`). Os nomes de atributo podem ter esses caracteres e pontos (`.`). Os nomes relatados por padrão começam com uma letra. Você deve colocar nomes personalizados que não seguem essas diretrizes entre crases nas consultas NRQL. O exemplo a seguir mostra um nome personalizado entre crases:
+
+        ```sql
+        ... FACET `Logged-in user`
+        ```
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Coerção de tipo de dados
+      </td>
+
+      <td>
+        Não oferecemos suporte ao tipo de dados &quot;coerção&quot;. Para obter mais informações, consulte [Conversão de tipo de dados](/docs/insights/nrql-new-relic-query-language/nrql-reference/nrql-syntax-components-functions#type-conversion).
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+Para obter mais informações, consulte nossa [referência NRQL](/docs/query-your-data/nrql-new-relic-query-language/get-started/nrql-syntax-clauses-functions/) para ajudar a criar suas consultas.
+
+## Próximos passos [#next-steps]
+
+* [Como o NRQL funciona](/docs/query-your-data/nrql-new-relic-query-language/get-started/introduction-nrql-how-nrql-works/) (execução de consulta, atualização de dados e limites)
+* [Gráficos e dashboards com NRQL](/docs/query-your-data/nrql-new-relic-query-language/get-started/charts-and-dashboards-with-nrql/) (visualize os resultados da sua consulta)
+* [Tutorial guiado da NRQL](/docs/query-your-data/nrql-new-relic-query-language/get-started/introduction-nrql-tutorial/) (passo a passo prático para novos usuários)
+* [Referência do NRQL](/docs/query-your-data/nrql-new-relic-query-language/get-started/nrql-syntax-clauses-functions/) (sintaxe completa, cláusulas e funções)

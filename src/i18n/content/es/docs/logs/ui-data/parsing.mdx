@@ -1,0 +1,827 @@
+---
+title: Analizando datos log
+tags:
+  - Logs
+  - Log management
+  - UI and data
+metaDescription: How New Relic uses parsing and how to send customized log data.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Log <DNT>parsing</DNT> transforma los datos de logs no estructurados en atributos de búsqueda que puede utilizar para obtener información más detallada de sus logs. Estos atributos le permiten filtrar, facetar y alertar sobre sus datos con precisión.
+
+## Selecciona tu estrategia de análisis [#choose]
+
+Decida si analizar los datos en el momento de la ingesta o al ejecutar una consulta:
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>
+        Tipo de análisis
+      </th>
+
+      <th>
+        Descripción
+      </th>
+
+      <th>
+        Ideal para
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        **Análisis en tiempo de consulta**
+      </td>
+
+      <td>
+        Crea atributos temporales usando NRQL que solo existen durante la ejecución de la consulta. Ideal para el análisis instantáneo de datos existentes sin esperar a que ingresen nuevos logs. Obtenga más información sobre el [análisis en tiempo de consulta](/docs/logs/ui-data/query-time-parsing).
+      </td>
+
+      <td>
+        * Solución de problemas e investigaciones ad hoc
+        * Análisis exploratorio en conjuntos de datos pequeños
+        * Investigaciones puntuales
+        * Extraer atributos de logs ya almacenados en NRDB
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        **Análisis en tiempo de ingesta**
+      </td>
+
+      <td>
+        Crea atributos permanentes almacenados en NRDB. Dos formas de crear reglas de análisis en tiempo de ingesta:
+
+        * **Reglas de análisis incorporadas:** Patrones preconfigurados para fuentes de logs comunes (Apache, NGINX, CloudFront, MongoDB, etc.). Simplemente agregue un atributo `logtype` al reenviar logs. Consulte la [lista completa de reglas integradas](/docs/logs/ui-data/built-log-parsing-rules).
+
+        * **Reglas de análisis personalizadas:** Cuando sus logs son únicos para su aplicación, las reglas de análisis personalizadas le permiten definir exactamente qué campos son importantes para su negocio.
+
+          * <DNT>**No Code Log Parsing:**</DNT> Detecta patrones en sus logs de muestra. Ideal para usuarios que desean apuntar y hacer clic para extraer campos.
+          * **<DNT>Grok/Regex:</DNT> personalizado** Ingreso manual de código para formatos de log altamente complejos.
+      </td>
+
+      <td>
+        * Grandes volúmenes de logs
+        * Atributos analizados necesarios para alertas, dashboards y monitoreo continuo
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+También puede crear, consultar y administrar sus reglas de análisis de registros utilizando NerdGraph, nuestra API GraphQL. Una herramienta útil para esto es nuestro [explorador de API Nerdgraph](https://api.newrelic.com/graphiql). Para obtener más información, consulte nuestro [tutorial de NerdGraph para analizar](/docs/apis/nerdgraph/examples/nerdgraph-log-parsing-rules-tutorial/). <DNT>/* Here&apos;s a 5-minute video about log parsing: &lt;Video id=&quot;xPWM46yw3bQ&quot; type=&quot;youtube&quot; /&gt; */</DNT>
+
+## Cómo funciona el análisis personalizado en tiempo de ingesta [#how-it-works]
+
+El análisis personalizado le permite definir exactamente cómo New Relic estructura sus logs entrantes. Antes de crear reglas, es importante comprender las limitaciones técnicas del pipeline de ingesta.
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "100px" }}>
+        Análisis de registros
+      </th>
+
+      <th>
+        Cómo funciona
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        Qué
+      </td>
+
+      <td>
+        Las reglas de análisis son altamente específicas. Cuando crea una regla, define:
+
+        * **El campo objetivo:** El análisis se aplica a un campo específico a la vez.
+        * **La lógica de coincidencia:** Usa una cláusula `WHERE` de NRQL para filtrar exactamente qué logs debe evaluar esta regla.
+        * **El método de extracción:** Puede utilizar <DNT>**No Code Log Parsing**</DNT> para una experiencia de detección de patrones automática y guiada, o escribir manualmente <DNT>**Grok/Regex**</DNT> para estructuras de logs complejas y altamente personalizadas.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Cuando
+      </td>
+
+      <td>
+        New Relic procesa los logs en orden secuencial. Esto afecta qué condiciones pueden coincidir.
+
+        * El análisis ocurre mientras se ingieren los datos. Una vez que se escribe un log en la NRDB, los cambios realizados son permanentes.
+        * Una vez que se guarda y habilita una regla, las reglas comienzan a procesar los logs entrantes inmediatamente.
+        * El análisis ocurre **antes** del enriquecimiento de datos (como la síntesis de entidades), el descarte o la partición.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Validación
+      </td>
+
+      <td>
+        Para asegurarse de que sus reglas funcionen antes de que afecten los datos ingestados, puede previsualizar la salida con 10 muestras de logs almacenadas recientemente en la partición ‘Log’. Estas muestras representan datos recibidos en los últimos 30 minutos, en lugar de una transmisión en vivo en tiempo real.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Crear una regla personalizada [#custom-parsing]
+
+Puede crear reglas de análisis en contexto mientras investiga un log. Esto evita el cambio de contexto y reduce el tiempo medio de detección (MTTD). Alternativamente, puede crear reglas desde cero al incorporar una nueva aplicación o servicio.
+
+### <DNT>No Code Log Parsing</DNT> [#no-code]
+
+Utilice <DNT>No Code Log Parsing</DNT> para detectar y extraer campos de sus logs de muestra. New Relic analiza sus logs de muestra y sugiere patrones que puede configurar.
+
+<Steps>
+  <Step>
+    Para crear una regla en contexto, vaya a <DNT>**[one.newrelic.com](https://one.newrelic.com) &gt; Logs**</DNT> y aplique un filtro (o seleccione cualquier entidad que tenga logs, como APM, Browser o Mobile, y navegue a <DNT>**Logs in Context**</DNT>).
+
+    Para crear una regla sin contexto, vaya a <DNT>**[one.newrelic.com](https://one.newrelic.com) &gt; Logs**</DNT> sin establecer un filtro, o vaya a <DNT>**Logs &gt; Parsing**</DNT> y haga clic en <DNT>**Create a parsing rule**</DNT>.
+  </Step>
+
+  <Step>
+    En el proceso de creación de reglas en contexto:
+
+    1. Haz clic en un log para abrirlo <DNT>**Log details**</DNT>
+    2. Selecciona el atributo de log que deseas analizar (por ejemplo, `message`)
+    3. Haga clic en <DNT>**Create ingest time parsing rule**</DNT> y proporcione un nombre para su regla
+
+    Si ha aplicado un filtro en la IU de Logs antes de crear la regla, se completa automáticamente una condición de coincidencia basada en ese filtro.
+
+    <img title="Log parsing rules" alt="Screenshot of log filtering in UI" src="/images/logs_filtering.webp" />
+
+    En el flujo sin contexto, proporciona un nombre para tu regla y establece una condición de filtro NRQL o pega un log de muestra.
+
+    * Si configura un filtro de logs, haga clic en <DNT>**Run your query**</DNT>, seleccione el campo que desea analizar y haga clic en <DNT>**Next**</DNT>.
+    * Si pega un log de muestra, debe definir la cláusula `WHERE` de NRQL para que coincida con sus logs, seleccionar el campo que desea analizar y hacer clic en <DNT>**Next**</DNT>.
+
+    <img title="Log parsing rules" alt="Screenshot of creating a parsing rule in UI" src="/images/Create_a_parsing_rule_.webp" />
+  </Step>
+
+  <Step>
+    Revise el <DNT>**Patterns we detected**</DNT> en el log de muestra seleccionado y la regla que se creó. Haga clic en un patrón resaltado para ver y editar su configuración.
+
+    <img title="Screenshot of matching pattern in UI" alt="Screenshot of matching pattern in UI" src="/images/matching_pattern.webp" />
+
+    <Callout variant="Preview" title="Nota">
+      * Al nombrar atributos, use minúsculas con guiones bajos. Evite los caracteres especiales excepto los guiones bajos y no comience un nombre de atributo con un número.
+
+      * Para las subcadenas que desea evitar analizar que incluyen valores dinámicos, asegúrese de establecerlas como subcadenas dinámicas seleccionándolas y cambiando su configuración a <DNT>**Yes**</DNT>.
+    </Callout>
+  </Step>
+
+  <Step>
+    Para un control más granular sobre los campos a extraer, haga clic y arrastre para resaltar el log de muestra.
+
+    <img title="Log parsing rules" alt="Screenshot of creating a parsing rule in UI" src="/images/create_a_parsing_rule.webp" />
+
+    Puede interactuar con los patrones de las siguientes maneras:
+
+    * <DNT>**Auto detect patterns**</DNT>: Para detectar patrones en cualquier parte del log de muestra que no esté resaltada, haga clic y arrastre para resaltar esa subcadena y haga clic en <DNT>**Auto detect patterns**</DNT>. New Relic encontrará y resaltará patrones en la porción seleccionada. Para obtener una lista de los nombres de patrones Grok admitidos, consulte [Nombres de patrones Grok admitidos](#grok-patterns).
+    * <DNT>**Select text to parse**</DNT>: Seleccione este modo para la experiencia guiada de creación de reglas. Este modo ofrece una configuración patrón por patrón. Una vez establecidas las configuraciones del patrón, haga clic en <DNT>**Add pattern to rule**</DNT> para ver la regla actualizada y la vista previa de la salida.
+
+    Si los patrones detectados no son relevantes o extraen datos no deseados, puede eliminarlos de la regla creada mediante:
+
+    * Resalte el patrón no deseado en la ventana de log de muestra y haga clic en <DNT>**Remove selected patterns**</DNT>, o
+    * Haga clic en un patrón y seleccione <DNT>**Remove**</DNT>.
+  </Step>
+
+  <Step>
+    Revise el panel <DNT>**Preview output**</DNT>. Verifique que los logs de muestra muestren una marca de verificación verde, indicando que coinciden con su regla y que los campos se extraerán al momento de la ingesta.
+
+    * Para cambiar su muestra, expanda cualquier log en el panel <DNT>**Preview output**</DNT> y haga clic en <DNT>**Use as sample**</DNT>.
+
+      * Si seleccionó un log sin coincidencias: La muestra seleccionada aparecerá en la ventana de logs de muestra, se detectarán nuevos patrones y se creará una nueva regla.
+      * Si seleccionó un log coincidente: La muestra seleccionada aparecerá en la ventana de logs de muestra.
+  </Step>
+
+  <Step>
+    Haga clic en <DNT>**Save rule**</DNT> para activar de inmediato o en <DNT>**Save as draft**</DNT> para activar más tarde.
+  </Step>
+</Steps>
+
+### Escriba su propio personalizado <DNT>Grok/Regex</DNT> [#grok]
+
+Para formatos únicos, los usuarios avanzados pueden hacer clic en <DNT>**Write your own rule**</DNT> en la página <DNT>**Create a parsing rule**</DNT> para cambiar al editor de código y modificar patrones directamente en el editor de reglas.
+
+<img title="Screenshot depicting where to click to write your own custom Grok/Regex" alt="Screenshot depicting where to click to write your own custom Grok/Regex" src="/images/create_a_parsing_rule.webp" />
+
+Una vez que termine de editar la regla, haga clic en <DNT>**Preview**</DNT> para ver la salida de la vista previa actualizada y haga clic en <DNT>**Save rule**</DNT> para activarla.
+
+<Callout variant="preview" title="Nota">
+  Para cambiar al editor heredado, haga clic en <DNT>**Switch to original editor**</DNT> en la esquina superior derecha de la página <DNT>**Create a parsing rule**</DNT>.
+</Callout>
+
+#### Patrones de datos admitidos [#supported-patterns]
+
+New Relic admite el análisis de varios tipos de datos y formatos de datos mediante patrones Grok. Los patrones de análisis se especifican mediante Grok, un estándar de la industria para analizar mensajes de log. Grok es un superconjunto de expresiones regulares que agrega patrones con nombre integrados para usarse en lugar de expresiones regulares complejas literales.
+
+Las reglas de análisis pueden incluir una combinación de expresiones regulares y nombres de patrones Grok en su cadena de coincidencia. Haga clic en este enlace para ver una lista de [patrones Grok](https://github.com/thekrakken/java-grok/tree/master/src/main/resources/patterns) compatibles, y aquí para ver una lista de [tipos de Grok](#grok-types) compatibles.
+
+<CollapserGroup>
+  <Collapser id="grok-syntax" title="Sintaxis de patrones Grok">
+    Los patrones Grok siguen una sintaxis predefinida:
+
+    ```
+    %{PATTERN_NAME[:OPTIONAL_EXTRACTED_ATTRIBUTE_NAME[:OPTIONAL_TYPE[:OPTIONAL_PARAMETER]]]}
+    ```
+
+    Dónde:
+
+    * `PATTERN_NAME` es uno de los patrones Grok admitidos. El nombre del patrón es simplemente un nombre fácil de usar que representa una expresión regular. Son exactamente iguales a la expresión regular correspondiente.
+    * `OPTIONAL_EXTRACTED_ATTRIBUTE_NAME`, si se proporciona, es el nombre del atributo que se agregará a su mensaje de registro con el valor que coincide con el nombre del patrón. Es equivalente a utilizar un grupo de captura con nombre utilizando expresiones regulares. Si no se proporciona esto, entonces la regla de análisis simplemente coincidirá con una región de su cadena, pero no extraerá un atributo con su valor.
+    * `OPTIONAL_TYPE` especifica el tipo de valor de atributo que se extraerá. Si se omite, los valores se extraen como cadenas. Por ejemplo, para extraer el valor `123` de `"File Size: 123"` como un número en el atributo `file_size`, use `value: %{INT:file_size:int}`.
+    * `OPTIONAL_PARAMETER` especifica un parámetro opcional para ciertos tipos. Actualmente, solo el tipo `datetime` toma un parámetro; consulte a continuación para obtener más detalles.
+  </Collapser>
+
+  <Collapser id="grok-types" title="Tipos de Grok admitidos">
+    El campo `OPTIONAL_TYPE` especifica el tipo de valor de atributo que se extraerá. Si se omite, los valores se extraen como cadenas.
+
+    Los tipos admitidos son:
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            Tipo especificado en Grok
+          </th>
+
+          <th>
+            Tipo almacenado en la base de datos de New Relic
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `boolean`
+          </td>
+
+          <td>
+            `boolean`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `byte` `short` `int` `integer`
+          </td>
+
+          <td>
+            `integer`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `long`
+          </td>
+
+          <td>
+            `long`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `float`
+          </td>
+
+          <td>
+            `float`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `double`
+          </td>
+
+          <td>
+            `double`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `string` (por defecto) `text`
+          </td>
+
+          <td>
+            `string`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `date` `datetime`
+          </td>
+
+          <td>
+            El tiempo como `long`
+
+            De forma predeterminada, se interpreta como ISO 8601. Si `OPTIONAL_PARAMETER` está presente, especifica la [cadena de patrón de fecha y hora](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/text/SimpleDateFormat.html)que se usará para interpretar el `datetime`.
+
+            Tenga en cuenta que esto sólo está disponible durante el análisis. Disponemos de un [paso adicional e independiente de interpretación timestamp ](/docs/logs/ui-data/timestamp-support)que se produce para todos los registros más adelante en el proceso de ingesta.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `json`
+          </td>
+
+          <td>
+            Datos estructurados JSON. Consulte [Análisis de JSON mezclado con texto sin formato](#parsing-json) para obtener más información.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `csv`
+          </td>
+
+          <td>
+            Datos CSV. Consulte [Análisis de CSV](#parsing-csv) para obtener más información.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `geo`
+          </td>
+
+          <td>
+            Ubicación geográfica a partir de direcciones IP. Consulte [Geolocalización de direcciones IP (GeoIP)](#geo) para obtener más información.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `key value pairs`
+          </td>
+
+          <td>
+            valor principal Par . Consulte [Análisis de pares de valores principales](#parsing-key-value-pairs) para obtener más información.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </Collapser>
+
+  <Collapser id="grok-multiline" title="Análisis multilínea de Grok">
+    Si tiene un registro de varias líneas, tenga en cuenta que el patrón `GREEDYDATA` Grok no coincide con las nuevas líneas (es equivalente a `.*`).
+
+    Entonces, en lugar de usar `%{GREEDYDATA:some_attribute}` directamente, necesitarás agregar la bandera multilínea delante: `(?s)%{GREEDYDATA:some_attribute}`
+  </Collapser>
+
+  <Collapser id="parsing-json" title="Análisis de JSON mezclado con texto sin formato">
+    El pipeline de logs de New Relic analiza sus mensajes de log JSON de forma predeterminada, pero a veces tiene mensajes de log JSON mezclados con texto sin formato. En esta situación, es posible que desee analizarlos y luego poder filtrar utilizando los atributos JSON. Si ese es el caso, puede utilizar el [tipo Grok](#grok-syntax) `json`, que analizará el JSON capturado por el patrón Grok. Este formato se basa en 3 partes principales: la sintaxis Grok, el prefijo que desee asignar a los atributos JSON analizados y el `json` [tipo de Grok](#grok-syntax). Al usar el `json` [tipo Grok](#grok-syntax), puede extraer y analizar JSON de logs que no tienen el formato correcto; por ejemplo, si sus logs están precedidos por una cadena de fecha/hora:
+
+    ```json
+    2015-05-13T23:39:43.945958Z {"event": "TestRequest", "status": 200, "response": {"headers": {"X-Custom": "foo"}}, "request": {"headers": {"X-Custom": "bar"}}}
+    ```
+
+    Para extraer y analizar los datos JSON de este formato log , cree la siguiente expresión de Grok:
+
+    ```
+    %{TIMESTAMP_ISO8601:containerTimestamp} %{GREEDYDATA:my_attribute_prefix:json}
+    ```
+
+    El log resultante es:
+
+    ```
+    containerTimestamp: "2015-05-13T23:39:43.945958Z"
+    my_attribute_prefix.event: "TestRequest"
+    my_attribute_prefix.status: 200
+    my_attribute_prefix.response.headers.X-Custom: "foo"
+    my_attribute_prefix.request.headers.X-Custom: "bar"
+    ```
+
+    Puede definir la lista de atributos a extraer o soltar con las opciones `keepAttributes` o `dropAttributes`. Por ejemplo, con la siguiente expresión de Grok:
+
+    ```
+    %{TIMESTAMP_ISO8601:containerTimestamp} %{GREEDYDATA:my_attribute_prefix:json({"keepAttributes": ["my_attribute_prefix.event", "my_attribute_prefix.response.headers.X-Custom"]})}
+    ```
+
+    El log resultante es:
+
+    ```
+    containerTimestamp: "2015-05-13T23:39:43.945958Z"
+    my_attribute_prefix.event: "TestRequest"
+    my_attribute_prefix.request.headers.X-Custom: "bar"
+    ```
+
+    Si desea omitir el prefijo `my_attribute_prefix` , puede incluir el `"noPrefix": true` en la configuración.
+
+    ```
+    %{TIMESTAMP_ISO8601:containerTimestamp} %{GREEDYDATA:my_attribute_prefix:json({"noPrefix": true})}
+    ```
+
+    Si desea omitir el prefijo `my_attribute_prefix` y conservar solo el atributo `status` , puede incluir `"noPrefix": true` y `"keepAttributes: ["status"]` en la configuración.
+
+    ```
+    %{TIMESTAMP_ISO8601:containerTimestamp} %{GREEDYDATA:my_attribute_prefix:json({"noPrefix": true, "keepAttributes": ["status"]})}
+    ```
+
+    Si se escapó su JSON, puede usar la opción `isEscaped` para poder analizarlo. Si su JSON se escapó y luego se citó, también debe hacer coincidir las comillas, como se muestra a continuación. Por ejemplo, con la siguiente expresión de Grok:
+
+    ```
+    %{TIMESTAMP_ISO8601:containerTimestamp} "%{GREEDYDATA:my_attribute_prefix:json({"isEscaped": true})}"
+    ```
+
+    Podría analizar el mensaje escapado:
+
+    ```
+    2015-05-13T23:39:43.945958Z "{\"event\": \"TestRequest\", \"status\": 200, \"response\": {\"headers\": {\"X-Custom\": \"foo\"}}, \"request\": {\"headers\": {\"X-Custom\": \"bar\"}}}"
+    ```
+
+    El log resultante es:
+
+    ```
+    containerTimestamp: "2015-05-13T23:39:43.945958Z"
+    my_attribute_prefix.event: "TestRequest"
+    my_attribute_prefix.status: 200
+    my_attribute_prefix.response.headers.X-Custom: "foo"
+    my_attribute_prefix.request.headers.X-Custom: "bar"
+    ```
+
+    Para configurar el tipo `json` [Grok](#grok-syntax), emplee `:json(_CONFIG_)`:
+
+    * `json({"dropOriginal": true})`: elimine el fragmento JSON que se utilizó en el análisis. Cuando se establece en `true` (valor predeterminado), la regla de análisis eliminará el fragmento JSON original. Tenga en cuenta que el atributo JSON permanecerá en el campo del mensaje.
+    * `json({"dropOriginal": false})`: Esto mostrará la carga útil JSON que se extrajo. Cuando se establece en `false`, la carga útil completa solo JSON se mostrará bajo un atributo denominado en `my_attribute_prefix` arriba. Tenga en cuenta que el atributo JSON permanecerá aquí en el campo de mensaje y también brindará al usuario 3 vistas diferentes de los datos JSON. Si le preocupa el almacenamiento de las tres versiones, se recomienda utilizar el valor predeterminado `true` aquí.
+    * `json({"depth": 62})`: Niveles de profundidad que desea analizar el valor JSON (predeterminado en 62).
+    * `json({"keepAttributes": ["attr1", "attr2", ..., "attrN"]})`: Especifica qué atributo se extraerá del JSON. La lista proporcionada no puede estar vacía. Si esta opción de configuración no está configurada, se extraen todos los atributos.
+    * `json({"dropAttributes": ["attr1", "attr2", ..., "attrN"]})`: Especifica qué atributo se eliminará del JSON. Si esta opción de configuración no está configurada, no se elimina ningún atributo.
+    * `json({"noPrefix": true})`: establezca esta opción en `true` para eliminar el prefijo del atributo extraído del JSON.
+    * `json({"isEscaped": true})`: Establezca esta opción en `true` para analizar JSON que se escapó (lo que normalmente se ve cuando JSON está encadenado, por ejemplo, `{\"key\": \"value\"}`).
+  </Collapser>
+
+  <Collapser id="parsing-csv" title="Analizando CSV">
+    Si su sistema envía un registro de valores separados por comas (CSV) y necesita analizarlos en New Relic, puede usar el [tipo `csv` Grok](#grok-syntax), que analiza el CSV capturado por el patrón Grok. Este formato se basa en 3 partes principales: la sintaxis de Grok, el prefijo que le gustaría asignar al atributo CSV analizado y el [tipo](#grok-syntax) `csv` de Grok. Usando el tipo `csv` [Grok](#grok-syntax), puede extraer y analizar CSV del registro.
+
+    Dada la siguiente línea log CSV como ejemplo:
+
+    ```
+    "2015-05-13T23:39:43.945958Z,202,POST,/shopcart/checkout,142,10"
+    ```
+
+    Y una regla de análisis con la siguiente forma:
+
+    ```
+    %{GREEDYDATA:log:csv({"columns": ["timestamp", "status", "method", "url", "time", "bytes"]})}
+    ```
+
+    Analizará su log de la siguiente manera:
+
+    ```
+    log.timestamp: "2015-05-13T23:39:43.945958Z"
+    log.status: "202"
+    log.method: "POST"
+    log.url: "/shopcart/checkout"
+    log.time: "142"
+    log.bytes: "10"
+    ```
+
+    Si necesita omitir el prefijo &quot;log&quot;, puede incluir el `"noPrefix": true` en la configuración.
+
+    ```
+    %{GREEDYDATA:log:csv({"columns": ["timestamp", "status", "method", "url", "time", "bytes"], "noPrefix": true})}
+    ```
+
+    #### Configuración de columnas:
+
+    * Es obligatorio indicar las columnas en la configuración del tipo CSV Grok (que debe ser un JSON válido).
+    * Puede ignorar cualquier columna estableciendo &quot;\_&quot; (guión bajo) como nombre de la columna para eliminarla del objeto resultante.
+
+    #### Opciones de configuración opcionales:
+
+    Si bien la configuración de &quot;columnas&quot; es obligatoria, es posible cambiar el análisis del CSV con las siguientes configuraciones.
+
+    * <DNT>**dropOriginal**</DNT>: (El valor predeterminado es `true`) Suelte el fragmento CSV utilizado en el análisis. Cuando se establece en `true` (valor predeterminado), la regla de análisis descarta el campo original.
+    * <DNT>**noPrefix**</DNT>: (El valor predeterminado es `false`) No incluye el nombre del campo Grok como prefijo en el objeto resultante.
+    * <DNT>**separator**</DNT>: (Predeterminado en `,`) Define el carácter/cadena que divide cada columna.
+      * Otro escenario común son los valores separados por tabulaciones (TSV), para eso debes indicar `\t` como separador, ej. `%{GREEDYDATA:log:csv({"columns": ["timestamp", "status", "method", "url", "time", "bytes"], "separator": "\t"})`
+    * <DNT>**quoteChar**</DNT>: (Predeterminado en `"`) Define el carácter que opcionalmente rodea el contenido de una columna.
+  </Collapser>
+
+  <Collapser id="geo" title="Geolocalización de direcciones IP (GeoIP)">
+    Si su sistema envía registros que contienen direcciones IPv4, New Relic puede ubicarlas geográficamente y enriquecer el registro de eventos con el atributo especificado. Puede utilizar el [tipo](#grok-syntax) `geo` Grok, que encuentra la posición de una dirección IP capturada por el patrón Grok. Este formato se puede configurar para devolver uno o más campos relacionados con la dirección, como la ciudad, el país y la latitud/longitud de la IP.
+
+    Dada la siguiente línea log como ejemplo:
+
+    ```
+    2015-05-13T23:39:43.945958Z 146.190.212.184
+    ```
+
+    Y una regla de análisis con la siguiente forma:
+
+    ```
+    %{TIMESTAMP_ISO8601:containerTimestamp} %{GREEDYDATA:ip:geo({"lookup":["city","region","countryCode", "latitude","longitude"]})}
+    ```
+
+    Analizaremos su log de la siguiente manera:
+
+    ```
+    ip: 146.190.212.184
+    ip.city: North Bergen
+    ip.countryCode: US
+    ip.countryName: United States
+    ip.latitude: 40.793
+    ip.longitude: -74.0247
+    ip.postalCode: 07047
+    ip.region: NJ
+    ip.regionName: New Jersey
+    containerTimestamp:2015-05-13T23:39:43.945958Z
+    ISO8601_TIMEZONE:Z
+    ```
+
+    #### Configuración de búsqueda:
+
+    Es obligatorio especificar los campos `lookup` deseados devueltos por la acción `geo` . Se requiere al menos un elemento de las siguientes opciones.
+
+    * <DNT>**city**</DNT>: Nombre de la ciudad
+    * <DNT>**countryCode**</DNT>: Abreviatura de país
+    * <DNT>**countryName**</DNT>: Nombre del país
+    * <DNT>**latitude**</DNT>: Latitud
+    * <DNT>**longitude**</DNT>: Longitud
+    * <DNT>**postalCode**</DNT>: Código postal, código postal o similar
+    * <DNT>**region**</DNT>: Abreviatura de estado, provincia o territorio
+    * <DNT>**regionName**</DNT>: Nombre del estado, provincia o territorio
+  </Collapser>
+
+  <Collapser id="parsing-key-value-pairs" title="Análisis de pares de valores principales">
+    La canalización de logs de New Relic analiza su mensaje de log de manera predeterminada, pero a veces tiene mensajes de log que están formateados como pares principales de valores. En esta situación, es posible que desees poder analizarlos y luego filtrarlos empleando el atributo valor principal.
+
+    En ese caso, puede utilizar el `keyvalue` [tipo Grok](#grok-syntax), que analizará los pares clave-valor capturados por el patrón Grok. Este formato se basa en 3 partes principales: la sintaxis Grok, el prefijo que desea asignar a los atributos clave-valor analizados y el `keyvalue` [tipo de Grok](#grok-syntax). Al usar el [tipo Grok](#grok-syntax) `keyvalue`, puede extraer y analizar pares clave-valor de logs que no tienen el formato correcto; por ejemplo, si sus logs tienen un prefijo de cadena de fecha/hora:
+
+    ```json
+      2015-05-13T23:39:43.945958Z key1=value1,key2=value2,key3=value3
+    ```
+
+    Para extraer y analizar los datos de clave-valor de este formato de log, cree la siguiente expresión Grok:
+
+    ```
+    %{TIMESTAMP_ISO8601:containerTimestamp} %{GREEDYDATA:my_attribute_prefix:keyvalue()}
+    ```
+
+    El log resultante es:
+
+    ```
+      containerTimestamp: "2015-05-13T23:39:43.945958Z"
+      my_attribute_prefix.key1: "value1"
+      my_attribute_prefix.key2: "value2"
+      my_attribute_prefix.key3: "value3"
+    ```
+
+    También puede definir el delimitador y separador personalizados para extraer los pares principales de valores requeridos.
+
+    ```json
+    2015-05-13T23:39:43.945958Z event:TestRequest request:bar
+    ```
+
+    Por ejemplo, con la siguiente expresión de Grok:
+
+    ```
+      %{TIMESTAMP_ISO8601:containerTimestamp} %{GREEDYDATA:my_attribute_prefix:keyvalue({"delimiter": " ", "keyValueSeparator": ":"})}
+    ```
+
+    El log resultante es:
+
+    ```
+    containerTimestamp: "2015-05-13T23:39:43.945958Z"
+    my_attribute_prefix.event: "TestRequest"
+    my_attribute_prefix.request: "bar"
+    ```
+
+    Si desea omitir el prefijo `my_attribute_prefix` , puede incluir el `"noPrefix": true` en la configuración.
+
+    ```
+    %{TIMESTAMP_ISO8601:containerTimestamp} %{GREEDYDATA:my_attribute_prefix:keyValue({"noPrefix": true})}
+    ```
+
+    El log resultante es:
+
+    ```
+    containerTimestamp: "2015-05-13T23:39:43.945958Z"
+    event: "TestRequest"
+    request: "bar"
+    ```
+
+    Si desea configurar su prefijo de carácter de comillas personalizado, puede incluir &quot;quoteChar&quot;: en la configuración.
+
+    ```json
+    2015-05-13T23:39:43.945958Z nbn_demo='INFO',message='This message contains information with spaces ,sessionId='abc123'
+    ```
+
+    ```
+    %{TIMESTAMP_ISO8601:containerTimestamp} %{GREEDYDATA:my_attribute_prefix:keyValue({"quoteChar": "'"})}
+    ```
+
+    El log resultante es:
+
+    ```
+    "my_attribute_prefix.message": "'This message contains information with spaces",
+    "my_attribute_prefix.nbn_demo": "INFO",
+    "my_attribute_prefix.sessionId": "abc123"
+    ```
+
+    #### Parrilla con patrón Grok
+
+    Puede personalizar el comportamiento de análisis con las siguientes opciones para adaptarlo a sus formatos de log:
+
+    * **delimitador**
+
+      * **Descripción:** Cadena que separa cada par principal de valores.
+      * **Valor predeterminado:** `,` (coma)
+      * **Anular:** establezca el campo `delimiter` para cambiar este comportamiento.
+
+    * **separador de valor-clave**
+
+      * **Descripción:** Cadena empleada para asignar valores a las claves.
+      * **Valor predeterminado:** `=`
+      * **Anulación:** establezca el campo `keyValueSeparator` para el uso del separador personalizado.
+
+    * **Cita Char**
+
+      * **Descripción:** Carácter empleado para encerrar valores con espacios o caracteres especiales.
+      * **Valor predeterminado:** `"` (comillas dobles)
+      * **Anulación:** define un carácter personalizado empleando `quoteChar`.
+
+    * **soltarOriginal**
+
+      * **Descripción:** Elimina el mensaje de log original luego del análisis. Útil para reducir el almacenamiento de logs.
+      * **Valor predeterminado:** `true`
+      * **Anulación:** Establezca `dropOriginal` en `false` para conservar el mensaje de log original.
+
+    * **Sin prefijo**
+
+      * **Descripción:** Cuando `true`, excluye el nombre del campo Grok como prefijo en el objeto resultante.
+      * **Valor predeterminado:** `false`
+      * **Anulación:** habilítelo estableciendo `noPrefix` en `true`.
+
+    * **escapeChar**
+
+      * **Descripción:** Define un carácter de escape personalizado para manejar caracteres de log especiales.
+      * **Valor predeterminado:** &quot;&quot; (barra invertida)
+      * **Anular:** Personalizar con `escapeChar`.
+
+    * **valores de recorte**
+
+      * **Descripción:** Permite recortar valores que contienen espacios en blanco.
+      * **Valor predeterminado:** `false`
+      * **Anulación:** Establezca `trimValues` en `true` para activar el recorte.
+
+    * **Teclas de ajuste**
+
+      * **Descripción:** Permite recortar teclas que contienen espacios en blanco.
+      * **Valor predeterminado:** `true`
+      * **Anulación:** Establezca `trimKeys` en `true` para activar el recorte.
+  </Collapser>
+
+  <Collapser id="grok-patterns" title="Patrones Grok admitidos">
+    New Relic admite los siguientes patrones Grok:
+
+    * IP
+    * TIMESTAMP\_ISO8601
+    * HTTPDATE
+    * TIME
+    * UUID
+    * MONTH
+    * SPACE
+    * DATESTAMP
+    * DATE
+    * COMBINEDAPACHELOG
+    * ISO8601\_TIMEZONE
+    * MAC
+    * DATE\_EU
+    * TZ
+    * DATE\_US
+    * DAY
+    * LOGLEVEL
+    * NUMBER
+    * INT
+    * QUOTEDSTRING
+    * SYSLOGTIMESTAMP
+    * PATH
+    * SYSLOGBASE
+    * COMMONAPACHELOG
+    * IPV6
+    * COMMONMAC
+    * DATESTAMP\_OTHER
+    * ISO8601\_SECOND
+    * DATESTAMP\_EVENTLOG
+    * SYSLOGBASE2
+    * HAPROXYHTTP
+    * RUBY\_LOGGER
+    * WINDOWSMAC
+    * WORD
+    * DATA
+    * GREEDYDATA
+    * NOTSPACE
+    * BASE16FLOAT
+    * QS
+    * BASE10NUM
+    * USER
+    * IPORHOST
+    * USERNAME
+    * IPV4
+    * MONTHDAY
+    * YEAR
+    * HOSTNAME
+    * POSINT
+    * URIPATHPARAM
+    * URI
+    * URIPATH
+    * MONTHNUM
+    * NONNEGINT
+    * MINUTE
+    * SECOND
+    * HOUR
+    * URIHOST
+    * URIPROTO
+    * URIPARAM
+    * SYSLOGHOST
+    * BASE16NUM
+    * SYSLOGPROG
+    * ANFITRIÓN
+    * HOSTPORT
+    * JAVACLASS
+    * PROG
+    * UNIXPATH
+    * WINPATH
+    * MONTHNUM2
+    * RUBY\_LOGLEVEL
+    * SYSLOGFACILITY
+    * CRON\_ACTION
+    * HAPROXYCAPTUREDREQUESTHEADERS
+    * HAPROXYCAPTUREDRESPONSEHEADERS
+    * HAPROXYDATE
+    * CISOMAC
+  </Collapser>
+</CollapserGroup>
+
+## Administrar reglas de análisis [#manage-rules]
+
+Después de crear reglas de análisis, puede gestionarlas desde <DNT>**Logs &gt; Parsing**</DNT>. Las reglas en borrador están guardadas pero aún no activadas. Puede activarlos cuando esté listo para aplicarlos a los logs entrantes.
+
+Para editar una regla de análisis:
+
+1. En su lista de reglas de análisis, haga clic en el nombre de la regla o haga clic en <DNT>**... &gt; Edit**</DNT> y realice los cambios necesarios. Para cambiar al editor de código, haga clic en <DNT>**Write your own rule**</DNT> para escribir o modificar patrones <DNT>Grok/Regex</DNT> directamente.
+2. Haga clic en <DNT>**Save rule**</DNT> (o <DNT>**Save as draft**</DNT> si desea mantenerlo desactivado).
+
+Los cambios se aplican a los logs ingeridos después de la actualización. Para habilitar, deshabilitar o eliminar una regla de análisis:
+
+1. Busque la regla en su lista de reglas de análisis y haga clic en el menú <DNT>**...**</DNT>.
+
+2. Seleccione una acción:
+
+   * <DNT>**Enable:**</DNT> Activa la regla en borrador (se aplica inmediatamente a los logs recién ingestados)
+   * <DNT>**Disable:**</DNT> Pausa temporalmente la regla activa
+   * <DNT>**Delete:**</DNT> Elimina la regla por completo
+
+## Límites
+
+El análisis es computacionalmente intensivo. Para garantizar la estabilidad de la plataforma, New Relic aplica lo siguiente:
+
+* **Límite por mensaje**: Una regla tiene 100ms para analizar un solo mensaje. Si supera esto, el análisis se detiene para ese mensaje.
+* **Límite por cuenta**: El tiempo total de procesamiento está limitado por minuto. Si alcanza esto, los logs permanecerán sin analizar (almacenados en su formato original).
+* **Tiempos del pipeline**: El análisis ocurre antes del enriquecimiento. No puedes hacer coincidir una regla de análisis con un atributo que aún no se ha agregado (como una etiqueta agregada más adelante en el pipeline).
+* **La regla de la primera coincidencia**: Las reglas de análisis no están ordenadas. Si múltiples reglas coinciden con un solo log, New Relic aplica una al azar. Asegúrese de que sus cláusulas `WHERE` de NRQL sean lo suficientemente específicas para evitar coincidencias superpuestas.
+
+<Callout variant="tip">
+  Para comprobar fácilmente si se han alcanzado sus límites de tarifas, vaya a la [página de su <DNT>**Limits**</DNT> ](/docs/telemetry-data-platform/ingest-manage-data/manage-data/view-system-limits#limits-ui)sistema en la New Relic UI.
+</Callout>
+
+## Resolución de problemas [#troubleshooting]
+
+Si el análisis no funciona como esperaba, puede deberse a lo siguiente:
+
+* <DNT>**Logic:**</DNT> La lógica de coincidencia de reglas de análisis no coincide con el registro que desea.
+* <DNT>**Timing:**</DNT> Si su regla de coincidencia de análisis tiene como objetivo un valor que aún no existe, fallará. Esto puede ocurrir si el valor se agrega más adelante en el proceso como parte del proceso de enriquecimiento.
+* <DNT>**Limits:**</DNT> Hay una cantidad fija de tiempo disponible cada minuto para procesar el registro mediante análisis, patrones, filtros de eliminación, etc. Si se ha invertido la cantidad máxima de tiempo, se omitirá el análisis de registros de eventos adicionales.
+
+Para resolver estos problemas, cree o ajuste sus [reglas de análisis personalizadas](#custom-parsing).
+
+## Documentación relacionada [#related-docs]
+
+<DocTiles>
+  <DocTile title="Reglas integradas de análisis de registros." path="/docs/logs/ui-data/built-log-parsing-rules">
+    Explora patrones predefinidos de New Relic.
+  </DocTile>
+
+  <DocTile title="Consultar datos log" path="/docs/logs/log-management/ui-data/query-logs">
+    Utilice atributos analizados en consultas NRQL.
+  </DocTile>
+</DocTiles>

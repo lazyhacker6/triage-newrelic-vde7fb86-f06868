@@ -1,0 +1,31 @@
+---
+title: 'Cloud Cost Intelligence: Pricing'
+metaDescription: Understand how Cloud Cost Intelligence is priced, including billing file ingest rates and how usage is measured.
+freshnessValidatedDate: never
+---
+
+<DNT>Cloud Cost Intelligence</DNT> is an Advanced Compute product. Pricing is based on the volume of billing export data that your cloud provider publishes and CCI processes, referred to as billing file ingest. To access CCI, users must have a **full platform user license**.
+
+<Callout variant="tip">
+  Contact your New Relic account team for the latest pricing details or to discuss volume-based options.
+</Callout>
+
+## Billing file ingest rate
+
+Billing file ingest is charged in aCCUs per GB of billing data processed.
+
+The per-GB rate differs by cloud provider, but so does the volume of billing data each provider generates for a infrastructure landscape.
+
+On a per-GB basis, AWS has the lowest rate, GCP is higher than AWS, and Azure is higher than both.
+
+For example, if you have a comparable infrastructure landscape across all three providers, you would see broadly similar total ingest costs on AWS, GCP, and Azure — even though the per-GB rates differ.
+
+## What is billing file ingest?
+
+Billing file ingest refers to the size of the billing export files that your cloud provider (AWS, Azure, or GCP) publishes to your designated storage container. CCI imports these files to build cost analysis and insights.
+
+<Callout variant="important">
+  Billing file ingest is different from New Relic's standard [data ingest](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/data-ingest-billing/), which applies to streaming telemetry data such as metrics, logs, and traces. The two are metered and billed separately.
+</Callout>
+
+For an overview of how New Relic pricing works more broadly, see [New Relic pricing](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/new-relic-one-pricing-billing/).

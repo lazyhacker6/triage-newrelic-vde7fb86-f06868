@@ -1,0 +1,331 @@
+---
+title: Modificar la configuración del agente
+metaDescription: Learn how to modify agent configuration to manage the flow of data from your monitored entities to New Relic.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Para que el gateway procese los telemetry data de sus agentes, reconfigúrelos para enrutar los datos a su clúster de gateway en lugar de directamente a New Relic. Cómo hacerlo depende del tipo de agente: los agentes de New Relic APM usan `NEW_RELIC_HOST`, las fuentes de OpenTelemetry usan la configuración del exportador OTLP y los reenviadores de logs usan su propia configuración de plug-in de salida. Las secciones a continuación cubren cada tipo de agente. Todos los ejemplos usan el extremo de gateway local del clúster. Reemplácelo por su extremo real si los agentes se ejecutan fuera del clúster.
+
+## Agente New Relic APM
+
+`NEW_RELIC_HOST` es solo para APM y no tiene efecto en las fuentes de OpenTelemetry, el agente de infraestructura o los reenviadores de logs. El El extremo de la gateway debe ser accesible a través de HTTPS, por lo que los agentes APM se conectan a través del proxy inverso dentro del clúster (NGINX o Kong) o el ALB fuera del clúster, no directamente al pod de la gateway.
+
+El siguiente ejemplo muestra un archivo de configuración del agente de Node.js:
+
+```js
+'use strict'
+/**
+ * New Relic agent configuration.
+ *
+ * See lib/config/default.js in the agent distribution for a more complete
+ * description of configuration variables and their potential values.
+ */
+exports.config = {
+  /**
+   * Array of application names.
+   */
+  app_name: ['My Application'],
+  /**
+   * Your New Relic Host endpoint.
+  */
+  NEW_RELIC_HOST: 'GATEWAY_DNS_ENDPOINT_HERE',
+  /**
+   * Your New Relic license key.
+   */
+  license_key: 'license key here',
+  logging: {
+    /**
+     * Level at which to log. 'trace' is most useful to New Relic when diagnosing
+     * issues with the agent, 'info' and higher will impose the least overhead on
+     * production applications.
+     */
+    level: 'info'
+  },
+  /**
+   * When true, all request headers except for those listed in attributes.exclude
+   * will be captured for all traces, unless otherwise specified in a destination's
+   * attributes include/exclude lists.
+   */
+  allow_all_headers: true,
+  attributes: {
+    /**
+     * Prefix of attributes to exclude from all destinations. Allows * as wildcard
+     * at end.
+     *
+     * NOTE: If excluding headers, they must be in camelCase form to be filtered.
+     *
+     * @name NEW_RELIC_ATTRIBUTES_EXCLUDE
+     */
+    exclude: [
+      'request.headers.cookie',
+      'request.headers.authorization',
+      'request.headers.proxyAuthorization',
+      'request.headers.setCookie*',
+      'request.headers.x*',
+      'response.headers.cookie',
+      'response.headers.authorization',
+      'response.headers.proxyAuthorization',
+      'response.headers.setCookie*',
+      'response.headers.x*'
+    ]
+  }
+}
+```
+
+{/* [NEW SECTION START] */}
+
+## Recolector OpenTelemetry
+
+**Versión mínima:** opentelemetry-collector-contrib v0.104.0
+
+Use el exportador `otlphttp` apuntando al puerto HTTP OTLP del gateway. Despliegue esta configuración como un ConfigMap de Kubernetes:
+
+```yaml
+exporters:
+  otlphttp:
+    endpoint: http://pipeline-control-gateway.newrelic.svc.cluster.local:4318
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      exporters: [otlphttp]
+    metrics:
+      exporters: [otlphttp]
+    logs:
+      exporters: [otlphttp]
+```
+
+<Callout variant="important">
+  Utilice el exportador `otlphttp`, no `otlp`. El chart de Helm renombra `otlp` a `otlp_grpc` internamente, lo cual no es válido para esta versión del recolector.
+</Callout>
+
+## agente de conexión automática de eBPF
+
+Configure el agente de conexión automática de APM de eBPF para enviar telemetría a través de OTLP gRPC estableciendo `customOtlpEndpoint` en el archivo de valores:
+
+```yaml
+customOtlpEndpoint: "pipeline-control-gateway.newrelic.svc.cluster.local:4317"
+customOtlpEndpointTlsEnabled: false
+reportLogs: "true"
+```
+
+Esto enruta tanto las métricas como los logs a través del receptor OTLP gRPC de la gateway en el puerto 4317. TLS está desactivado porque la conexión permanece dentro del clúster.
+
+## Agente de infraestructura
+
+**Versión mínima:** v1.62.0
+
+El agente de infraestructura tiene dos rutas de configuración independientes según lo que desee enrutar a través de la gateway:
+
+* **Toda la telemetría (métricas, eventos, inventario y logs):** utilice `collector_url` y `metric_url` en los valores de Helm. Esto enruta todo lo que recopila el agente a través de la gateway.
+* **Solo logs:** utilice `logging_endpoint` en `newrelic-infra.yml`. Esto enruta solo el reenvío de logs a través de la gateway, mientras que el resto de la telemetría continúa yendo directamente a New Relic.
+
+### Enrute toda la telemetría a través del gateway
+
+Establezca `collector_url` y `metric_url` en sus valores de Helm:
+
+```yaml
+newrelic-infrastructure:
+  common:
+    agentConfig:
+      collector_url: "http://pipeline-control-gateway.newrelic.svc.cluster.local"
+      metric_url: "http://pipeline-control-gateway.newrelic.svc.cluster.local"
+```
+
+### Enrute los logs solo a través del gateway.
+
+Establezca `logging_endpoint` en `/etc/newrelic-infra.yml` y habilite el reenvío de logs:
+
+```yaml
+license_key: YOUR_LICENSE_KEY
+logging_endpoint: http://pipeline-control-gateway.newrelic.svc.cluster.local/log/v1
+log:
+  forward: true
+```
+
+Utilice `http://` para el extremo local del clúster. Utilice `https://` solo cuando se enrute a través de un proxy inverso dentro del clúster (NGINX o Kong) con cert-manager desplegado.
+
+Luego, defina qué archivos de log reenviar en `/etc/newrelic-infra/logging.d/logging.yml`:
+
+```yaml
+logs:
+  - name: my-app-logs
+    file: /var/log/my-app.log
+```
+
+Reinicie el agente de infraestructura para aplicar los cambios.
+
+{/* [NEW SECTION END] */}
+
+## Matriz de compatibilidad: Agentes y versiones compatibles
+
+La siguiente tabla enumera los agentes de APM de New Relic, los agentes de infraestructura y los recopiladores de logs compatibles para su uso con el gateway. Tenga en cuenta que el soporte para la función Gateway no anula las [políticas generales de fin de vida útil (EOL) de New Relic](/docs/licenses/end-of-life/notification-changes-new-relic-saas-features-distributed-software/) ni ninguna [política de EOL específica del agente.](/docs/licenses/end-of-life/notification-changes-new-relic-saas-features-distributed-software/#eol-agents)
+
+<table>
+  <thead>
+    <tr>
+      <th>
+        Tipo de agente/Lenguaje
+      </th>
+
+      <th>
+        Versiones disponibles
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        <strong>Agente New Relic APM</strong>
+      </td>
+
+      <td>
+        Consulte las versiones específicas del lenguaje a continuación:
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+            
+
+        [.NET](/docs/apm/agents/net-agent/configuration/net-agent-configuration/)
+      </td>
+
+      <td>
+        8.17.438 y posteriores
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+            
+
+        [Go](/docs/apm/agents/go-agent/configuration/go-agent-configuration/)
+      </td>
+
+      <td>
+        2.2.0 y posteriores
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+            
+
+        [Java](/docs/apm/agents/java-agent/configuration/java-agent-configuration-config-file/)
+      </td>
+
+      <td>
+        4.9.0 y posteriores
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+            
+
+        [NodeJS](/docs/apm/agents/nodejs-agent/installation-configuration/nodejs-agent-configuration/)
+      </td>
+
+      <td>
+        6.10.0 y posteriores
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+            
+
+        [PHP](/docs/apm/agents/php-agent/configuration/php-agent-configuration/)
+      </td>
+
+      <td>
+        10.0.0 y posteriores
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+            
+
+        [Python](/docs/apm/agents/python-agent/configuration/python-agent-configuration/)
+      </td>
+
+      <td>
+        4.10.0 y posteriores
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+            
+
+        [Ruby](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration/)
+      </td>
+
+      <td>
+        6.1.0 y más tarde
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        [Agente de infraestructura](/docs/infrastructure/infrastructure-agent/new-relic-guided-install-overview)
+      </td>
+
+      <td>
+        1.62.0 y posteriores
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        [Agente de Kubernetes](/install/kubernetes)
+      </td>
+
+      <td>
+        v3.33.2 y posteriores
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        [Agente de Fluent Bit](/docs/logs/forward-logs/fluent-bit-plugin-log-forwarding)
+      </td>
+
+      <td>
+        2.3.0 y posteriores
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        [Recolector OpenTelemetry](https://opentelemetry.io/docs/collector/)
+      </td>
+
+      <td>
+        opentelemetry-collector-contrib v0.104.0 y posteriores
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        [APIs MELT](/docs/apis/intro-apis/introduction-new-relic-apis/#data-type-apis)
+      </td>
+
+      <td>
+        N / A
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+Las versiones enumeradas son representativas de la gama disponible para cada idioma. Para obtener información detallada sobre la versión, consulte la documentación del agente específico.
+
+## Siguiente tema
+
+* [Comprenda su canalización de ingesta](/docs/new-relic-control/pipeline-control/ingest-pipeline)

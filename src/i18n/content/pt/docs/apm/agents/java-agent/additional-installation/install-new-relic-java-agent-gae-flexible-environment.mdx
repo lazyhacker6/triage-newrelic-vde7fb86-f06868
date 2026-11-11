@@ -1,0 +1,104 @@
+---
+title: Instalar o agente Java no ambiente flexível GAE
+tags:
+  - Agents
+  - Java agent
+  - Additional installation
+metaDescription: How to install the New Relic Java agent in a Google App Engine flexible environment using a custom Docker runtime.
+freshnessValidatedDate: '2026-08-05T00:00:00.000Z'
+contentType: onboarding-install
+audience:
+  - human
+  - ai
+surface:
+  - cli
+integration: apm-java-agent
+flow:
+  prev: /docs/apm/agents/java-agent/installation/java-agent-installation-overview
+  next: null
+translationType: machine
+---
+
+Esta página aborda a instalação do agente Java da New Relic em um [ambiente flexível do Google App Engine (GAE)](https://cloud.google.com/appengine/docs/flexible/java/) usando um tempo de execução personalizado do Docker.
+
+<Callout variant="important">
+  Não use o ambiente padrão GAE ou o [“modo nativo”](https://cloud.google.com/appengine/docs/flexible/java/) do Google App Engine — o agente Java requer um runtime personalizado.
+</Callout>
+
+## Compatibilidade e requisitos [#requirements]
+
+### Suportado
+
+* Java 8, 11, 17, 21, 24, 25 e 26 *(Java 7 suportado apenas no agente v6.5.4 e anteriores)*
+* Ambiente flexível do Google App Engine com um tempo de execução personalizado do Docker
+* Consulte a [compatibilidade e os requisitos](/docs/apm/agents/java-agent/getting-started/compatibility-requirements-java-agent) para ver os intervalos de versões de framework e biblioteca suportados
+
+### Não suportado
+
+* Ambiente padrão GAE — requer um runtime personalizado; o ambiente padrão não oferece suporte a ele
+* Modo nativo GAE — o agente Java requer um runtime personalizado
+* Execução em conjunto com outros agentes APM — o agente Java não pode garantir o comportamento correto quando outro agente APM está ativo na mesma JVM
+
+### Você precisa
+
+* Uma conta New Relic e<InlinePopover type="licenseKey" />
+* Uma JVM com suporte a SSL SHA-2 (256 bits)
+* Um projeto do Google Cloud Platform com um aplicativo do App Engine criado (consulte os [procedimentos do Google App Engine para Java](https://cloud.google.com/appengine/docs/flexible/java/managing-projects-apps-billing#create))
+* A CLI do `gcloud` instalada e inicializada (consulte a [documentação do SDK do Google Cloud](https://cloud.google.com/sdk/gcloud/))
+* Maven ou Gradle com o [plug-in do App Engine](https://cloud.google.com/appengine/docs/flexible/java/using-maven) configurado
+
+## Instalar [#install]
+
+Faça o download de `newrelic-java.zip` e descompacte-o em seu projeto: \[#install-step-1]
+
+```bash
+curl -O https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip
+unzip newrelic-java.zip
+```
+
+Configure o seu `app.yaml` para um runtime personalizado:
+
+```yaml
+runtime: custom
+env: flex
+```
+
+Configure seu `Dockerfile` para adicionar o agente e passar o argumento `-javaagent`. O exemplo abaixo usa o Tomcat:
+
+```dockerfile
+ADD ./newrelic/newrelic.jar /usr/local/tomcat/newrelic/newrelic.jar
+ENV JAVA_OPTS="$JAVA_OPTS -javaagent:/usr/local/tomcat/newrelic/newrelic.jar"
+```
+
+Construa o seu projeto:
+
+```bash
+mvn clean install
+```
+
+## Configurar [#configure]
+
+Edite `newrelic/newrelic.yml` e defina os dois valores obrigatórios:
+
+1. Defina `license_key` como seu <InlinePopover type="licenseKey" />.
+2. Defina `app_name` como um nome significativo para seu aplicativo.
+
+Para todas as outras opções de configuração, consulte a [configuração do agente Java](/docs/apm/agents/java-agent/configuration/java-agent-configuration-config-file).
+
+## Verifique sua instalação [#verify]
+
+Implantar no GAE:
+
+```bash
+gcloud --project YOUR_PROJECT_NAME app deploy
+```
+
+Aguarde até que a implantação seja concluída. Envie pelo menos dois requests, depois aguarde 2–3 minutos e seu aplicativo aparecerá em [APM &amp; serviços](https://one.newrelic.com/nr1-core?filters=%28domain%20IN%20%28%27APM%27%2C%20%27EXT%27%29%20AND%20type%20IN%20%28%27APPLICATION%27%2C%20%27SERVICE%27%29%29).
+
+Se nenhum dado aparecer após cinco minutos, consulte [Nenhum dado aparece (Java)](/docs/apm/agents/java-agent/troubleshooting/no-data-appears-java).
+
+## Artigos relacionados [#related-articles]
+
+* [Compatibilidade e requisitos do agente Java](/docs/apm/agents/java-agent/getting-started/compatibility-requirements-java-agent)
+* [Configuração do agente Java](/docs/apm/agents/java-agent/configuration/java-agent-configuration-config-file)
+* [Documentação do Google App Engine para Java](https://cloud.google.com/appengine/docs/flexible/java/)

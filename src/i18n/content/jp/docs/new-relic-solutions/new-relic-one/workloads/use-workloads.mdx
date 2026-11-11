@@ -1,0 +1,83 @@
+---
+title: 標準ワークロードUI
+tags:
+  - New Relic
+  - Use New Relic
+  - Workloads
+  - Standard workloads
+metaDescription: 'In New Relic, use the standard workload UI to group together entities that make up a specific business service, making it easier to isolate and troubleshoot issues.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+標準ワークロードは、運用エンティティを単一のまとまったビューに集約し、パフォーマンスをモニターしてサービス全体の健全性を把握するのに役立ちます。
+
+## 概要ページ [#summary]
+
+<DNT>**Summary**</DNT>ページは中央の運用ダッシュボードとして機能し、リアルタイムのワークロードのヘルスメトリクス、最近の変更、およびパフォーマンスのテレメトリーを1か所にまとめます。これにより、アクティブな問題を即座に把握し、スタック全体にわたる中断を迅速に関連付けることができます。
+
+<img title="Workload summary page" alt="Workload summary page" src="/images/workloads_screenshot-crop_workload-summary-page.webp" />
+
+## 概要ページのナビゲーション [#navigating-summary]
+
+ワークロードのステータスが変化した場合は、「What&apos;s changed」タイムラインから開始して、最近のデプロイメント、エラーグループのスパイク、または集計アクティビティがパフォーマンスの変化と関連しているかどうかを確認することをお勧めします。たとえば、タイムライン上でエラーグループのスパイクに気付いた場合は、ヘルスフィルターを使用して、「Critical」または「Warning」状態のエンティティを絞り込みます。次に、それらのクリティカルなエンティティの集約されたゴールデンメトリクスを確認し、そのイベントと同時にエラー率が急増したかどうかを検証します。この手順に従うことで、特定のエンティティを選択してさらにドリルダウンする前に、ヘルスの変化の要因を絞り込むことができます。
+
+<img title="Workload health filter" alt="Screenshot of the health status filter menu on the Workload summary page, showing Critical, Warning, Operational, Not configured, and Not reporting options" src="/images/workloads_screenshot-crop_navigating-summary-filter.webp" />
+
+## 複数のワークロードのビューを保存する [#save-views]
+
+特定のワークロード グループのステータスを頻繁に確認する必要がある場合は、それらのワークロードのみを含むビューを保存できます。
+
+ビューを作成するには:
+
+1. <DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Workloads**</DNT>に移動します。
+2. クリックして<Icon name="fe-edit-2" />`Edit view`アイコン。
+3. ビューに意味のある名前（チームやビジネスユニットの名前など）を付け、ビューを関連付けるアカウントを選択します。
+4. ビューに含めたいワークロードを、名前やタグで選択します。
+
+ステータス表示は、複数のワークロードに責任を持つチーム、サポート役、ビジネスユニットマネージャーに最も有効です。
+
+## エラー [#errors]
+
+<DNT>**Errors**</DNT>ページでは、ワークロード内で発生しているエラー率、数、およびエラーの種類に関するインサイトを提供します。問題のある領域を特定し、修正の優先順位を付けるのに役立ちます。詳細については、[Errors Inbox](/docs/triage-inbox/getting-started/)をご覧ください。
+
+<img align="left" title="Error page" alt="Error summary page" src="/images/workload-error.webp" />
+
+## パフォーマンスリスク [#performance-risks]
+
+<DNT>**Performance risks**</DNT>ページには、ワークロードを構成するエンティティ全体で検出されたパフォーマンスリスクが表示されるため、各エンティティを個別に確認する必要はありません。詳細については、[パフォーマンスリスクインボックス](/docs/triage-inbox/performance-risks/introduction)を参照してください。
+
+<img title="Performance risks" alt="Screenshot showing the Performance risks page for a workload" src="/images/PRI_WorkloadsPRs.webp" />
+
+## アクティビティ [#activity]
+
+<DNT>**Activity**</DNT>ページには、ワークロード内のエンティティに関連するパフォーマンス データと、それらの時系列の変化を説明できるイベントが表示されます。
+
+<img title="workload activity page" alt="workload activity page" src="/images/workloads_screenshot-crop_workload-activity-page.webp" />
+
+最も重要なセクションのいくつかを次に示します。
+
+1. リンクされたダッシュボード。ここから、事前にフィルタリングされたダッシュボードへのリンクなど、関連するダッシュボードをワークロードに追加できます。
+2. ゴールデンメトリクス。これらは、エンティティ タイプごとに最も関連性の高いメトリックを含むグラフです。チャートを調べて、さまざまなエンティティ (たとえば、2 つのアプリケーション) およびさまざまなスタック層 (たとえば、アプリケーションとホスト) の間の相関関係を検出します。表示されるメトリクスは、 [NerdGraph API を使用して](/docs/apis/nerdgraph/examples/golden-metrics-entities-nerdgraph-api-tutorial/#customize-golden-metrics)アカウント レベルまたはワークロード レベルでカスタマイズできます。
+3. 活動の流れ。これには、ワークロード エンティティを参照するインシデントと異常の開始時刻と終了時刻が含まれます。また、展開や構成の変更など、ワークロードのステータスやパフォーマンスの変化を説明できる他のイベント タイプも表示されます。
+
+## ワークロード マップを表示する [#maps]
+
+ワークロード内のエンティティがどのように関係し、相互に影響を与えるかを示すマップを表示できます。
+
+<img title="Workloads map" alt="A screenshot of a workloads map" src="/images/workloads_screenshot-crop_workload-map.webp" />
+
+このマップの詳細については、 [「コンテキスト内のマップ」](/docs/new-relic-solutions/new-relic-one/ui-data/maps-in-context)を参照してください。
+
+## 健康状態 [#health-status]
+
+このページの詳細については、 [「ステータスの構成」](/docs/new-relic-solutions/new-relic-one/workloads/workload-status-configuration)を参照してください。
+
+## 全般設定 [#general-settings]
+
+<DNT>**General settings**</DNT>ページには、ワークロードを担当するチームに関する情報が表示されます。内容は次のとおりです:
+
+* ワークロードを担当するチームです。複数のチームを含めることができます。
+* ワークロードの説明。ワークロードの目的と、それが表すビジネス ロジックを共有します。これは Web アプリケーションですか?API？バックエンドプロセス?自分のチーム、または組織内の他のチームに関連する詳細を入力します。
+* 連絡先を入力します。ドロップダウンメニューから、あなたのチームが希望する連絡方法を選択してください。
+* ワークロードを操作するために最も関連性の高いリソースへのリンク。ここで、Runbook、コード リポジトリ、生産性ツール、その他のものへのリンクを追加できます。

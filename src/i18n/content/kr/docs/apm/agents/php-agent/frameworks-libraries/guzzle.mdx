@@ -1,0 +1,71 @@
+---
+title: Guzzle에 대한 PHP 에이전트 지원
+tags:
+  - Agents
+  - PHP agent
+  - Frameworks and libraries
+metaDescription: New Relic PHP agent notes about the Guzzle library (supported as of PHP agent release 7.0).
+freshnessValidatedDate: never
+translationType: machine
+---
+
+New Relic supports versions 7 and 8 of the <DNT>**Guzzle HTTP client library**</DNT>.
+
+Guzzle 라이브러리는 순차 요청과 병렬 요청을 모두 허용합니다. 이 페이지에서는 [<DNT>**Summary**</DNT> ](/docs/apm/applications-menu/monitoring/apm-overview-page)뉴렐릭 UI 의 페이지 에 각 요청 유형이 어떻게 표시되는지 설명합니다. 가장 느린 통화를 확인하려면 개별 외부 통화의 타이밍을 표시하는 [외부 서비스 페이지를](/docs/apm/applications-menu/monitoring/external-services-page) 확인하세요.
+
+## 순차적 요청 [#more_help]
+
+이 PHP 코드는 Guzzle을 사용하여 여러 순차적 요청을 수행합니다.
+
+```php
+$client = new \GuzzleHttp\Client;
+$response = $client->get('http://YOUR_SITE.com/api/foo');
+$client->delete('http://YOUR_SITE.com/api/foo/'.$response->getBody());
+```
+
+이 코드는 New Relic UI에 다음과 같이 표시됩니다.
+
+<img title="Sequential requests with Guzzle" alt="guzzle_sequential.png" src="/images/apm_screenshot-crop_guzzle-sequence.webp" />
+
+<figcaption>
+  <DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; APM &amp; services &gt; (select an app) &gt; Overview &gt; Web transactions time**</DNT>: 뉴렐릭 UI 에서 Guzzle을 사용한 순차적 요청입니다.
+</figcaption>
+
+[응답 시간은](/docs/data-analysis/user-interface-functions/response-time) 진한 파란색 선으로 표시됩니다. 녹색 <DNT>**web external time**</DNT> Guzzle 라이브러리에서 소요된 시간을 나타냅니다. 요청이 순차적으로 이루어졌기 때문에 응답 시간은 PHP, MySQL 및 웹 외부 활동에 소요된 [총 시간](/docs/data-analysis/user-interface-functions/response-time#response-time-total-time) 에 대해 <DNT>**equal**</DNT> 입니다.
+
+## 병렬 요청 [#more_help]
+
+이 PHP 코드는 Promise 배열을 풀어서 여러 요청을 병렬로 만듭니다.
+
+```php
+$client = new \GuzzleHttp\Client;
+
+$promises = [
+    $client->getAsync('http://YOUR_SITE.com/api/foo'),
+    $client->getAsync('http://YOUR_SITE.com/api/bar'),
+    $client->getAsync('http://YOUR_SITE.com/api/quux'),
+];
+
+\GuzzleHttp\Promise\unwrap($promises);
+```
+
+이 코드는 New Relic UI에 다음과 같이 표시됩니다.
+
+<img title="Parallel requests with Guzzle" alt="Parallel requests with Guzzle" src="/images/apm_screenshot-crop_guzzle-parallel.webp" />
+
+<figcaption>
+  <DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; APM &amp; services &gt; (select an app) &gt; Summary &gt; Web transactions time**</DNT>: 뉴렐릭 UI에서 Guzzle을 사용한 병렬 요청
+</figcaption>
+
+녹색 <DNT>**web external time**</DNT> Guzzle 라이브러리에서 소요된 시간을 나타냅니다. 요청이 비동기식으로 수행되었기 때문에 PHP, MySQL 및 웹 외부에서 소요된 [총 시간은](/docs/data-analysis/user-interface-functions/response-time#response-time-total-time) 응답 시간보다 <DNT>**greater**</DNT> 입니다.
+
+## Timing with Guzzle 7 and 8 [#timing]
+
+Unlike previous versions, Guzzle 7 and 8 do not generate an event when a request is sent. Instead, the agent begins timing a request when the request object is created. If a request object is created and additional work is done before sending, New Relic may report that the request took longer than it actually did.
+
+## Guzzle 지원 비활성화
+
+Guzzle 지원을 비활성화하려면:
+
+1. `newrelic.ini` 파일에 `newrelic.guzzle.enabled = false` 을(를) 추가합니다.
+2. [웹 서버(Apache, Nginx, PHP-FPM 등)를 다시 시작합니다](/docs/agents/php-agent/troubleshooting/why-when-restart-your-web-server-php) .

@@ -1,0 +1,274 @@
+---
+title: NRQL検索をスケジュールする
+tags:
+  - NRQL
+  - Scheduled searches
+  - Query scheduling
+  - Automated queries
+  - Email notifications
+  - Logs
+metaDescription: 'Schedule automated NRQL queries to receive regular updates on your data via email. Transform repetitive, manual queries into proactive, automated workflows.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+New Relicユーザーは、同じNRQL書き込みを何度も実行して、重要なパターンを監視したり、特定の条件を確認したり、定期的なレポートを生成したりできます。 たとえば、失敗したトランザクションを毎日チェックしたり、毎週エラー率を監視したり、アプリケーション全体で時間ごとのパフォーマンス メトリクスを追跡したりする必要があります。 この手動プロセスは時間がかかり、積極的に監視していないときに重要なインサイトを見逃しやすくなります。
+
+スケジュールされた NRQL 検索は、繰り返し実行されるクエリを自動化することでこの問題を解決します。クエリを自動的に実行するようにスケジュールし、結果を電子メールで受け取ることができるため、手動で継続的に監視することなく、重要なパターンに関する情報を常に把握できます。
+
+## 行えること [#features]
+
+スケジュールされた NRQL 検索では次のことが可能になります。
+
+* **繰り返しのクエリを自動化**: 手動クエリを、スケジュールに従って実行される自動ワークフローに変換します。
+* **どこからでも開始**：Administrationから、またはログUIから直接スケジュールされた検索を作成します。
+* **積極的に情報を入手**: クエリの結果が直接受信トレイに配信される電子メール通知を受け取ります。
+* **通知条件の設定**：実行のたびに通知を受け取るか、クエリの結果数に基づいて定義した条件を結果が満たした場合にのみ通知を受け取るかを選択します。
+* **柔軟なスケジュール設定**：カスタムのcron式スケジュールを使用して、クエリを実行するタイミングを定義します。
+* **出力形式を選択します**：結果をCSVまたはJSONファイルとしてエクスポートし、メール通知に添付します。
+* **チームとのコラボレーション**：スケジュールされた検索結果を複数のメール受信者に送信します。
+* **すべてを一元管理**：作成した場所に関係なく、管理UIの1か所からすべてのスケジュールされた検索を表示、編集、管理します。
+
+## 価格 [#pricing]
+
+スケジュールされたNRQL検索には、個別の料金はかかりません。アカウントの価格モデルに基づいて、基盤となるNRQLクエリを実行するための標準的なクエリコストのみをお支払いいただきます。
+
+## 前提条件 [#prerequisites]
+
+スケジュールされた NRQL 検索を使用するには、次のものが必要です。
+
+* **アカウント アクセス**: 検索をスケジュールするアカウントへのアクセス。
+* **データ アクセス**: スケジュールするデータを記述するための適切な権限。 たとえば、ログ データに対してクエリをスケジュールする場合は、そのログ データにアクセスする必要があります。
+
+### 権限 [#permissions]
+
+デフォルトでは、<DNT>**All product admin**</DNT>および<DNT>**Standard user**</DNT>の標準ロールには、スケジュールされた検索に対する<DNT>**Read**</DNT>および<DNT>**Modify**</DNT>アクセスがすでに含まれており、<DNT>**All product admin**</DNT>のみに<DNT>**Delete**</DNT>アクセスが含まれています。これらのロールには、スケジュールされた検索を正常に実行するために必要な<DNT>**User API Keys (for self)**</DNT> &gt; <DNT>**Modify**</DNT>機能（`account.create.own_api_keys`）もすでに含まれています。
+
+スケジュール済み検索の通知を設定する際に、新しいEメールの宛先を作成する場合は、<DNT>**Applied Intelligence**</DNT> &gt; <DNT>**Destinations**</DNT>へのアクセス権も必要です：
+
+* <DNT>**Read**</DNT>：既存の宛先を選択できます。
+* <DNT>**Modify**</DNT>：新しい送信先を作成できます。
+
+[カスタムロールを作成](/docs/accounts/accounts-billing/new-relic-one-user-management/account-user-mgmt-tutorial/#roles)し、それに特定の<DNT>**Scheduled Search**</DNT>機能を割り当てる場合は、次のいずれかの方法を使用します：
+
+* **NerdGraph**：[NerdGraph経由でアカウントスコープのカスタムロールを作成し](/docs/apis/nerdgraph/examples/nerdgraph-manage-groups/#account-scoped-role)、以下の表の権限IDを`permissionIds`配列に追加します。
+* **UI**：[新しいカスタムロールを作成する](/docs/accounts/accounts-billing/new-relic-one-user-management/account-user-mgmt-tutorial/#roles)か、既存のロールを編集して、<DNT>**Scheduled Search and Reports**</DNT>セクションから<DNT>**Scheduled Search**</DNT>機能を追加します。
+
+<Callout variant="important">
+一部のケイパビリティは、他のケイパビリティよりも広範なアクセス権を付与します。たとえば、<DNT>**Delete**</DNT>は読み取りおよび変更アクセス権も付与します。より限定的なケイパビリティのみを付与したい場合は、<DNT>**Delete**</DNT>の代わりにその特定のケイパビリティを選択してください。
+</Callout>
+
+以下の表に、各機能、その権限ID、および付与される内容を示します：
+
+<table>
+<thead>
+<tr>
+<th>
+機能
+</th>
+
+<th>
+権限ID
+</th>
+
+<th>
+説明
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+<DNT>**Scheduled Search**</DNT> &gt; <DNT>**Read**</DNT>
+</td>
+
+<td>
+`scheduled_search.read.schedule`
+</td>
+
+<td>
+スケジュールされた検索を表示する
+</td>
+</tr>
+
+<tr>
+<td>
+<DNT>**Scheduled Search**</DNT> &gt; <DNT>**Modify**</DNT>
+</td>
+
+<td>
+* `scheduled_search.modify.schedule`
+* `scheduled_search.read.schedule`
+</td>
+
+<td>
+スケジュールされた検索の表示、作成、および編集
+</td>
+</tr>
+
+<tr>
+<td>
+<DNT>**Scheduled Search**</DNT> &gt; <DNT>**Delete**</DNT>
+</td>
+
+<td>
+* `scheduled_search.delete.schedule`
+* `scheduled_search.read.schedule`
+* `scheduled_search.modify.schedule`
+</td>
+
+<td>
+スケジュールされた検索の表示、作成、編集、削除
+</td>
+</tr>
+
+<tr>
+<td>
+<DNT>**User API Keys (for self)**</DNT> &gt; <DNT>**Modify**</DNT>
+</td>
+
+<td>
+`account.create.own_api_keys`
+</td>
+
+<td>
+スケジュールされた検索を実行するために必要です。New Relicはこれを使用して、お客様に代わってユーザーAPIキーを作成し、ユーザーコンテキストを維持します。これがない場合、実行は失敗します。
+</td>
+</tr>
+
+<tr>
+<td>
+<DNT>**Applied Intelligence - Destinations**</DNT> &gt; <DNT>**Read**</DNT>
+</td>
+
+<td>
+`applied_intelligence.read.destination`
+</td>
+
+<td>
+既存のEメール宛先を選択する必要があります。
+</td>
+</tr>
+
+<tr>
+<td>
+<DNT>**Applied Intelligence - Destinations**</DNT> &gt; <DNT>**Modify**</DNT>
+</td>
+
+<td>
+* `applied_intelligence.create.destination`
+* `applied_intelligence.update.destination`
+* `applied_intelligence.read.destination`
+</td>
+
+<td>
+新しいメールの宛先を作成するために必要です。
+</td>
+</tr>
+</tbody>
+</table>
+
+## 新しい検索をスケジュールする [#create-schedule]
+
+New Relicは、製品内で直接このフローを案内します。以下の各ステップでは、そこで何を行う必要があるか、および画面から明らかではない事項について説明します。
+
+<Steps>
+<Step>
+**スケジュールされた検索の作成フローにアクセスします**：
+
+ワークフローに適したエントリポイントを選択してください。どちらも同じ設定フローにつながります。
+
+<Tabs>
+<TabsBar>
+<TabsBarItem id="from-admin">管理から</TabsBarItem> <TabsBarItem id="from-logs-ui">ログUIから</TabsBarItem>
+</TabsBar>
+
+<TabsPages>
+<TabsPageItem id="from-admin">
+<DNT>**[one.newrelic.com](https://one.newrelic.com) &gt; Administration &gt; Scheduled Searches**</DNT>に移動し、 <DNT>**Schedule a search**</DNT>をクリックします。
+</TabsPageItem>
+
+<TabsPageItem id="from-logs-ui">
+[ログUI](/docs/logs/ui-data/use-logs-ui/#workflow-search)から、次のいずれかのオプションを使用します：
+
+* 右上隅の<Icon name="fe-more-horizontal" />メニューをクリックし、 <DNT>**Schedule a search**</DNT>を選択します。
+* クエリのトレンドチャートの下にある時計アイコンをクリックしてください。
+
+すでにクエリを作成して実行している場合、設定フローに引き継がれます。そうでない場合は、次のステップでクエリを作成できます。
+</TabsPageItem>
+</TabsPages>
+</Tabs>
+
+<Callout variant="tip">
+AdministrationまたはログUIからスケジュール検索を作成できますが、既存のスケジュール検索を表示、編集、または削除できるのは<DNT>**Administration &gt; Scheduled Searches**</DNT>からのみです。
+</Callout>
+</Step>
+
+<Step>
+**クエリを設定します**:
+
+NRQLクエリを作成してテストし、続行してください。
+</Step>
+
+<Step>
+**通知の設定**:
+
+次を設定します：
+
+* 検索に名前を付けてから、結果の送信先を設定してください。結果はEメールの宛先にのみ送信できます。
+
+  * 宛先が存在する場合は、リストから選択します。
+  * 存在しない場合は、1つ以上のメール受信者を追加し、宛先に名前を付けます。
+
+* メールの件名、メッセージ、および出力形式を選択します。
+
+* <DNT>**Send notification**</DNT>で通知条件を設定します。デフォルトは<DNT>**Always**</DNT>です。結果が定義した数に達した場合にのみ送信するには、ここでカスタマイズします。
+
+<Callout variant="caution">
+スケジュールされた検索結果はCSVまたはJSONファイルとしてメールに添付され、機密データが含まれる場合があります。メールの宛先を確認し、意図した受信者のみが含まれていることを確認してください。
+</Callout>
+</Step>
+
+<Step>
+**スケジュールを設定する**:
+
+次を選択します：
+
+* 頻度を選択してください：毎時、毎日、毎週、またはカスタムcron式。
+* スケジュールのタイムゾーンを選択します。
+
+cron式を使用する場合、参考となる一般的なパターンは以下のとおりです：
+
+* `0 * * * *` - 毎時0分
+* `0 9 * * *` - 毎日午前9時
+* `0 9 * * 1` - 毎週月曜日午前9時
+* `0 0 1 * *` - 毎月1日の午前0時
+* `*/15 * * * *` - 15分ごと
+* `0 9 * * 1-5` - 平日午前9時
+
+<Callout variant="tip">
+サポートされている最短の間隔は10分ごとです。
+</Callout>
+
+実行のたびに送信するのではなく、通知条件を設定した場合、New Relicはスケジュールされた正確なランタイムに条件を確認します。実行間の変動は追跡されないため、次の実行前に結果が条件の閾値を下回った場合、その実行に対する通知は送信されません。
+</Step>
+
+<Step>
+**検索をレビュー、確認し、スケジュールを設定します**：
+
+設定を確認し、検索をスケジュールします。<DNT>**Scheduled searches**</DNT>ページに表示されます。
+</Step>
+</Steps>
+
+## スケジュールされた検索を管理する [#manage]
+
+Administration UIの<DNT>**Scheduled searches**</DNT>ページには、ログUIから作成したものを含め、すべての自動検索が一覧表示されます。<Icon name="fe-more-horizontal" />メニューから、[権限](#permissions)に基づいて検索を表示、編集、または削除できます。
+
+## 関連トピック [#related-topics]
+
+関連情報については、以下を参照してください。
+
+* より洗練された自動検索を作成するには、 [NRQL クエリについて詳しく学習してください](/docs/nrql/get-started/introduction-nrql-new-relics-query-language)。
+* [一括メールの宛先を設定して](/docs/alerts-applied-intelligence/notifications/destinations)、通知オプションを拡張します。
+* より高度な自動化の可能性については、[ワークフロー自動化を検討してください](/docs/alerts/get-notified/alert-event-workflows)。

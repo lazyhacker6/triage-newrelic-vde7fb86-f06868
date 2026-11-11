@@ -1,0 +1,94 @@
+---
+title: 'Ruby agent installation: Rails plugin'
+tags:
+  - Agents
+  - Ruby agent
+  - Installation
+metaDescription: Install the New Relic Ruby agent as a Rails plugin for Rails 1.2.6 and earlier.
+redirects:
+  - /docs/agents/ruby-agent/installation/ruby-agent-installation-rails-plugin
+  - /docs/ruby/ruby-agent-installation-plugin
+  - /docs/ruby/ruby-agent-installation-rails-plugin
+  - /docs/agents/ruby-agent/installation-and-configuration/ruby-agent-installation-rails-plugin
+  - /docs/agents/ruby-agent/installation-configuration/ruby-agent-installation-rails-plugin
+freshnessValidatedDate: 2026-08-05
+---
+
+This method is for installing the Ruby agent as a Rails plugin for **Rails 2 or higher**.
+
+<Callout variant="important">
+  For most use cases, [install the Ruby agent as a gem](/docs/apm/agents/ruby-agent/installation/install-new-relic-ruby-agent) instead. The gem method provides better control over versions and dependencies.
+</Callout>
+
+## Prerequisites [#prerequisites]
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>Requirement</th>
+      <th>Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>**New Relic account**</td>
+      <td>You need a [New Relic account](https://newrelic.com/signup) and your <InlinePopover type="licenseKey"/>.</td>
+    </tr>
+    <tr>
+      <td>**Ruby and Rails version**</td>
+      <td>See [Ruby agent requirements and supported frameworks](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks) for supported versions.</td>
+    </tr>
+    <tr>
+      <td>**Git**</td>
+      <td>Git must be accessible from the command line to install from GitHub.</td>
+    </tr>
+  </tbody>
+</table>
+
+<Steps>
+  <Step>
+    ## Install the Rails plugin [#install]
+
+    Install the plugin from GitHub into your application's `vendor/plugins` directory:
+
+    ```sh
+    script/plugin install git://github.com/newrelic/newrelic-ruby-agent.git
+    mv vendor/plugins/rpm vendor/plugins/newrelic-ruby-agent
+    ```
+
+    If you cannot install directly from the git URL, clone the repository into the `vendor/plugins` directory manually.
+  </Step>
+
+  <Step>
+    ## Configure the agent [#configure]
+
+    Copy the `newrelic.yml` file from the plugin directory into your application's `config` subdirectory:
+
+    ```sh
+    cp vendor/plugins/newrelic-ruby-agent/newrelic.yml config/newrelic.yml
+    ```
+
+    Edit `config/newrelic.yml` and set the two required values:
+
+    1. Set `license_key` to your <InlinePopover type="licenseKey"/>.
+    2. Set `app_name` to a meaningful name for your application.
+
+    For all other configuration options, see [Ruby agent configuration](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration).
+  </Step>
+
+  <Step>
+    ## Verify data is flowing [#verify]
+
+    Restart your web server, then send at least two requests to your application. Wait 2–3 minutes and open [one.newrelic.com > APM](https://one.newrelic.com/apm) to look for your app by name.
+
+    <Callout variant="tip">
+      App not appearing? See [No data appears (Ruby)](/docs/apm/agents/ruby-agent/troubleshooting/no-data-appears-ruby).
+    </Callout>
+  </Step>
+</Steps>
+
+## Related articles [#related-docs]
+
+* [Install the Ruby agent as a gem](/docs/apm/agents/ruby-agent/installation/install-new-relic-ruby-agent) — Recommended method for most use cases.
+* [Ruby agent requirements and supported frameworks](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks) — Supported Ruby and Rails versions.
+* [Ruby agent configuration](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration) — All available configuration settings.

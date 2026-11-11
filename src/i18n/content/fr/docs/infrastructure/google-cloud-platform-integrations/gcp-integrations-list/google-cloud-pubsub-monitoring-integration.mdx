@@ -1,0 +1,1107 @@
+---
+title: IntégrationGoogle Cloud Pub/Sub monitoring
+tags:
+  - Integrations
+  - Google Cloud Platform integrations
+  - GCP integrations list
+metaDescription: 'New Relic''s Google Cloud Pub/Sub integration: how to activate it and what data it reports.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Les [intégrations New Relic](/docs/infrastructure/introduction-infra-monitoring) avec la [Google Cloud Platform (GCP)](https://cloud.google.com/) en incluent une qui signale les données de [Google Cloud Pub/Sub](https://cloud.google.com/pubsub/) à New Relic. Ce document explique comment activer l’intégration GCP Pub/Sub et décrit les données qu’elle signale.
+
+## Caractéristiques
+
+Dans le cadre de la [solution d’analyse de flux](https://cloud.google.com/solutions/stream-analytics) Google Cloud, le service Cloud Pub/Sub ingère et distribue des flux d’événements pour un traitement des données et une analyse rapides. L’intégration New Relic Pub/Sub collecte les métriques de publication, de distribution, de backlog et de rétention sur les rubriques, les abonnements et les instantanés.
+
+## Activer l&apos;intégration [#activate]
+
+Pour activer l’intégration, suivez les procédures standard pour [connecter votre service GCP à New Relic](/docs/connect-google-cloud-platform-services-infrastructure):
+
+* [Se connecter avec la fédération d&apos;identité de workload (Workload Identity Federation) (recommandé)](/docs/connect-google-cloud-platform-services-infrastructure)
+* [Se connecter avec un compte de service ou un compte utilisateur](/docs/connect-google-cloud-platform-services-infrastructure)
+
+## Fréquence des sondages [#polling]
+
+Les intégrations New Relic interrogent vos services GCP selon un intervalle d’interrogation qui varie selon l’intégration. La fréquence d&apos;interrogation pour Google Cloud Pub/Sub est de 5 minutes. La résolution est de 1 point de données par minute.
+
+<Callout variant="important">
+Cloud Pub/Sub prend en charge des intervalles d’interrogation de 1 minute pour les intégrations WIF en version préliminaire limitée. Pour demander l’accès, contactez le [support New Relic](https://support.newrelic.com/).
+</Callout>
+
+## Fédération d&apos;identité de workload (Workload Identity Federation) [#wif]
+
+### Rechercher et utiliser des données [#find-data-wif]
+
+Une fois que vous avez activé l’intégration, vos ressources Pub/Sub apparaissent sous forme d’entités dans l’explorateur d’entités de New Relic. Pour voir les dashboards et gérer les services, accédez à <DNT>[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Infrastructure &gt; GCP</DNT>.
+
+Toutes les métriques Pub/Sub disponibles dans le monitoring cloud de GCP sont collectées en tant que métriques dimensionnelles dans le type d’événement `Metric`. Des métriques supplémentaires au-delà de ce tableau sont collectées automatiquement. Consultez la [documentation de Google sur les métriques Pub/Sub](https://cloud.google.com/monitoring/api/metrics_gcp_p_z#gcp-pubsub) pour obtenir la liste complète.
+
+#### Entité
+
+<CollapserGroup>
+<Collapser id="entities-table" title="Entités Pub/Sub">
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+Entité
+</th>
+
+<th style={{ width: "260px" }}>
+Type d’entité
+</th>
+
+<th>
+Type de ressource
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+Sujet
+</td>
+
+<td>
+`GCPPUBSUBTOPIC`
+</td>
+
+<td>
+`pubsub_topic`
+</td>
+</tr>
+
+<tr>
+<td>
+Abonnement
+</td>
+
+<td>
+`GCPPUBSUBSUBSCRIPTION`
+</td>
+
+<td>
+`pubsub_subscription`
+</td>
+</tr>
+
+<tr>
+<td>
+Instantané
+</td>
+
+<td>
+`GCPPUBSUBSNAPSHOT`
+</td>
+
+<td>
+`pubsub_snapshot`
+</td>
+</tr>
+</tbody>
+</table>
+</Collapser>
+</CollapserGroup>
+
+### données métriques [#metrics-wif]
+
+#### Principales métriques — Topic
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "440px" }}>
+Nom métrique
+</th>
+
+<th style={{ width: "100px" }}>
+Unité
+</th>
+
+<th>
+Description
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`gcp.pubsub.topic.send_request_count`
+</td>
+
+<td>
+Compter
+</td>
+
+<td>
+Nombre de requests de publication sur le topic, réparties par code de réponse.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.topic.send_request_latencies`
+</td>
+
+<td>
+Microsecondes
+</td>
+
+<td>
+Distribution de la latence des requêtes de publication au niveau du topic.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.topic.publish_message_count`
+</td>
+
+<td>
+Compter
+</td>
+
+<td>
+Nombre de messages publiés dans la rubrique.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.topic.message_sizes`
+</td>
+
+<td>
+Octets
+</td>
+
+<td>
+Distribution de la taille des messages publiés sur le sujet.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.topic.byte_cost`
+</td>
+
+<td>
+Octets
+</td>
+
+<td>
+Coût en octets des opérations sur le sujet, utilisé pour la comptabilisation des quotas.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.topic.num_retained_messages`
+</td>
+
+<td>
+Compter
+</td>
+
+<td>
+Nombre de messages conservés dans le sujet.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.topic.num_unacked_messages_by_region`
+</td>
+
+<td>
+Compter
+</td>
+
+<td>
+Nombre de messages non acquittés conservés par le topic, réparti par région.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.topic.retained_bytes`
+</td>
+
+<td>
+Octets
+</td>
+
+<td>
+Taille totale en octets des messages conservés dans le topic.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.topic.oldest_retained_message_age`
+</td>
+
+<td>
+Secondes
+</td>
+
+<td>
+Âge du message le plus ancien conservé dans la rubrique.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.topic.oldest_unacked_message_age_by_region`
+</td>
+
+<td>
+Secondes
+</td>
+
+<td>
+Âge du plus ancien message non acquitté dans le topic, réparti par région.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.topic.publish_quota_utilization`
+</td>
+
+<td>
+Pour cent
+</td>
+
+<td>
+Ratio d’utilisation du quota de publication pour le sujet.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.topic.config_updates_count`
+</td>
+
+<td>
+Compter
+</td>
+
+<td>
+Nombre de modifications de configuration appliquées au topic, ventilé par type d’opération et résultat.
+</td>
+</tr>
+</tbody>
+</table>
+
+Pour la liste complète des métriques de sujet, consultez la [documentation de Google sur les métriques Pub/Sub](https://cloud.google.com/monitoring/api/metrics_gcp_p_z#gcp-pubsub).
+
+#### Principales métriques — abonnement
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "440px" }}>
+Nom métrique
+</th>
+
+<th style={{ width: "100px" }}>
+Unité
+</th>
+
+<th>
+Description
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`gcp.pubsub.subscription.num_undelivered_messages`
+</td>
+
+<td>
+Compter
+</td>
+
+<td>
+Nombre de messages en attente non acquittés dans l’abonnement.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.subscription.backlog_bytes`
+</td>
+
+<td>
+Octets
+</td>
+
+<td>
+Taille totale en octets des messages non acquittés dans l’abonnement.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.subscription.oldest_unacked_message_age`
+</td>
+
+<td>
+Secondes
+</td>
+
+<td>
+Âge du plus ancien message non acquitté dans l’abonnement.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.subscription.num_outstanding_messages`
+</td>
+
+<td>
+Compter
+</td>
+
+<td>
+Nombre de messages livrés au point de terminaison push de l&apos;abonnement mais pas encore acquittés.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.subscription.ack_message_count`
+</td>
+
+<td>
+Compter
+</td>
+
+<td>
+Nombre de messages acquittés sur l’abonnement.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.subscription.ack_latencies`
+</td>
+
+<td>
+Millisecondes
+</td>
+
+<td>
+Distribution de la latence d’acquittement au niveau de l’abonnement.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.subscription.pull_request_count`
+</td>
+
+<td>
+Compter
+</td>
+
+<td>
+Nombre de demandes de tirage émises pour l’abonnement, réparties par code de réponse.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.subscription.pull_ack_request_count`
+</td>
+
+<td>
+Compter
+</td>
+
+<td>
+Nombre de requests d’acquittement émises pour l’abonnement, réparties par code de réponse.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.subscription.push_request_count`
+</td>
+
+<td>
+Compter
+</td>
+
+<td>
+Nombre de tentatives de push de l’abonnement vers son point de terminaison, segmentées par code de réponse.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.subscription.push_request_latencies`
+</td>
+
+<td>
+Microsecondes
+</td>
+
+<td>
+Distribution de la latence des requêtes push de l&apos;abonnement vers son point de terminaison, répartie par code de réponse.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.subscription.streaming_pull_response_count`
+</td>
+
+<td>
+Compter
+</td>
+
+<td>
+Nombre de réponses StreamingPull renvoyées pour l’abonnement, réparties par code de réponse.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.subscription.expired_ack_deadlines_count`
+</td>
+
+<td>
+Compter
+</td>
+
+<td>
+Nombre de délais d’acquittement qui ont expiré avant que l’abonné n’acquitte le message.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.subscription.dead_letter_message_count`
+</td>
+
+<td>
+Compter
+</td>
+
+<td>
+Nombre de messages livrés de l’abonnement à son sujet de lettres mortes.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.subscription.byte_cost`
+</td>
+
+<td>
+Octets
+</td>
+
+<td>
+Coût en octets des opérations sur l&apos;abonnement, utilisé pour la comptabilisation des quotas.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.subscription.delivery_latency_health_score`
+</td>
+
+<td>
+Booléen
+</td>
+
+<td>
+Score de santé indiquant si la latence de distribution de l’abonnement est dans sa cible.
+</td>
+</tr>
+</tbody>
+</table>
+
+Pour la liste complète des métriques d’abonnement, consultez la [documentation sur les métriques Pub/Sub de Google](https://cloud.google.com/monitoring/api/metrics_gcp_p_z#gcp-pubsub).
+
+#### Métriques clés — instantané
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "440px" }}>
+Nom métrique
+</th>
+
+<th style={{ width: "100px" }}>
+Unité
+</th>
+
+<th>
+Description
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`gcp.pubsub.snapshot.num_messages`
+</td>
+
+<td>
+Compter
+</td>
+
+<td>
+Nombre de messages conservés dans le snapshot.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.snapshot.backlog_bytes`
+</td>
+
+<td>
+Octets
+</td>
+
+<td>
+Taille totale en octets des messages conservés dans le snapshot.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.snapshot.oldest_message_age`
+</td>
+
+<td>
+Secondes
+</td>
+
+<td>
+Âge du message le plus ancien dans l’instantané.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.snapshot.num_messages_by_region`
+</td>
+
+<td>
+Compter
+</td>
+
+<td>
+Nombre de messages contenus dans le snapshot, répartis par région.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.snapshot.backlog_bytes_by_region`
+</td>
+
+<td>
+Octets
+</td>
+
+<td>
+Taille totale en octets des messages conservés dans l’instantané, répartie par région.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.snapshot.oldest_message_age_by_region`
+</td>
+
+<td>
+Secondes
+</td>
+
+<td>
+Âge du message le plus ancien dans le snapshot, segmenté par région.
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.pubsub.snapshot.config_updates_count`
+</td>
+
+<td>
+Compter
+</td>
+
+<td>
+Nombre de modifications de configuration appliquées au snapshot, ventilé par type d’opération et résultat.
+</td>
+</tr>
+</tbody>
+</table>
+
+Pour obtenir la liste complète des métriques d’instantané, consultez la [documentation sur les métriques Pub/Sub de Google](https://cloud.google.com/monitoring/api/metrics_gcp_p_z#gcp-pubsub).
+
+## Compte de service ou compte utilisateur [#service-account]
+
+### Rechercher et utiliser des données [#find-data]
+
+Après avoir activé l&apos;intégration et attendu quelques minutes (en fonction de la [fréquence d&apos;interrogation](#polling)), les données apparaîtront dans l&apos;UI de New Relic. Pour [rechercher et utiliser vos données](/docs/infrastructure/integrations/find-use-infrastructure-integration-data), y compris les liens vers vos <InlinePopover type="dashboards" />et vos paramètres d&apos;alerte, accédez à <DNT>[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Infrastructure &gt; GCP &gt; (select an integration)</DNT>.
+
+Les sujets Pub/Sub sont des entités nommées qui représentent des flux de messages, et les abonnements sont des entités nommées qui représentent des destinations de messages sur un sujet particulier.
+
+Pour afficher [les données métriques](/docs/telemetry-data-platform/understand-data/new-relic-data-types/#metrics) de votre intégration GCP Pub/Sub dans New Relic, [créez une requête NRQL ](/docs/integrations/new-relic-integrations/getting-started/use-integration-data-new-relic-insights#nrql)pour [l&apos;événement](/docs/data-apis/understand-data/new-relic-data-types/#event-data) `GcpPubSubTopicSample` et `GcpPubSubSubscriptionSample` et leur attribut associé.
+
+### Exemple de sous-sujet GcpPub [#gcp-pubsub-topic-sample]
+
+requête `GcpPubSubTopicSample` événement dans New Relic pour afficher les données de l&apos;attribut suivant :
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "400px" }}>
+Attribut
+</th>
+
+<th>
+Description
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`topic.ByteCost`
+</td>
+
+<td>
+Coût des opérations, mesuré en octets. Ceci est utilisé pour mesurer l&apos;utilisation des quotas.
+</td>
+</tr>
+
+<tr>
+<td>
+`topic.ConfigUpdates`
+</td>
+
+<td>
+Nombre cumulé de modifications de configuration, regroupées par type d&apos;opération et résultat.
+</td>
+</tr>
+
+<tr>
+<td>
+`topic.MessageSizes`
+</td>
+
+<td>
+Répartition des tailles des messages publiés (en octets).
+</td>
+</tr>
+
+<tr>
+<td>
+`topic.NumRetainedAckedMessagesByRegion`
+</td>
+
+<td>
+Nombre de messages reconnus conservés dans une rubrique, répartis par région Cloud.
+</td>
+</tr>
+
+<tr>
+<td>
+`topic.NumUnackedMessagesByRegion`
+</td>
+
+<td>
+Nombre de messages non reconnus dans une rubrique, répartis par région Cloud.
+</td>
+</tr>
+
+<tr>
+<td>
+`topic.OldestRetainedAckedMessageAgeByRegion`
+</td>
+
+<td>
+Âge (en secondes) du message reconnu le plus ancien conservé dans une rubrique, réparti par région Cloud.
+</td>
+</tr>
+
+<tr>
+<td>
+`topic.OldestUnackedMessageAgeByRegion`
+</td>
+
+<td>
+Âge (en secondes) du message non reconnu le plus ancien dans une rubrique, réparti par région Cloud.
+</td>
+</tr>
+
+<tr>
+<td>
+`topic.RetainedAckedBytesByRegion`
+</td>
+
+<td>
+Taille totale en octets des messages reconnus conservés dans une rubrique, répartis par région Cloud.
+</td>
+</tr>
+
+<tr>
+<td>
+`topic.SendMessageOperation`
+</td>
+
+<td>
+Nombre cumulé d&apos;opérations de publication de messages.
+</td>
+</tr>
+
+<tr>
+<td>
+`topic.SendRequest`
+</td>
+
+<td>
+Nombre cumulé de requests de publication.
+</td>
+</tr>
+
+<tr>
+<td>
+`topic.UnackedBytesByRegion`
+</td>
+
+<td>
+Taille totale en octets des messages non reconnus dans une rubrique, répartie par région Cloud.
+</td>
+</tr>
+</tbody>
+</table>
+
+### Exemple d&apos;abonnement GcpPubSub [#gcp-pubsub-subscription-sample]
+
+requête `GcpPubSubSubscriptionSample` événement dans New Relic pour afficher les données de l&apos;attribut suivant :
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "400px" }}>
+Attribut
+</th>
+
+<th>
+Description
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`subscription.BacklogBytes`
+</td>
+
+<td>
+Taille totale en octets des messages non reconnus (alias messages en attente) dans un abonnement.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.ByteCost`
+</td>
+
+<td>
+Coût cumulé des opérations, mesuré en octets. Ceci est utilisé pour mesurer l&apos;utilisation des quotas.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.ConfigUpdates`
+</td>
+
+<td>
+Nombre cumulé de modifications de configuration pour chaque abonnement, regroupées par type d&apos;opération et résultat.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.ModAckDeadlineMessageOperation`
+</td>
+
+<td>
+Nombre cumulé d&apos;opérations de message ModifyAckDeadline, regroupées par résultat.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.ModAckDeadlineRequest`
+</td>
+
+<td>
+Nombre cumulé de requests ModifyAckDeadline, regroupées par résultat.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.NumOutstandingMessages`
+</td>
+
+<td>
+Nombre de messages livrés au point de terminaison push d&apos;un abonnement, mais pas encore reconnus.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.NumRetainedAckedMessages`
+</td>
+
+<td>
+Nombre de messages reconnus conservés dans un abonnement.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.NumRetainedAckedMessagesByRegion`
+</td>
+
+<td>
+Nombre de messages reconnus conservés dans un abonnement, répartis par région Cloud.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.NumUnackedMessagesByRegion`
+</td>
+
+<td>
+Nombre de messages non reconnus dans un abonnement, répartis par région Cloud.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.NumUndeliveredMessages`
+</td>
+
+<td>
+Nombre de messages non reconnus (aka messages en attente) dans un abonnement.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.OldestRetainedAckedMessageAge`
+</td>
+
+<td>
+Âge (en secondes) du message reconnu le plus ancien conservé dans un abonnement.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.OldestRetainedAckedMessageAgeByRegion`
+</td>
+
+<td>
+Âge (en secondes) du message reconnu le plus ancien conservé dans un abonnement, réparti par région Cloud.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.OldestUnackedMessageAge`
+</td>
+
+<td>
+Âge (en secondes) du plus ancien message non reconnu (aka message d&apos;arriéré) dans un abonnement.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.OldestUnackedMessageAgeByRegion`
+</td>
+
+<td>
+Âge (en secondes) du message non reconnu le plus ancien dans un abonnement, réparti par région Cloud.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.PullAckMessageOperation`
+</td>
+
+<td>
+Nombre cumulé d&apos;opérations de messages d&apos;accusé de réception, regroupées par résultat.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.PullAckRequest`
+</td>
+
+<td>
+Nombre cumulé de requests d&apos;accusé de réception, regroupées par résultat.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.PullMessageOperation`
+</td>
+
+<td>
+Nombre cumulé d&apos;opérations d&apos;extraction de messages, regroupées par résultat.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.PullRequest`
+</td>
+
+<td>
+Nombre cumulé de demandes de tirage, regroupées par résultat.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.PushRequest`
+</td>
+
+<td>
+Nombre cumulé de tentatives de push, regroupées par résultat. Contrairement aux pulls, l&apos;implémentation du serveur push ne regroupe pas les messages utilisateur, donc chaque demande ne contient qu&apos;un seul message utilisateur. Le serveur push réessaye en cas d&apos;erreur, de sorte qu&apos;un message utilisateur donné peut apparaître plusieurs fois.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.PushRequestLatencies`
+</td>
+
+<td>
+Répartition de la latence des requêtes push (en microsecondes), regroupée par résultat.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.RetainedAckedBytes`
+</td>
+
+<td>
+Taille totale en octets des messages reconnus conservés dans un abonnement.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.RetainedAckedBytesByRegion`
+</td>
+
+<td>
+Taille totale en octets des messages reconnus conservés dans un abonnement, répartie par région Cloud.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.StreamingPullAckMessageOperation`
+</td>
+
+<td>
+Nombre cumulé d&apos;opérations de messages d&apos;accusé de réception StreamingPull, regroupées par résultat.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.StreamingPullAckRequest`
+</td>
+
+<td>
+Nombre cumulé de demandes de tirage en streaming avec des identifiants d&apos;accusé de réception non vides, regroupées par résultat.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.StreamingPullMessageOperation`
+</td>
+
+<td>
+Nombre cumulé d&apos;opérations d&apos;extraction de messages en streaming, regroupées par résultat.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.StreamingPullModAckDeadlineMessageOperation`
+</td>
+
+<td>
+Nombre cumulé d&apos;opérations StreamingPull ModifyAckDeadline, regroupées par résultat.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.StreamingPullModAckDeadlineRequest`
+</td>
+
+<td>
+Nombre cumulé de demandes de tirage en streaming avec des champs ModifyAckDeadline non vides, regroupés par résultat.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.StreamingPullResponse`
+</td>
+
+<td>
+Nombre cumulé de réponses d&apos;extraction en continu, regroupées par résultat.
+</td>
+</tr>
+
+<tr>
+<td>
+`subscription.UnackedBytesByRegion`
+</td>
+
+<td>
+Taille totale en octets des messages non reconnus dans un abonnement, répartie par région Cloud.
+</td>
+</tr>
+</tbody>
+</table>

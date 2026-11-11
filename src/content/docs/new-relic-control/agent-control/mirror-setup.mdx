@@ -1,0 +1,94 @@
+---
+title: "Configure an OCI registry mirror for Agent Control"
+metaDescription: "Learn how to configure Agent Control to use an OCI registry mirror."
+tags:
+  - new-relic-control
+  - agent-control
+  - mirror-setup
+  - oci-registry
+  - artifacts
+  - linux
+  - windows
+freshnessValidatedDate: never
+---
+
+By default, Agent Control uses docker.io as the Open Container Initiative (OCI) registry to download agent packages and agent type definitions. If your environment requires a different registry, for example an air-gapped environment, you can configure a custom OCI registry or mirror.
+
+## Mirror signed artifacts
+
+Every agent package and agent type definition is signed with a detached `sigstore/cosign` signature artifact. Your mirror must also serve this signature artifact alongside the package itself to keep Agent Control signature verification working.
+
+
+## Before you begin
+
+Before configuring a custom OCI registry, ensure you have:
+
+1. **Installed Agent Control:** Use the New Relic CLI to complete the [Agent Control installation](/docs/new-relic-control/agent-control/setup).
+2. **Mirror registry available:** Ensure your custom OCI registry is accessible from the host machine.
+3. **CA certificate installed:** Install the certificate authority certificate on the host machine required to communicate with the mirror.
+
+## Configure on hosts
+
+After installing Agent Control on your host, follow these steps to configure a custom OCI registry:
+
+<Steps>
+
+<Step>
+
+### Edit the local configuration file
+
+Edit the Agent Control local configuration file:
+
+* Linux: `/etc/newrelic-agent-control/local-data/agent-control/local_config.yaml`
+* Windows: `C:\Program Files\New Relic\newrelic-agent-control\local-data\agent-control\local_config.yaml`
+
+Add the following configuration sections to the file:
+
+```yaml
+oci:
+  registry: YOUR_REGISTRY_URL
+```
+
+If you need to set up your username and password, use the following snippet:
+
+```yaml
+oci:
+  registry: YOUR_REGISTRY_URL
+  auth:
+    basic:
+      username: YOUR_USERNAME
+      password: YOUR_PASSWORD
+```
+
+Replace the placeholder values:
+- `YOUR_REGISTRY_URL`: The URL of your custom OCI registry (for example, `registry.example.com:5000` or `mirror.internal.company.com`)
+- `YOUR_USERNAME`: Username for registry authentication
+- `YOUR_PASSWORD`: Password for registry authentication
+
+This setting applies to both agent packages and agent type definitions, since both are pulled through the same `oci.registry`.
+
+</Step>
+
+<Step>
+
+### Restart Agent Control
+
+Restart the Agent Control service to apply the new configuration and verify that the service restarted successfully
+
+* Linux:
+
+  ```bash
+  sudo systemctl restart newrelic-agent-control
+  sudo systemctl status newrelic-agent-control
+  ```
+
+* Windows:
+
+  ```powershell
+  Restart-Service -Name newrelic-agent-control
+  Get-Service -Name newrelic-agent-control
+  ```
+
+</Step>
+
+</Steps>

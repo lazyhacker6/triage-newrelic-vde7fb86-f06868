@@ -1,0 +1,104 @@
+---
+title: ポートモニタリングの統合
+tags:
+  - Integrations
+  - On-host integrations
+  - On-host integrations list
+metaDescription: An introduction to New Relic's open-source port monitoring integration.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+弊社のポート監視インテグレーションは、TCP、UDP などのネットワーク ポートのステータスを監視し、稼働時間や停止データをNew Relicに報告します。
+
+<img title="port-dashboard" alt="Dashboard of the port monitoring integration" src="/images/infrastructure_screenshot-crop_port-monitoring-dashboard.webp" />
+
+<Callout variant="tip">
+  この統合は[Github 上でオープンソース](https://github.com/newrelic/nri-port-monitor)として公開されています。 最新のアップデートについては、変更ログもそこで入手できます。
+</Callout>
+
+## 統合をインストールする [#install]
+
+インテグレーションをインストールするには、以下の手順に従ってください。
+
+<Steps>
+  <Step>
+    ## インフラストラクチャエージェントをインストールします [#infra-install]
+
+    ポート監視インテグレーションを使用するには、まず同じホストに[インフラストラクチャエージェントをインストールする](/docs/infrastructure/install-infrastructure-agent/get-started/install-infrastructure-agent-new-relic/)必要があります。 すべてのオンホスト インテグレーションには、メトリックをNew Relicに公開してレポートするインフラストラクチャ エージェントが必要です。
+  </Step>
+
+  <Step>
+    ## インテグレーションをダウンロードして準備する [#download]
+
+    1. [GitHub リポジトリ](https://github.com/newrelic/nri-port-monitor/releases)からプラットフォーム用のリリースを選択してダウンロードします。例えば：
+
+       ```shell
+       wget https://github.com/newrelic/nri-port-monitor/releases/download/1.4/nri-port-monitor_x86_64.tar.gz && tar -zxvf nri-port-monitor_x86_64.tar.gz  
+       ```
+
+    2. `nri-port-monitor`実行ファイルを`/var/db/newrelic-infra/newrelic-integrations`にコピーします。`port-monitor-config.yml`をコピー `/etc/newrelic-infra/integrations.d`
+
+       ```shell
+       cp nri-port-monitor /var/db/newrelic-infra/newrelic-integrations && cp port-monitor-config.yml /etc/newrelic-infra/integrations.d
+       ```
+
+    3. バイナリ ファイル`nri-port-monitor`の実行権限を設定して、正しく実行できるようにします。
+
+       ```shell
+       chmod +x /var/db/newrelic-infra/newrelic-integrations/nri-port-monitor
+       ```
+  </Step>
+
+  <Step>
+    ## 統合を構成する [#configure-step]
+
+    1. `port-monitor-config.yml`を開き、監視したいすべてのポート インスタンスを含む構成を編集します (監視するアドレス/ポートごとに複数のスタンザを統合ブロックに追加します)。
+
+       ```yml
+       ```
+
+    インテグレーション:
+
+    * 名前: nri-port-モニター 間隔: 60 秒 環境:
+
+      # ネットワークの種類。既知のネットワークは次のとおりです。
+
+      # tcp、tcp4（IPv4のみ）、tcp6（IPv6のみ）、
+
+      # udp、udp4（IPv4のみ）、udp6（IPv6のみ）、
+
+      # ip、ip4（IPv4のみ）、ip6（IPv6のみ）、
+
+      # unix、unixgram、unixpacket
+
+      ネットワーク: tcp
+
+      # 確認するアドレス（ホスト:ポートの形式）
+
+      アドレス: localhost:80
+
+      # タイムアウト（秒）
+
+      タイムアウト: 5 ラベル: env: production
+
+    ````
+    </Step>
+
+    <Step>
+    ## Find your data [#find-data]
+
+    To easily find your Port Monitoring data, download our pre-built dashboard:
+
+    1. Go to <DNT>**[one.newrelic.com](https://one.newrelic.com/)**</DNT> and click on <DNT>**+ Integrations & Agents**</DNT>.
+    2. Click on <DNT>**Dashboards**</DNT> tab.
+    3. In the search box, search for <DNT>**Port Monitoring**</DNT>.
+    4. Click on the Port Monitoring dashboard to install it.
+
+    Here's an example NRQL query that returns the status of configured ports:
+
+    ```sql
+    SELECT latest(status) FROM NetworkPortSample FACET address SINCE 30 MINUTES AGO TIMESERIES
+    ````
+  </Step>
+</Steps>

@@ -1,0 +1,163 @@
+---
+title: Gerenciar permissões do aplicativo Nerdpack
+metaDescription: Learn about permissions for using and subscribing accounts to Nerdpacks.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Entenda os requisitos para gerenciar e usar Nerdpacks no New Relic.
+
+## Visão geral das capacidades [#capabilities]
+
+Sua capacidade de gerenciar e usar Nerdpacks é afetada pelo seu usuário New Relic :
+
+* Tipo de usuário
+* Funções atribuídas
+
+Confira a tabela abaixo para um resumo das capacidades do seu Nerdpack.
+
+<table>
+  <thead>
+    <tr>
+      <th />
+
+      <th>
+        Usuário básico
+      </th>
+
+      <th>
+        Usuário de plataforma principal ou completa
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        Sirva Nerdpacks
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        sim
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Publicar Nerdpacks
+      </td>
+
+      <td>
+        não
+      </td>
+
+      <td>
+        sim
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Inscreva-se no Nerdpacks
+      </td>
+
+      <td>
+        não
+      </td>
+
+      <td>
+        sim
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        tag Nerdpacks
+      </td>
+
+      <td>
+        não
+      </td>
+
+      <td>
+        sim
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Use Nerdlets ou visualizações criadas por suas contas
+      </td>
+
+      <td>
+        não
+      </td>
+
+      <td>
+        sim
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Use Nerdlets criados pela New Relic
+      </td>
+
+      <td>
+        não\*
+      </td>
+
+      <td>
+        sim
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Use visualizações criadas pela New Relic
+      </td>
+
+      <td>
+        não
+      </td>
+
+      <td>
+        sim
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+Existem alguns Nerdlets que usuários básicos podem usar. Consulte [Usuário básico](#basic-users-1) para obter mais informações.
+
+## Permissões do Nerdpack: [#nerdpack-permissions]
+
+Saiba as [diferenças de tipo de usuário](/docs/accounts/original-accounts-billing/original-users-roles/overview-user-models) entre como usuários básicos, usuários da plataforma completa e usuários core podem usar e gerenciar Nerdpacks.
+
+### Usuário básico [#basic-users-new-users]
+
+Se você for um usuário básico, você está limitado em suas capacidades do Nerdpack. Você só pode criar e servir Nerdpacks localmente. Para publicar, adicionar tags, assinar e usar seus Nerdpacks, um administrador deve atualizar você para usuário da plataforma completa ou usuário Core.
+
+<Callout variant="tip">
+  Se você for um usuário básico, geralmente não poderá usar nenhum Nerdpacks. No entanto, existem alguns Nerdlets mantidos pela New Relic que você pode usar. Eles são raros e atualmente não há como distingui-los em nossa interface web. E mesmo que você possa usar um Nerdlet em um Nerdpack, você nunca poderá usar visualizações personalizadas. Para isso, você deve estar atualizado para um usuário completo da plataforma ou um usuário principal.
+</Callout>
+
+### Usuário principal e usuário completo da plataforma [#core-full-platform-users-new]
+
+Se você é um usuário core ou um usuário full platform, você tem o privilégio **Nerdpacks &quot;modify&quot;** ou não.
+
+O privilégio **Nerdpacks &quot;modify&quot;** é necessário para publicar, assinar e tag Nerdpacks. Portanto, se você não tiver o privilégio de **Nerdpacks &quot;modify&quot;** , você só poderá criar e servir Nerdpacks localmente e usar Nerdpacks nos quais suas contas já foram assinadas.
+
+Para publicar, tag ou assinar seu Nerdpack, um administrador deve conceder a você o recurso de **Nerdpacks &quot;modify&quot;** .
+
+<Callout variant="tip">
+  A capacidade de **Nerdpacks &quot;modify&quot;** está incluída nos grupos **User** e **Admin** , os únicos grupos disponíveis por padrão. Portanto, na maioria dos casos, você poderá gerenciar Nerdpacks como um usuário completo da plataforma ou como usuário principal. No entanto, se você for um usuário completo da plataforma ou um usuário principal atribuído a um grupo personalizado que não inclui o privilégio de **Nerdpacks &quot;modify&quot;** , você não poderá gerenciar Nerdpacks.
+</Callout>
+
+## Capacidades de conta pai/filho [#parent-child]
+
+Algumas organizações New Relic possuem [estruturas de contas pai/filho](/docs/accounts/original-accounts-billing/original-users-roles/parent-child-account-structure). Para essas organizações, as contas dos filhos reportam os dados às contas dos pais. Esta hierarquia organizacional afeta os recursos do Nerdpack.

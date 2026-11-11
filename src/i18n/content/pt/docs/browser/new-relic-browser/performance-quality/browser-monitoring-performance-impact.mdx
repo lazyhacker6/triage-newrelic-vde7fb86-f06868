@@ -1,0 +1,383 @@
+---
+title: Monitoramento de browser e impacto no desempenho
+tags:
+  - Browser
+  - Browser monitoring
+  - Performance quality
+metaDescription: The negligible amount of overhead required to load browser JavaScript into a webpage results in a significant return of actionable data.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+O trecho JavaScript do <InlinePopover type="browser" />apresenta um impacto quase invisível no desempenho do site e na percepção do usuário sobre o tempo que uma página leva para carregar. O JavaScript está incluído em um pacote de dados de páginas da web que é enviado de qualquer maneira. Além disso, inicia imediatamente o monitoramento de erros e eventos à medida que o restante da página web é executado. A quantidade insignificante de sobrecarga necessária para carregar o JavaScript resulta em um retorno significativo de dados acionáveis.
+
+## Impacto geral [#overall]
+
+A sobrecarga do JavaScript leva em consideração tanto o impacto no usuário quanto o impacto no desempenho dos seus sistemas:
+
+* <DNT>**User perception:**</DNT> Normalmente o usuário não consegue detectar degradações de desempenho em um site com menos de 200ms. O JavaScript do browser adiciona menos de 15 ms no tempo agregado por carregamento de página. Isso é dividido ao longo do tempo, portanto, em nenhum momento o usuário seria capaz de perceber qualquer impacto no desempenho devido ao JavaScript.
+* <DNT>**Webserver and systems:**</DNT> O monitoramento do aplicativo browser ocorre no browser do usuário, não no servidor. O tempo de processamento não afeta o consumo da CPU.
+
+Além disso, tomamos medidas adicionais para minimizar qualquer impacto potencial nos aplicativos e páginas da web monitorados. Por exemplo, o script &quot;loader&quot; é carregado de forma síncrona no `<HEAD>` para garantir que o monitoramento esteja ativado durante todo o ciclo de vida da página. Esse script é incluído em linha, o que elimina a necessidade de outra solicitação de rede de ida e volta para uma [rede de distribuição de conteúdo (CDN)](/docs/browser/new-relic-browser/performance-quality/security-new-relic-browser#cdn). O &quot;carregador&quot; vem com o carregamento inicial da página.
+
+Posteriormente no ciclo de vida da página, o New Relic carrega scripts de monitoramento adicionais de forma assíncrona. Esses scripts não devem ter nenhum efeito perceptível para o usuário e estão incluídos na sobrecarga geral de menos de 15 ms por página.
+
+## Impacto na rede [#network]
+
+O monitoramento do browser também minimiza o tráfego de rede para o usuário final, agregando dados localmente (no cliente) e enviando-os de volta para a New Relic em intervalos periódicos e nos eventos do ciclo de vida da página `load`, `unload`, `pageshow` e `pagehide`. (Durante os períodos ociosos da sessão do browser, as transmissões podem não ser necessárias.)
+
+### Script do agente browser [#agent-scripts]
+
+O agente consiste em múltiplos scripts para reduzir o tamanho inicial do &quot;loader&quot; e para suportar o carregamento apenas do JavaScript necessário para suportar os recursos do agente que estão habilitados. O primeiro script, o &quot;loader&quot;, é inserido in-line no documento HTML. Os scripts restantes são baixados da rede de distribuição de conteúdo (js-agente.newrelic.com) quando o evento de ciclo de vida da página `load` acontece. O número de scripts carregados depende do tipo de agente que está sendo usado. Descubra mais sobre [os tipos de browsers de agentes aqui](/docs/browser/browser-monitoring/installation/install-browser-monitoring-agent/#agent-types).
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>
+        Script
+      </th>
+
+      <th>
+        Lite
+      </th>
+
+      <th>
+        Pró
+      </th>
+
+      <th>
+        Pró + SPA
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        Tamanho do script embutido
+      </td>
+
+      <td>
+        10,2 KB
+      </td>
+
+      <td>
+        15,5 KB
+      </td>
+
+      <td>
+        17,5 KB
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Tamanho do script baixado
+      </td>
+
+      <td>
+        15,3 KB
+      </td>
+
+      <td>
+        21 KB
+      </td>
+
+      <td>
+        25,4 KB
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<sup>Os tamanhos são baseados em script reduzido usando compactação gzip.</sup>
+
+### Colheitas do agente browser [#agent-harvests]
+
+Os eventos Browser são coletados primeiro após o evento PageView ser coletado com sucesso e, depois, a cada 30 segundos. Se qualquer tipo de evento exceder 16 kB de dados antes da próxima coleta programada, uma coleta antecipada será acionada para esse evento. Além disso, uma colheita final ocorre sempre que o documento faz a transição para `hidden` por meio de um evento `visibilitychange` (por exemplo, quando um usuário sai, alterna entre guias, fecha a guia, minimiza ou fecha o navegador ou alterna do navegador para outro aplicativo se estiver em um dispositivo móvel).
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>
+        Tipo de dados
+      </th>
+
+      <th>
+        Lite
+      </th>
+
+      <th>
+        Pró
+      </th>
+
+      <th>
+        Pró + SPA
+      </th>
+
+      <th>
+        Frequência de colheita
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        Evento [PageView](/attribute-dictionary/?event=PageView)
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        `PageView` os eventos são coletados uma vez imediatamente após o evento de ciclo de vida da página `load` . Esses dados são responsáveis por gerar a métrica de page view no dashboard do browser da interface New Relic. Esta é uma chamada JSONP para `bam.nr-data.net` ou `bam-cell.nr-data.net`. Todos os agentes são <DNT>**required**</DNT> para coletar um evento `PageView` .
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Evento [PageViewTiming](/attribute-dictionary/?event=PageViewTiming)
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        `PageViewTiming` Os eventos são coletados por todos os agentes e incluem dados de tempo, como medições core web vitals. Consulte a [documentação do PageViewTiming](/docs/browser/new-relic-browser/page-load-timing-resources/pageviewtiming-async-or-dynamic-page-details/#interactivity-metrics) para obter uma lista de eventos relatados.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Métrica [de erro JavaScript](/attribute-dictionary/?event=JavaScriptError)
+      </td>
+
+      <td>
+        não
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        `JavaScriptError` métrica são enviadas junto com a métrica Ajax como dados da fração de tempo.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Métrica Ajax
+      </td>
+
+      <td>
+        não
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        Enviado junto com JavaScriptError métrica como dados da fração de tempo.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Evento [AjaxRequest](/attribute-dictionary/?event=AjaxRequest)
+      </td>
+
+      <td>
+        não
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        `AjaxRequest` o evento segue o ciclo de coleta de 30 segundos, a menos que o agente `SPA` esteja em uso. Se estiver usando o agente `SPA`, a primeira coleta ocorrerá após o evento do ciclo de vida da página `load` e coletas adicionais ocorrerão a cada 30 segundos ou quando o agente `SPA` perceber uma alteração de rota.,
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Rastreamento da sessão
+      </td>
+
+      <td>
+        não
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        O rastreamento da sessão pode gerar uma grande quantidade de dados, mas isso pode ser controlado por amostragem. Por padrão, apenas cerca de 90 visualizações de página por hora serão amostradas para enviar dados trace da sessão. Também há uma opção para definir uma taxa de amostragem personalizada.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Session Replay
+      </td>
+
+      <td>
+        não
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        Além do ciclo geral de coleta, as coletas do Session Replay que incluem snapshots e carga de metadados serão coletadas imediatamente.
+
+        O endpoint pode diferir dependendo da localidade, mas um exemplo para os EUA seria `https://bam.nr-data.net/browser/blobs`.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Evento [PageAction](/attribute-dictionary/?event=PageAction)
+      </td>
+
+      <td>
+        não
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td />
+    </tr>
+
+    <tr>
+      <td>
+        Evento [de interação do browser](/attribute-dictionary/?event=BrowserInteraction)
+      </td>
+
+      <td>
+        não
+      </td>
+
+      <td>
+        não
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        `BrowserInteraction` evento são colhidos imediatamente após o término da interação. Sempre haverá pelo menos uma interação que representa o carregamento inicial da página. Interações adicionais são coletadas somente se a URL mudar (representando mudança de rota). `AjaxRequest` evento também são coletados ao mesmo tempo se ocorrerem durante uma interação.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Logs do navegador
+      </td>
+
+      <td>
+        não
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td />
+    </tr>
+
+    <tr>
+      <td>
+        Evento [UserAction](/attribute-dictionary/?event=UserAction)
+      </td>
+
+      <td>
+        não
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td />
+    </tr>
+
+    <tr>
+      <td>
+        Eventos [BrowserPerformance](/attribute-dictionary/?event=BrowserPerformance)
+      </td>
+
+      <td>
+        não
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td>
+        sim
+      </td>
+
+      <td />
+    </tr>
+  </tbody>
+</table>

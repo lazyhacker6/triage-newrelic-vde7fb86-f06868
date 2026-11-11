@@ -1,0 +1,129 @@
+---
+title: Mise à niveau du contrôle des agents et des agents gérés
+metaDescription: 'A simple, centralized process for updating agent versions across your entire fleet'
+tags:
+  - agent-control
+  - upgrade
+  - agent-management
+  - kubernetes
+  - linux
+  - windows
+freshnessValidatedDate: never
+translationType: machine
+---
+
+## Présentation
+
+Agent Control offre un moyen fluide et centralisé de gérer l&apos;ensemble du cycle de vie de vos agents, y compris les mises à jour. Au lieu de mettre à jour manuellement les agents sur chaque hôte ou cluster, vous définissez l&apos;état souhaité dans Fleet Control, et Agent Control gère automatiquement le reste.
+
+Agent Control peut se mettre à niveau dans le cadre de vos déploiements de contrôle de la flotte, de sorte qu&apos;il reste à jour sans campagne de mise à niveau distincte. Vous mettez à jour les agents qu&apos;il gère en modifiant leur version dans la configuration de votre flotte.
+
+### Principaux avantages du processus de mise à jour avec New Relic Control
+
+* Contrôle centralisé : gérez toutes les versions d’agent pour l’ensemble de votre flotte à partir d’un seul emplacement.
+* Automatisé : une fois que vous définissez une nouvelle version, le processus de déploiement et de réconciliation est géré automatiquement.
+* Installations protégées : sur les hôtes, Agent Control vérifie une nouvelle version avant de remplacer celle en cours d’exécution. Sur Kubernetes, une mise à jour progressive maintient les anciens pods en cours d’exécution jusqu’à ce que les nouveaux soient sains. Voir [Si une mise à niveau d’Agent Control échoue](#upgrade-failure).
+
+<Callout variant="important">
+Agent Control n’annule pas automatiquement une mise à niveau une fois que la nouvelle version est en cours d’exécution. Pour savoir ce qui est protégé et ce qui ne l’est pas, consultez [Si une mise à niveau d’Agent Control échoue](#upgrade-failure).
+</Callout>
+
+## Mise à jour de vos Agents gérés
+
+Vous pouvez mettre à jour tout agent géré par Agent Control en modifiant simplement sa version dans la configuration à distance au sein de Fleet Control. Cette approche déclarative garantit la cohérence et la fiabilité sur l&apos;ensemble de votre parc.
+
+* **Modifiez la configuration :** accédez à la configuration de votre flotte dans Fleet Control.
+* **Mettre à jour la version :** Localisez l&apos;agent que vous souhaitez mettre à jour (par exemple, `infrastructure`) et remplacez la valeur `chart_version` par le nouveau numéro de version.
+* **Déployer les modifications :** Enregistrez et déployer la configuration mise à jour.
+
+Agent Control détectera automatiquement le changement et effectuera une mise à jour progressive sans interruption, garantissant que vos nouveaux agents sont opérationnels et sains avant de remplacer les anciens.
+
+### Exemple : Mise à jour de l&apos;agent d&apos;infrastructure New Relic
+
+Cet exemple montre comment mettre à niveau l&apos;agent d&apos;infrastructure vers une nouvelle version.
+
+```yaml
+# Remote configuration for a single agent
+chart_version: "5.0.109"  # Change this value
+chart_values:
+  newrelic-infrastructure:
+    enableProcessMetrics: true
+```
+
+## Comment Agent Control se met à niveau avec le contrôle de la flotte [#ac-auto-upgrade]
+
+Lorsque vous lancez un déploiement dans le contrôle de la flotte, le contrôle de la flotte vérifie si une version plus récente d’Agent Control est disponible pour les entités gérées de cette flotte. Si c’est le cas, la mise à niveau est incluse dans votre déploiement.
+
+1. L’équipe Agent Control publie une nouvelle version sur le [canal de sortie](#release-channels).
+2. Vous lancez un déploiement dans le contrôle de la flotte. La mise à niveau d’Agent Control y est incluse.
+3. Agent Control se met à niveau lui-même, et vos agents gérés ne reçoivent que les modifications de configuration que vous avez demandées.
+
+Agent Control se met à niveau dans le cadre d’un déploiement et non entre les déploiements. Pour la partie déploiement de ce processus, consultez [Mises à niveau automatiques d’Agent Control](/docs/new-relic-control/fleet-control/manage-fleets#automatic-agent-control-upgrades) dans la documentation du contrôle de la flotte.
+
+<Callout variant="important">
+Si vous avez installé Agent Control pendant la préversion limitée ou publique, avant la disponibilité générale, il se peut que votre version ne prenne pas en charge les mises à niveau via le contrôle de la flotte. Dans ce cas, mettez à niveau Agent Control manuellement vers la dernière version une fois, par exemple en exécutant à nouveau l’installation guidée. Après cela, le contrôle de la flotte peut inclure les futures mises à niveau dans vos déploiements.
+</Callout>
+
+Sur un hôte, une mise à niveau redémarre Agent Control. Il arrête d’abord les agents qu’il gère, et les redémarre une fois que la nouvelle version est en cours d’exécution, donc attendez-vous à une courte interruption des données provenant de ces agents. Sur Kubernetes, Flux remplace les pods Agent Control par une mise à jour progressive, et vos agents gérés continuent de fonctionner.
+
+### Canaux de sortie [#release-channels]
+
+Un canal de sortie est un flux de sorties d’Agent Control auquel vous vous abonnez. Chaque canal a sa propre politique quant au moment où une nouvelle version arrive, en fonction de facteurs tels que la durée de disponibilité d’une sortie et son degré de fiabilité.
+
+Le contrôle de la flotte propose un seul canal, **Rapid**. Il contient la dernière sortie d’Agent Control prête pour la production. Une nouvelle version arrive avec votre prochain déploiement dans le contrôle de la flotte, ce qui correspond également au fonctionnement des mises à niveau pour Agent Control sur Kubernetes. Vous ne pouvez pas sélectionner un canal différent, ni choisir la version vers laquelle le contrôle de la flotte se met à niveau.
+
+## Mise à niveau d&apos;Agent Control
+
+Mettez à niveau Agent Control via le contrôle de la flotte sur chaque plateforme. La mise à niveau fait partie de votre déploiement, comme décrit dans [Comment Agent Control se met à niveau avec le contrôle de la flotte](#ac-auto-upgrade).
+
+### Kubernetes
+
+Les instructions suivantes s&apos;appliquent à Agent Control exécuté sur un cluster Kubernetes.
+
+Le contrôle de la flotte inclut la mise à niveau d’Agent Control dans votre déploiement, comme décrit dans [Comment Agent Control se met à niveau avec le contrôle de la flotte](#ac-auto-upgrade). Lorsqu’une version plus récente est disponible, la page de déploiement affiche un avis indiquant qu’Agent Control sera mis à jour. Vous n’avez pas besoin de modifier la version d’Agent Control dans sa configuration. Cela permet de maintenir l’Agent Control en cours d’exécution sur votre cluster à jour avec les dernières fonctionnalités, les correctifs et les patchs de sécurité.
+
+La mise à niveau déclenche une mise à jour progressive des pods Agent Control sur votre cluster. Les vérifications d’état intégrées de Kubernetes garantissent que la nouvelle version est saine avant que l’ancienne ne soit arrêtée pour une mise à niveau sans interruption.
+
+### Hôtes Linux et Windows
+
+Sur les hôtes Linux et Windows, le contrôle de la flotte inclut également la mise à niveau d’Agent Control dans votre déploiement. Vous n’avez pas besoin de modifier la version d’Agent Control dans la configuration de votre flotte.
+
+<Callout variant="caution">
+Le contrôle de la flotte est le moyen de mettre à niveau Agent Control sur un hôte. Il n’est pas recommandé de le mettre à niveau avec votre gestionnaire de paquets (`apt-get`, `zypper`, ou `yum`), ou en réexécutant le script d’installation.
+</Callout>
+
+Les agents gérés (agent d’infrastructure, NRDOT) sont mis à niveau de la même manière que sur Kubernetes. Mettez à jour la version souhaitée de l’agent dans la configuration de votre flotte et déployez les modifications.
+
+### Si une mise à niveau d&apos;Agent Control échoue [#upgrade-failure]
+
+La façon dont Agent Control gère l’échec d’une mise à niveau dépend de la plateforme :
+
+* **Hôtes Linux et Windows :** avant qu’Agent Control ne se remplace, il exécute la nouvelle version une fois pour confirmer qu’elle peut démarrer, charger sa configuration et se connecter au contrôle de la flotte. Si cette vérification échoue, ou si le téléchargement ou la vérification de la signature échoue, la version actuelle continue de s’exécuter et le déploiement s’affiche comme **FAILED**. Déployer une version souhaitée différente lance immédiatement une nouvelle tentative. Si la cause est permanente, comme un package qui échoue à la vérification de la signature, la mise à niveau continue d’échouer et le déploiement reste **FAILED** jusqu’à ce que vous corrigiez la cause ou déployiez une version différente. La vérification s’exécute avant l’échange, elle ne peut donc pas détecter une version qui la réussit et qui tombe en panne plus tard.
+* **Kubernetes :** la mise à jour progressive maintient les anciens pods d’Agent Control en cours d’exécution jusqu’à ce que les nouveaux pods soient prêts.
+
+Une fois qu’une nouvelle version est en cours d’exécution, Agent Control ne revient pas de lui-même à la version précédente. Pour récupérer d’une mauvaise version, passez à une version corrigée, que le contrôle de la flotte inclut dans votre prochain déploiement. Pour voir ce qui a échoué, vérifiez les détails du déploiement dans le contrôle de la flotte. Voir aussi [Mises à niveau automatiques d’Agent Control](/docs/new-relic-control/fleet-control/manage-fleets#automatic-agent-control-upgrades).
+
+### Démarrer, arrêter et redémarrer Agent Control [#start-stop-restart]
+
+Agent Control démarre automatiquement après l&apos;exécution du script d&apos;installation.
+
+#### Linux
+
+Pour Linux, assurez-vous d&apos;utiliser la bonne commande pour votre système d&apos;initialisation. Sélectionnez `start`, `stop`, `restart` ou `status` selon le cas.
+
+Voici un exemple pour `systemd`:
+
+```shell
+sudo systemctl <start|stop|restart|status> newrelic-agent-control
+```
+
+#### Windows
+
+Exécutez ces commandes dans PowerShell avec des privilèges d&apos;administrateur :
+
+```powershell
+Start-Service -Name newrelic-agent-control
+Stop-Service -Name newrelic-agent-control
+Restart-Service -Name newrelic-agent-control
+Get-Service -Name newrelic-agent-control
+```

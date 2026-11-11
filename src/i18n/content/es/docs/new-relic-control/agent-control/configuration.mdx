@@ -1,0 +1,1055 @@
+---
+title: Gestionar la configuración
+metaDescription: Overview of the Agent Control configuration
+tags:
+  - agent-control
+  - configuration
+  - remote-configuration
+  - proxy
+  - secrets
+  - kubernetes
+  - linux
+  - windows
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Agente Control proporciona un enfoque perfecto para la configuración independientemente del entorno en el que se implementa. Hay dos métodos disponibles para gestionar la configuración del agente:
+
+* **Configuración local:** un archivo `values.yaml` completo empleado durante la instalación inicial Helm .
+
+* **Configuración remota:** una configuración centralizada basada en YAML que usted crea en New Relic Control y que se implementa de forma remota en toda su flota.
+
+La configuración remota es el método recomendado para la gestión diaria. Garantiza un comportamiento consistente del agente en todo su entorno, simplifica la gestión de cambios y le permite escalar sin actualizar manualmente los archivos YAML locales en cada host.
+
+<Callout variant="tip">
+El archivo `values-newrelic.yaml` , que tradicionalmente definía la configuración del agente New Relic , ahora también incluye la configuración para el control del agente. El parámetro que defina en este archivo determinará cómo funcionan tanto el agente Control como su agente gestionado. Este archivo se denomina configuración local.
+</Callout>
+
+## Comprender las dos capas de configuración
+
+La configuración de agente Control se estructura en dos capas:
+
+1. **Configuración principal de Agente Control:** estas son las configuraciones de nivel superior que controlan cómo funciona Agente Control, como su conexión a New Relic, su identidad y los detalles de administración de la flota.
+
+2. **Configuración del agente gestionado:** Estos son los `chart_values` individuales para cada subagente (por ejemplo, agente de infraestructura, Fluent Bit) que el agente Control despliega y gestiona.
+
+Cuando están presentes tanto una configuración local como remota, el Control del agente aplica la siguiente lógica:
+
+1. La configuración remota tiene prioridad. Cualquier configuración definida en una configuración remota desde New Relic Control anulará la configuración correspondiente en el archivo local `values.yaml` .
+2. Para anular intencionalmente la configuración remota con su configuración local, puede implementar una configuración remota vacía a través de New Relic Control. Este cambio se aplicará a todos los clústeres de la flota seleccionada.
+
+## Configuración Kubernetes
+
+Estas instrucciones y ejemplos se aplican al control de agente que se ejecuta en un clúster de Kubernetes.
+
+### Configuración local `values.yaml` para Kubernetes
+
+El archivo de configuración local para Kubernetes, empleado durante la instalación, contiene todas las configuraciones para el agente Control y su agente gestionado.
+
+Este ejemplo muestra las dos capas de configuración dentro de un solo archivo.
+
+<CollapserGroup>
+<Collapser id="agent-control-config" title="Configuración de Agent Control">
+```yaml
+# Layer 1: Agent Control's Core Configuration
+global:
+  cluster: "YOUR_CLUSTER_NAME"
+  licenseKey: "YOUR_LICENSE_KEY"
+
+# Values related to the Agent Control's Helm chart release.
+# `https://github.com/newrelic/helm-charts/blob/master/charts/agent-control-bootstrap/values.yaml`
+agentControlDeployment:
+  chartValues:
+    systemIdentity:
+      organizationId: "****"
+      parentIdentity:
+        clientId: "****"
+        clientSecret: "****"
+    config:
+      fleet_control:
+        # Optional: Specify a fleet_id (entity guid) to automatically connect to an existing fleet.
+        fleet_id: "****"
+
+      # Layer 2: Managed Agents' Configurations
+      # List of managed agents that will be deployed. The key represents the name of the agent and the value holds the configuration.
+      agents:
+        infrastructure:
+          agent_type: newrelic/com.newrelic.infrastructure:0.1.0
+        logs:
+          agent_type: newrelic/io.fluentbit:0.1.0
+        agent-operator:
+          agent_type: com.newrelic.k8s_agent_operator:0.1.0
+
+    agentsConfig:
+      infrastructure:
+        # Ref: `https://github.com/newrelic/helm-charts/tree/master/charts/nri-bundle`
+        # Recommended: check and define an explicit chart version (latest stable)
+        chart_version: "*"
+        chart_values:
+          newrelic-infrastructure:
+          enableProcessMetrics: true
+      logs:
+        # Ref: `https://github.com/newrelic/helm-charts/tree/master/charts/newrelic-logging`
+        # Recommended: check and define an explicit chart version (latest stable)
+        chart_version: "*"
+        chart_values:
+          newrelic-logging:
+            sendMetrics: true
+      agent-operator:
+        chart_version: "*"
+```
+</Collapser>
+</CollapserGroup>
+
+El ejemplo demuestra cómo configurar el Agent Control junto con dos agentes gestionados: el agente de infraestructura Kubernetes y Fluent Bit para el reenvío de logs. Por ejemplo, si no desea enviar métricas de estado para su recolector de logs Fluent Bit , simplemente configure `sendMetrics: false` en el archivo YAML antes de ejecutar el comando de instalación.
+
+### Configuración remota para Kubernetes
+
+La configuración remota garantiza un comportamiento consistente del agente en todo su entorno, simplifica la gestión de cambios y le permite escalar la observabilidad sin gestionar manualmente los archivos YAML locales.
+
+Para implementar la configuración de forma centralizada en todo el clúster, defina este mismo contenido YAML en la sección de **configuración** de [Control de flota (Fleet Control)](/docs/new-relic-control/fleet-control/overview). Luego, puede aplicar la configuración a una flota completa de clúster como parte de una implementación remota. Esto se conoce como archivo **de configuración remota** .
+
+<Callout variant="tip">
+Cuando define una configuración en la UI de control New Relic , la estructura YAML es diferente. Solo proporciona el YAML que corresponde al bloque `content` para un solo agente.
+</Callout>
+
+### Configuración de ejemplo: agente Control en Kubernetes
+
+configuración: agente Control en Kubernetes Los siguientes ejemplos muestran cómo configurar agente Control para gestionar diferentes conjuntos de agentes. Esta configuración se puede emplear durante la instalación inicial o como parte de una configuración remota en control de flota.
+
+Para explorar todas las configuraciones disponibles, consulte [`values-newrelic.yaml`](https://github.com/newrelic/helm-charts/blob/master/charts/agent-control-bootstrap/values.yaml).
+
+Los siguientes ejemplos muestran cómo configurar el control del agente con un conjunto de subagentes empleando el archivo local `values.yaml` .
+
+#### Control de agentes con infraestructura New Relic y Fluent Bit
+
+Este ejemplo implementar Agent Control con monitoreo de infraestructura y Fluent Bit para recolección de logs.
+
+<CollapserGroup>
+<Collapser id="agent-control-config" title="Configuración local para infraestructura y Fluent Bit">
+```yaml
+global:
+  cluster: "YOUR_CLUSTER_NAME"
+  licenseKey: "YOUR_LICENSE_KEY"
+
+# See `https://github.com/newrelic/helm-charts/blob/master/charts/agent-control-bootstrap/values.yaml`
+agentControlDeployment:
+  chartValues:
+    systemIdentity:
+      organizationId: "****"
+      parentIdentity:
+        clientId: "****"
+        clientSecret: "****"
+    config:
+      fleet_control:
+        # Optional: Specify a fleet_id (entity guid) to automatically connect to an existing fleet.
+        fleet_id: "****"
+      agents:
+        infrastructure:
+          agent_type: newrelic/com.newrelic.infrastructure:0.1.0
+        logs:
+          agent_type: newrelic/io.fluentbit:0.1.0
+        agent-operator:
+          agent_type: com.newrelic.k8s_agent_operator:0.1.0
+    agentsConfig:
+      infrastructure:
+        # Ref: `https://github.com/newrelic/helm-charts/tree/master/charts/nri-bundle`
+        # Recommended: check and define an explicit chart version (latest stable)
+        chart_version: "*"
+
+        #chart_values:
+        #  newrelic-infrastructure:
+        #    enableProcessMetrics: true
+      logs:
+        # Ref: `https://github.com/newrelic/helm-charts/tree/master/charts/newrelic-logging`
+        # Recommended: check and define an explicit chart version (latest stable)
+        chart_version: "*"
+
+        #chart_values:
+        #  newrelic-logging:
+        #    sendMetrics: true
+      agent-operator:
+        chart_version: "*"
+```
+</Collapser>
+</CollapserGroup>
+
+#### Agente Control con OpenTelemetry y configuraciones de recolector personalizadas
+
+con OpenTelemetry y configuraciones de recolector personalizadas Este ejemplo despliega el agente Control con la distribución New Relic del recolector OpenTelemetry (NRDOT) y deshabilita el receptor `filelog` en el [gráfico Helm gestionado`nr-k8s-otel-collector` ](https://github.com/newrelic/helm-charts/tree/master/charts/nr-k8s-otel-collector#values).
+
+<Callout variant="important">
+Práctica recomendada de seguridad: no almacene valores confidenciales como su clave de licencia directamente en la configuración. Recomendamos emplear un secreto de Kubernetes. Luego, el control del agente puede extraer de forma segura estos valores del secreto en tiempo de ejecución.
+</Callout>
+
+<CollapserGroup>
+<Collapser id="otel-config" title="Configuración OpenTelemetry">
+```yaml
+global:
+  cluster: "YOUR_CLUSTER_NAME"
+  licenseKey: "YOUR_LICENSE_KEY"
+# Values related to the Agent Control's Helm chart release.
+# `https://github.com/newrelic/helm-charts/blob/master/charts/agent-control-bootstrap/values.yaml`
+agentControlDeployment:
+  chartValues:
+    systemIdentity:
+      organizationId: "****"
+      parentIdentity:
+        clientId: "****"
+        clientSecret: "****"
+    config:
+      fleet_control:
+        # Optional: Specify a fleet_id (entity guid) to automatically connect to an existing fleet.
+        fleet_id: "****"
+
+      # List of managed agents that will be deployed. The key represents the name of the agent and the value holds the configuration.
+      agents:
+        nr-otel-collector:
+          agent_type: "newrelic/com.newrelic.opentelemetry.collector:0.1.0"
+    # List of managed agents that will be deployed. The key represents the name of the agent and the value holds the configuration.
+    agentsConfig:
+      nr-otel-collector:
+        chart_version: "*"
+        chart_values:
+          nr-k8s-otel-collector: {}
+          global: {}
+
+```
+</Collapser>
+</CollapserGroup>
+
+### Configuración de ejemplo: configuración de agente remoto en Kubernetes
+
+Los siguientes ejemplos muestran cómo configurar agentes individuales de forma remota desde la UI de **New Relic Control**.
+
+#### Configuración remota: New Relic Infrastructure
+
+Este ejemplo muestra cómo configurar de forma remota el agente New Relic Infrastructure para Kubernetes usando control de flota. Habilita la recopilación de métricas del proceso configurando `enableProcessMetrics: true`.
+
+<CollapserGroup>
+<Collapser id="infra-remote-config" title="configuración remota de infraestructura">
+```yaml
+chart_version: "*"
+chart_values:
+  newrelic-infrastructure:
+    enableProcessMetrics: true
+```
+</Collapser>
+</CollapserGroup>
+
+#### Configuración remota: Fluent Bit
+
+Este ejemplo configuró Fluent Bit de forma remota a través de control de flota. Habilita el reporte métrico de salud desde el recolector de logs configurando `sendMetrics: true`.
+
+<CollapserGroup>
+<Collapser id="fluentbit-remote-config" title="Configuración Fluent Bit">
+```yaml
+chart_version: "*"
+chart_values:
+  newrelic-logging:
+    sendMetrics: true
+```
+</Collapser>
+</CollapserGroup>
+
+#### Configuración remota: Prometheus
+
+Este ejemplo configura el agente Prometheus de forma remota usando control de flota. Permite a `low-data mode` reducir el volumen de telemetría y desactivar la integración predeterminada.
+
+<CollapserGroup>
+<Collapser id="prometheus-config" title="Configuración de Prometheus">
+```yaml
+chart_version: "*"
+chart_values:
+  newrelic-prometheus-agent:
+    lowDataMode: true
+```
+</Collapser>
+</CollapserGroup>
+
+#### Configuración remota: OpenTelemetry
+
+Este ejemplo configura el recolector OpenTelemetry New Relic y habilita `lowDataMode` como una opción válida.
+
+<Callout variant="important">
+Práctica recomendada de seguridad: no almacene valores confidenciales como su clave de licencia directamente en la configuración. Recomendamos emplear un secreto de Kubernetes. Luego, el control del agente puede extraer de forma segura estos valores del secreto en tiempo de ejecución.
+</Callout>
+
+<CollapserGroup>
+<Collapser id="otel-config" title="Configuración remota OpenTelemetry">
+<Callout variant="important">
+Cree un secreto de Kubernetes para almacenar de forma segura la clave de licencia de New Relic y úsela en `chart_values` en reemplazo del valor `licenseKey` :
+
+```yaml
+customSecretName: "your-secret-name"
+customSecretLicenseKey: "your-secret-key"
+```
+</Callout>
+
+Recomendamos emplear control de flota para definir y desplegar la configuración de OpenTelemetry en sus flotas. Para configurar OpenTelemetry de forma remota, cree una configuración en control de flota con la estructura que se muestra a continuación. Puede ajustar valores como `lowDataMode` o `receivers.filelog.enabled` e incluir cualquier otra configuración de gráfico Helm relevante según sus necesidades.
+
+```yaml
+chart_version: "*"
+chart_values:
+  nr-k8s-otel-collector:
+    lowDataMode: true
+```
+</Collapser>
+</CollapserGroup>
+
+### Configuración de proxy para Kubernetes
+
+Agente Control admite la configuración de proxy para enrutar el tráfico a través de servidores proxy corporativos. La configuración del proxy se puede establecer a través de variables de entorno o directamente en el archivo de configuración.
+
+#### Precedencia de proxy
+
+Agent Control empleará la configuración de proxy en el siguiente orden de precedencia:
+
+1. `proxy` ampo de configuración en la configuración de Agent Control
+2. `HTTP_PROXY` Variable ambiental
+3. `HTTPS_PROXY` Variable ambiental
+
+#### Configuración de proxy con certificados autofirmados
+
+Para configuraciones de proxy que emplean autenticación HTTPS con certificados autofirmados, debe proporcionar el paquete de certificados de CA y configurar la autenticación de proxy:
+
+<CollapserGroup>
+<Collapser id="k8s-proxy-config" title="Ejemplo de configuración de proxy de Kubernetes">
+```yaml
+global:
+  cluster: "YOUR_CLUSTER_NAME"
+  licenseKey: "YOUR_LICENSE_KEY"
+
+agentControlDeployment:
+  proxy:
+    url: https://proxy-service:8080
+
+  # Mount CA certificate bundle to Agent Control
+  extraVolumeMounts:
+    - mountPath: /etc/ssl/certs/
+      name: ca-certs
+  extraVolumes:
+    - name: ca-certs
+      secret:
+        secretName: ca-certs
+
+# Configure Flux components to use proxy
+agentControlCd:
+  flux2:
+    sourceController:
+      extraEnv:
+        # Configure Flux source-controller to proxy all requests
+        - name: HTTPS_PROXY
+          value: https://proxy-service:8080
+        # Except for in-cluster requests
+        - name: "NO_PROXY"
+          value: ".cluster.local.,.cluster.local,cluster.local,.svc,127.0.0.0/8,10.0.0.0/8"
+      volumeMounts:
+        # Mount CA certificate bundle to source-controller trust root store. The bundle should contain the
+        # proxy CA cert.
+        - mountPath: /etc/ssl/certs/
+          name: ca-certs
+      volumes:
+        - name: ca-certs
+          secret:
+            secretName: ca-certs
+
+
+```
+</Collapser>
+</CollapserGroup>
+
+#### Configuración de proxy para agente gestionado
+
+<Callout variant="caution">
+La configuración de un proxy en Agent Control **no** configura automáticamente las mismas configuraciones de proxy para el agente que gestiona. Cada agente tiene su propia configuración de proxy que debe configurar por separado según el formato de configuración y los requisitos específicos de ese agente.
+</Callout>
+
+Al emplear un proxy, también debe configurar los ajustes del proxy para cada agente gestionado individualmente. Consulte la documentación específica de cada agente para conocer las opciones de configuración del proxy.
+
+### Gestión de secretos
+
+El control del agente proporciona un mecanismo sólido para gestionar datos confidenciales, como contraseñas y claves de API, al recuperarlos de proveedores de secretos dedicados. Esto garantiza que la información confidencial no se codifique de forma rígida directamente en los archivos de configuración. Actualmente, el sistema admite los proveedores descritos en [Proveedores de valores](#value-providers).
+
+### Configuración del repositorio privado
+
+Agente Control admite la configuración de un repositorio Helm privado para implementar tanto el propio Agente Control como el agente gestionado. Esto permite entornos en los que no se puede acceder directamente a los gráficos de New Relic Helm.
+
+<Callout variant="caution">
+Al emplear el repositorio privado Helm, los gráficos deben ser compatibles y las imágenes referenciadas dentro de los gráficos deben ser accesibles. De lo contrario, el agente no funcionará como se espera.
+</Callout>
+
+### 1. Habilitar repositorio privado para agente
+
+Por razones de seguridad, solo los repositorios explícitamente habilitados se permiten en la configuración remota. Para habilitar un repositorio específico, actualice la configuración del agente Control de la siguiente manera:
+
+<CollapserGroup>
+<Collapser id="k8s-private-repository-config" title="Habilitar repositorio privado">
+```yaml
+# values-newrelic.yaml
+
+global:
+  cluster: "YOUR_CLUSTER_NAME"
+  licenseKey: "YOUR_LICENSE_KEY"
+
+# ...
+
+agentControlDeployment:
+  config:
+    allowedChartRepositoryUrl:
+      - https://my-private-repository-1
+      - https://my-private-repository-2
+    # ...
+```
+</Collapser>
+</CollapserGroup>
+
+La configuración del repositorio permitida se puede usar luego en su configuración remota dentro de New Relic Control. Ejemplo:
+
+```yaml
+chart_version: "1.2.3"
+chart_repository:
+  url: "https://my-private-repository-1"
+  name: "my-chart-name" # Optional: use only if the chart name doesn't match New Relic's chart name
+```
+
+Además, debe configurar la instalación Helm del agente Control para emplear su repositorio privado si el gráfico `agent-control-bootstrap` en sí está en un repositorio privado. Esto es independiente de la configuración del agente gestionado. Consulta el archivo `agent-control-bootstrap` Helm chart [values.yaml](https://github.com/newrelic/helm-charts/blob/master/charts/agent-control-bootstrap/values.yaml) para configurar la sección `installationJob` de la siguiente manera:
+
+* `chartRepositoryUrl`:La URL que contiene la ubicación de su repositorio.
+* `chartName`:El nombre del gráfico si se emplea un nombre de gráfico diferente.
+* `repositorySecretReferenceName` y `repositoryCertificateSecretReferenceName`: Los secretos necesarios para autenticar en su repositorio. Consulte la sección de autenticación a continuación para obtener más detalles.
+
+### 2. Configurar la autenticación para el repositorio privado
+
+Debe configurar recursos adicionales para habilitar la autenticación para acceder a su repositorio privado de la siguiente manera:
+
+<CollapserGroup>
+<Collapser id="k8s-private-repository-basic-auth" title="Autenticación básica">
+Para autenticar mediante la autenticación básica (nombre de usuario y contraseña), debe crear un secreto en el namespace de control del agente que contenga los valores esperados en `data.username` y `data.password`.
+
+Ejemplo:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-secret
+stringData:
+  username: "myUser"
+  password: "myPassword"
+```
+
+Para obtener más detalles, consulte la [documentación de Flux](https://fluxcd.io/flux/components/source/helmrepositories/#secret-reference).
+
+Al emplear la autenticación básica, la configuración remota debe configurar de la siguiente manera:
+
+```yaml
+chart_repository:
+  url: "https://my-private-repository-1"
+  secret_reference:
+    name: my-secret
+```
+</Collapser>
+
+<Collapser id="k8s-private-repository-tls-cert" title="Autenticación de certificado TLS">
+Para autenticar mediante TLS, debe crear un secreto que contenga:
+
+* `tls.crt` y `tls.key`: certificado de cliente y clave privada empleados para la autenticación del cliente TLS
+* `ca.crt`:Certificado CA empleado para verificar el servidor (obligatorio si el servidor emplea un certificado autofirmado)
+
+El secreto debe ser de tipo `Opaque` o `kubernetes.io/tls`. Se espera que todos los archivos del secreto estén codificados en PEM.
+
+Ejemplo:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-secret
+  namespace: newrelic-agent-control
+type: kubernetes.io/tls # or Opaque
+data:
+  tls.crt: <BASE64>
+  tls.key: <BASE64>
+  # NOTE: Can be supplied without the above values
+  ca.crt: <BASE64>
+```
+
+Para obtener más detalles, consulte la [documentación de Flux](https://fluxcd.io/flux/components/source/helmrepositories/#secret-reference).
+
+Al emplear la autenticación de certificado TLS, la configuración remota debe configurar de la siguiente manera:
+
+```yaml
+chart_repository:
+  url: "https://my-private-repository-1"
+  certificate_secret_reference:
+    name: my-secret
+```
+</Collapser>
+</CollapserGroup>
+
+## Configuración de Linux
+
+Estas son las rutas predeterminadas para la configuración del control del agente:
+
+* `Local` archivo de configuración: `/etc/newrelic-agent-control/config.yaml`
+* `Remote` archivo de configuración: `/var/lib/newrelic-agent-control/config.yaml` (si está habilitado mediante control de flota desplegable)
+* Definición de servicio: `/lib/systemd/system/newrelic-agent-control.service`
+* Archivo de entorno de servicio: `/etc/newrelic-agent-control/newrelic-agent-control.conf`
+
+De forma predeterminada, el agente puede orquestar el agente de infraestructura y el recolector OpenTelemetry :
+
+```yml
+# Configures the integration with Fleet Control
+fleet_control:
+  # EU region? Use: https://opamp.service.eu.newrelic.com/v1/opamp
+  # JP region? Use: https://opamp.service.jp.newrelic.com/v1/opamp
+  endpoint: https://opamp.service.newrelic.com/v1/opamp
+  headers:
+    api-key: YOUR_INGEST_KEY
+  auth_config:
+    # EU region? Use: https://system-identity-oauth.service.eu.newrelic.com/oauth2/token
+    # JP region? Use: https://system-identity-oauth.service.jp.newrelic.com/oauth2/token
+    token_url: "https://system-identity-oauth.service.newrelic.com/oauth2/token"
+    client_id: "YOUR_CLIENT_ID
+    provider: "local"
+    private_key_path: "path/to/key"
+
+# Configures the agents to be supervised by Agent Control
+agents:
+  # Agent name (RFC-1035 valid label)
+  nr-infra-agent:
+    # The supported agent type and agent type version
+    agent_type: "newrelic/com.newrelic.infrastructure:0.1.0"
+  nr-otel-collector:
+    agent_type: "newrelic/com.newrelic.opentelemetry.collector:0.1.0"
+```
+
+Puede cambiar el nombre o eliminar cualquiera de los agentes según sus requisitos de observabilidad. El nombre del agente debe ser un nombre de etiqueta [RFC-1035 válido](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#rfc-1035-label-names).
+
+También puede emplear variables de entorno para definir la configuración del agente:
+
+* Emplee el prefijo `NR_` (guión bajo único) para apuntar a la configuración principal de Control del agente.
+* Emplee `__` (guiones bajos dobles) para apuntar las configuraciones disponibles en el Control de agente. Esto es necesario para evitar colisiones con claves de configuración que contienen guiones bajos.
+* Las variables de entorno solo tienen precedencia sobre el archivo de configuración local. Si la configuración remota está habilitada, no se consideran las variables de entorno.
+* Por ejemplo, para definir una configuración dinámica para `fleet_control::endpoint`, agregue `NR_FLEET_CONTROL__ENDPOINT=https://opamp.service.newrelic.com/v1/opamp` en el archivo de definición de servicio.
+
+### Configurar el agente [#agents-config]
+
+Actualmente, agente Control puede gestionar los siguientes tipos de agentes predefinidos en el host:
+
+* Agente de infraestructura New Relic : `newrelic/com.newrelic.infrastructure`. Se admiten todas las características existentes en el [agente de infraestructura](/docs/infrastructure/infrastructure-monitoring/get-started/get-started-infrastructure-monitoring), incluida [la integración orquestada en el host](/docs/infrastructure/host-integrations/get-started/introduction-host-integrations/) y nuestro [reenviador de integración de logs](/docs/logs/forward-logs/forward-your-logs-using-infrastructure-agent/) basado en FluentBit.
+* Distribución de New Relic para OpenTelemetry: `newrelic/com.newrelic.opentelemetry.collector`
+
+Cada tipo de agente ofrece un conjunto de variables opcionales que se pueden personalizar para adaptar su comportamiento. Para personalizar la configuración local del agente:
+
+1. Cree un archivo `values.yml` : este archivo contendrá los valores de configuración deseados.
+2. Coloque el archivo `values.yml` en el directorio `/etc/newrelic-agent-control/fleet/agents.d/YOUR-AGENT-NAME/values/`. Aquí, `YOUR-AGENT-NAME` es el nombre real de su agente (por ejemplo, `nr-infra-agent`).
+
+A continuación se muestra una lista de variables disponibles para las últimas versiones del tipo de agente:
+
+* Agente de infraestructura New Relic : `0.1.0`
+* Distribución de New Relic para OpenTelemetry: `0.1.0`
+
+<table>
+<thead>
+<tr>
+<th>
+Tipo de agente
+</th>
+
+<th>
+Variable
+</th>
+
+<th>
+Tipo
+</th>
+
+<th>
+Por defecto
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`com.newrelic.infrastructure`
+</td>
+
+<td>
+`config_agent`
+</td>
+
+<td>
+Un YAML que contiene configuración de agente de infraestructura
+</td>
+
+<td>
+(vacío)
+</td>
+</tr>
+
+<tr>
+<td>
+`com.newrelic.infrastructure`
+</td>
+
+<td>
+`config_integrations`
+</td>
+
+<td>
+Un mapa YAML (las claves son nombres de archivos) que contiene la configuración de integración en el host
+</td>
+
+<td>
+(vacío)
+</td>
+</tr>
+
+<tr>
+<td>
+`com.newrelic.infrastructure`
+</td>
+
+<td>
+`config_logging`
+</td>
+
+<td>
+Un mapa YAML (las claves son nombres de archivos) que contiene el reenvío de configuración de logs
+</td>
+
+<td>
+(vacío)
+</td>
+</tr>
+
+<tr>
+<td>
+`com.newrelic.infrastructure`
+</td>
+
+<td>
+`health_port`
+</td>
+
+<td>
+Puerto para el servidor de estado local del agente de infraestructura
+</td>
+
+<td>
+`/health/status`
+</td>
+</tr>
+
+<tr>
+<td>
+`com.newrelic.opentelemetry.collector`
+</td>
+
+<td>
+`config`
+</td>
+
+<td>
+Configuración del recopilador OpenTelemetry (en formato YAML)
+</td>
+
+<td>
+(vacío)
+</td>
+</tr>
+
+<tr>
+<td>
+`com.newrelic.opentelemetry.collector`
+</td>
+
+<td>
+`health_check.path` `health_check.port`
+</td>
+
+<td>
+Ruta y puerto para la [extensión de verificación del estado](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/extension/healthcheckv2extension/README.md#configuration) del recolector OTel local http extremo
+</td>
+
+<td>
+`localhost:13133/health/status`
+</td>
+</tr>
+
+<tr>
+<td>
+Todos los agentes gestionados
+</td>
+
+<td>
+`backoff_delay`
+</td>
+
+<td>
+Tiempo hasta el próximo reintento si el recolector no se inicia (en segundos).
+</td>
+
+<td>
+`20s`
+</td>
+</tr>
+</tbody>
+</table>
+
+<Callout variant="tip">
+Puede configurar los [ajustes del agente de infraestructura](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/) y [los ajustes del recolectorOpenTelemetry ](https://docs-preview.newrelic.com/docs/new-relic-distribution-of-opentelemetry#configure)según sea necesario siguiendo la configuración compatible.
+</Callout>
+
+### Configuración de muestra
+
+Para obtener ejemplos completos de configuración remota que abarcan infra-agent, integraciones en el host (nri-MySQL, nri-flex), reenvío de logs y NRDOT, consulte [Instrumentar sus sistemas con Agent Control](/docs/new-relic-control/agent-control/instrumentation).
+
+## Configuración de Windows
+
+Estas son las rutas predeterminadas para la configuración de Agent Control en Windows:
+
+* `Local` archivo de configuración: `C:\Program Files\New Relic\newrelic-agent-control\local-data\agent-control\local_config.yaml`
+* `Remote` archivo de configuración: `C:\ProgramData\New Relic\newrelic-agent-control\fleet-data\agent-control\remote_config.yaml` (sincronizado desde Fleet Control)
+* Ejecutable del servicio: `C:\Program Files\New Relic\newrelic-agent-control\newrelic-agent-control.exe`
+* Directorio de logs: `C:\ProgramData\New Relic\newrelic-agent-control\logs\`
+
+De forma predeterminada, Agent Control en Windows puede orquestar el agente de infraestructura y el colector de OpenTelemetry:
+
+```yaml
+# Configures the integration with Fleet Control
+fleet_control:
+  endpoint: https://opamp.service.newrelic.com/v1/opamp
+  headers:
+    api-key: YOUR_INGEST_KEY
+  auth_config:
+    token_url: "https://system-identity-oauth.service.newrelic.com/oauth2/token"
+    client_id: "YOUR_CLIENT_ID"
+    provider: "local"
+    private_key_path: "path\\to\\key"
+
+# Configures the agents to be supervised by Agent Control
+agents:
+  # Agent name (RFC-1035 valid label)
+  nr-infra-agent:
+    # The supported agent type and agent type version
+    agent_type: "newrelic/com.newrelic.infrastructure:0.1.0"
+  nr-otel-collector:
+    agent_type: "newrelic/com.newrelic.opentelemetry.collector:0.1.0"
+```
+
+<Callout variant="tip">
+Para cuentas regionales, use el extremo apropiado y `token_url`:
+
+* Región de la UE: `https://opamp.service.eu.newrelic.com/v1/opamp` y `https://system-identity-oauth.service.eu.newrelic.com/oauth2/token`
+* Región de JP: `https://opamp.service.jp.newrelic.com/v1/opamp` y `https://system-identity-oauth.service.jp.newrelic.com/oauth2/token`
+</Callout>
+
+Puede cambiar el nombre o eliminar cualquiera de los agentes según sus requisitos de observabilidad. El nombre del agente debe ser un nombre de etiqueta [RFC-1035 válido](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#rfc-1035-label-names).
+
+### Notas de configuración específicas de Windows
+
+* Las rutas de archivo usan barras invertidas (`\\`) y rutas estilo Windows (por ejemplo, `C:\\ProgramData\\...`)
+* Los binarios del agente usan extensiones `.exe`
+* El servicio se ejecuta como `LocalSystem` — asegúrese de que los archivos de configuración tengan permisos de escritura restringidos
+* Las plantillas y configuraciones de entornos Linux pueden requerir ajustes de ruta para la compatibilidad con Windows
+
+### Configurar agentes [#windows-agents-config]
+
+Agent Control en Windows actualmente puede gestionar los siguientes tipos de agentes:
+
+* Agente de infraestructura de New Relic: `newrelic/com.newrelic.infrastructure`. Admite [integraciones en el host](/docs/infrastructure/host-integrations/get-started/introduction-host-integrations/) y reenvío de logs a través de Fluent Bit integrado.
+* Distribución de New Relic para OpenTelemetry: `newrelic/com.newrelic.opentelemetry.collector`
+
+Para personalizar la configuración local del agente, coloque un archivo `values.yml` en el directorio de valores del agente. Las variables disponibles son las mismas que para los [hosts de Linux](#agents-config).
+
+### Configuración de muestra
+
+Para obtener ejemplos completos de configuración remota que abarcan infra-agent, integraciones en el host (nri-MySQL, nri-flex), reenvío de logs y NRDOT, consulte [Instrumentar sus sistemas con Agent Control](/docs/new-relic-control/agent-control/instrumentation).
+
+## Proveedores de valores
+
+Los proveedores de valores permiten que el Control del agente resuelva valores de fuentes externas cuando se procesa una configuración, de modo que los datos confidenciales, como las claves de licencia, los tokens o las contraseñas, no tengan que estar codificados de forma rígida en los archivos de configuración.
+
+Los valores se referencian con la sintaxis del marcador de posición `${NAMESPACE:NAME}` dentro de las configuraciones del agente. El Control del agente los resuelve cada vez que se aplica una configuración, incluidas las actualizaciones de configuración remotas, por lo que los valores rotados se detectan sin reiniciar el Control del agente.
+
+<Callout variant="important">
+Si el Control del agente no puede resolver un valor, la representación de la configuración falla y el agente no se inicia. Esto evita que el agente se ejecute con una configuración incompleta o incorrecta.
+</Callout>
+
+Después de una resolución exitosa, Agent Control almacena el resultado renderizado en un secreto de Kubernetes o en un archivo de configuración privado para que lo utilice el agente correspondiente.
+
+### Proveedores de valores admitidos
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "220px" }}>
+Proveedor
+</th>
+
+<th style={{ width: "180px" }}>
+namespace de marcador de posición
+</th>
+
+<th>
+Requiere configuración
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+Variables de entorno
+</td>
+
+<td>
+`nr-env`
+</td>
+
+<td>
+No
+</td>
+</tr>
+
+<tr>
+<td>
+HashiCorp Vault
+</td>
+
+<td>
+`nr-vault`
+</td>
+
+<td>
+Sí
+</td>
+</tr>
+
+<tr>
+<td>
+Archivos locales
+</td>
+
+<td>
+`nr-file`
+</td>
+
+<td>
+No
+</td>
+</tr>
+
+<tr>
+<td>
+Secretos de Kubernetes
+</td>
+
+<td>
+`nr-kubesec`
+</td>
+
+<td>
+No
+</td>
+</tr>
+
+<tr>
+<td>
+ConfigMaps de Kubernetes
+</td>
+
+<td>
+`nr-kubecm`
+</td>
+
+<td>
+No
+</td>
+</tr>
+</tbody>
+</table>
+
+### Configuración de proveedores de valores
+
+Solo HashiCorp Vault requiere configuración explícita. Defínalo en la clave `value_providers` de la configuración de Agent Control. La clave legacy `secrets_providers` aún se acepta como alias.
+
+```yaml
+value_providers:
+  vault:
+    sources:
+      local-instance:
+        url: http://localhost:8200/v1/
+        token: root
+        engine: kv2
+      remote:
+        url: http://my-remote-server:8200/v1/
+        token: root
+        engine: kv1
+    client_timeout: 10s
+
+fleet_control:
+  ...
+
+agents:
+  ...
+```
+
+Cada entrada en `sources` define una fuente de Vault con nombre con los siguientes ajustes:
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+Clave YAML
+</th>
+
+<th style={{ width: "120px" }}>
+Requerido
+</th>
+
+<th>
+Descripción
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`url`
+</td>
+
+<td>
+Sí
+</td>
+
+<td>
+URL completa de Vault, incluida la ruta `/v1`.
+</td>
+</tr>
+
+<tr>
+<td>
+`token`
+</td>
+
+<td>
+Sí
+</td>
+
+<td>
+Token utilizado para autenticarse en el extremo.
+</td>
+</tr>
+
+<tr>
+<td>
+`engine`
+</td>
+
+<td>
+Sí
+</td>
+
+<td>
+Versión del motor de secretos: **`kv1`** o **`kv2`**.
+</td>
+</tr>
+
+<tr>
+<td>
+`client_timeout`
+</td>
+
+<td>
+No
+</td>
+
+<td>
+Tiempo de espera de HTTP para las requests de Vault. El valor predeterminado es `30s`. Se establece en el nivel `vault`, no por fuente.
+</td>
+</tr>
+</tbody>
+</table>
+
+### Variables de entorno: `nr-env`
+
+Lee un valor del entorno del host (disponible para el proceso de control del agente).
+
+```yaml
+config_agent:
+  license_key: "${nr-env:NEW_RELIC_LICENSE_KEY}"
+```
+
+### HashiCorp Vault: `nr-vault`
+
+Lee una clave de un secreto KV de Vault. Requiere la configuración `value_providers.vault` descrita anteriormente.
+
+El marcador de posición utiliza este formato:
+
+```
+"${nr-vault:SOURCE_NAME:MOUNT:PATH:KEY}"
+```
+
+* **`SOURCE_NAME`**: nombre de la fuente de Vault definida en `value_providers`.
+* **`MOUNT`**: nombre del montaje del motor de secretos.
+* **`PATH`**: ruta al secreto.
+* **`KEY`**: clave dentro del secreto que se va a recuperar.
+
+Por ejemplo:
+
+```yaml
+config_agent:
+  enable_process_metrics: true
+  custom_attributes:
+    username: "${nr-vault:local-instance:secret:my_secret:username}"
+    organization: "${nr-vault:remote:my_mount:my_path:organization}"
+```
+
+Aquí, `${nr-vault:local-instance:secret:my_secret:username}` recupera el valor de la clave `username` del secreto en `secret/my_secret` usando la fuente `local-instance`, y `${nr-vault:remote:my_mount:my_path:organization}` recupera la clave `organization` de la fuente `remote`.
+
+### Archivos locales: `nr-file`
+
+Lee el contenido de un archivo local, eliminando los espacios en blanco iniciales y finales.
+
+El marcador de posición toma la ruta absoluta al archivo:
+
+```yaml
+config_agent:
+  license_key: "${nr-file:/etc/newrelic/license.key}"
+```
+
+### Secretos de Kubernetes: `nr-kubesec`
+
+Lee una clave de un secreto de Kubernetes. Disponible solo en Kubernetes y no requiere configuración adicional siempre que el pod de Agent Control tenga permisos, a través de una cuenta de servicio y RBAC, para acceder a los secretos y namespace requeridos.
+
+El marcador de posición utiliza este formato:
+
+```
+"${nr-kubesec:NAMESPACE:SECRET_NAME:KEY}"
+```
+
+* **`NAMESPACE`**: namespace donde se encuentra el secreto.
+* **`SECRET_NAME`**: nombre del objeto secreto de Kubernetes.
+* **`KEY`**: clave dentro del secreto que se va a recuperar.
+
+### ConfigMaps de Kubernetes: `nr-kubecm`
+
+Lee una clave de un ConfigMap de Kubernetes. Disponible solo en Kubernetes y no requiere configuración adicional siempre que el pod de control del agente tenga permisos para acceder a los ConfigMaps y namespace requeridos.
+
+El marcador de posición utiliza este formato:
+
+```
+"${nr-kubecm:NAMESPACE:CONFIGMAP_NAME:KEY}"
+```
+
+* **`NAMESPACE`**: namespace donde se encuentra el ConfigMap.
+* **`CONFIGMAP_NAME`**: nombre del objeto ConfigMap de Kubernetes.
+* **`KEY`**: clave dentro del ConfigMap que se va a recuperar.

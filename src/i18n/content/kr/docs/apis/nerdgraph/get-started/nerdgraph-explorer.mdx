@@ -1,0 +1,210 @@
+---
+title: NerdGraph API 탐색기 자습서
+tags:
+  - APIs
+  - NerdGraph
+  - Get started
+metaDescription: How to use the New Relic NerdGraph API explorer.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+NerdGraph는 데이터를 쿼리하고 New Relic 기능에서 구성을 변경하는 데 사용할 수 있는 GraphQL API입니다. 다양한 방법으로 GraphQL을 NerdGraph API로 보낼 수 있습니다. 코드, curl 또는 CLI 요청, NerdGraph API 탐색기에서. 탐색기는 NerdGraph에서 쿼리 및 변형(변경)을 실험할 수 있는 GUI GraphQL 도구(GraphiQL 기반)입니다.
+
+GraphQL을 처음 사용하는 경우 NerdGraph API 탐색기를 통해 GraphQL API에 익숙해지십시오. 이 튜토리얼을 시작하기 전에 API에 대한 개요가 필요한 경우 [NerdGraph 만나기: GraphQL API를](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph) 확인하십시오.
+
+<Steps>
+  <Step>
+    ## NerdGraph API 탐색기 설정 [#set-up]
+
+    1. NerdGraph API 탐색기를 엽니다. URL은 계정을 호스팅하는 데이터센터 지역에 따라 다릅니다:
+
+       * 미국(기본 지역): <DNT>[one.newrelic.com/nerdgraph-graphiql](https://one.newrelic.com/nerdgraph-graphiql)</DNT>
+       * 유럽 연합: <DNT>[one.eu.newrelic.com/nerdgraph-graphiql](https://one.eu.newrelic.com/nerdgraph-graphiql)</DNT>
+       * JP: <DNT>[one.jp.newrelic.com/nerdgraph-graphiql](https://one.jp.newrelic.com/nerdgraph-graphiql)</DNT>
+
+    2. **User key** \[사용자 키] 필드에 [API 사용자 키를](/docs/apis/intro-apis/new-relic-api-keys/#user-key) 입력하고 **Submit** \[제출을] 클릭합니다. [API 키 UI](https://one.newrelic.com/api-keys) 에서 키를 복사해야 합니다.
+
+       <img title="Screenshot of how to set API key in Nerdgraph" alt="Screenshot of how to set API key in Nerdgraph" src="/images/apis_screenshot-crop_Screenshot-API-key-in-NerdGraph.webp" />
+  </Step>
+
+  <Step>
+    ## 이름을 검색하는 쿼리 작성 [#build-query]
+
+    GraphQL API에서 이름을 검색하는 간단한 NerdGraph 쿼리부터 시작하겠습니다.
+
+    아래에 기본 쿼리가 표시되지 않으면 쿼리 편집기에서 모든 항목을 지우고 쿼리 탐색기에서 `actor`, `user`, `name` 순서대로 필드를 선택합니다.
+
+    ```graphql
+    {
+      actor {
+        user {
+          name
+        }
+      }
+    }
+    ```
+
+    이 쿼리를 사용하면 NerdGraph에게 `user` 필드 내에 중첩된 `name` 필드를 검색하도록 요청합니다. `user` 필드는 [사용자 키](/docs/apis/get-started/intro-apis/types-new-relic-api-keys#user-api-key) 의 소유자를 참조하고, `user` 은 `actor` (API 사용자의 액세스 수준으로 범위가 지정된 모든 데이터에 대한 최상위 항목) 내에 중첩되어 있습니다.
+  </Step>
+
+  <Step>
+    ## 쿼리 실행 [#click-play]
+
+    빨간색 <DNT>**Execute query**</DNT> 버튼을 클릭하세요. 결과는 요청과 거의 동일한 형태입니다. 쿼리 빌더의 모든 필드는 사용 가능한 모든 데이터 유형과 해당 속성을 설명하는 GraphQL 스키마를 구성합니다. 각 필드에 대해 자세히 알아보려면 필드 옆에 있는 돋보기 아이콘을 클릭하세요.
+
+    <img title="Screenshot showing a basic query" alt="Screenshot showing a basic query" src="/images/apis-and-data_screenshot-crop_NerdGraph-internal-docs.webp" />
+  </Step>
+
+  <Step>
+    ## 쿼리에 더 많은 필드를 추가하세요. [#add-fields]
+
+    이제 쿼리에 더 많은 필드를 추가할 수 있습니다. 가장 간단한 방법은 쿼리 빌더에서 필드를 클릭하는 것입니다. 탐색기는 쿼리에 속성을 넣을 위치를 알고 있습니다. 예제에서 다음 필드를 추가합니다.
+
+    * 계정 `id` (왼쪽 하단에서 이름을 클릭한 다음 <DNT>**API Keys**</DNT>) 클릭하면 이 값을 찾을 수 있습니다.)
+    * `email`
+
+    쿼리를 실행하면 데이터를 과도하게 가져오거나 적게 가져오지 않고 필요한 데이터만 반환됩니다. `id` 필드에는 인수가 있습니다. 인수 전달은 NerdGraph 쿼리를 맞춤설정하는 강력한 방법입니다. 모든 필드와 객체는 인수를 포함할 수 있으므로 여러 쿼리를 실행하는 대신 필요한 쿼리를 구성하기만 하면 됩니다.
+
+    ```graphql
+    {
+      actor {
+        user {
+          name
+          email
+        }
+        account(id: INSERT_YOUR_OWN_ACCOUNT_ID )
+      }
+    }
+    ```
+  </Step>
+
+  <Step>
+    ## 돌연변이 실험 [#mutations]
+
+    GraphQL에서 [돌연변이](https://graphql.org/learn/queries/#mutations) 는 객체를 생성, 업데이트 또는 삭제하여 데이터를 변경할 수 있는 부작용이 있는 쿼리를 실행하는 방법입니다(REST API에서는 일반적으로 CRUD 작업이라고 함).
+
+    첫 번째 돌연변이에 대한 준비가 되셨습니까?
+
+    1. 편집기에 있는 내용을 지웁니다.
+
+    2. 쿼리 빌더를 아래로 스크롤하여 `mutation` 을 확장합니다.
+
+    3. `tagging` 까지 아래로 스크롤하고 `taggingAddTagsToEntity`) 선택합니다.
+
+    4. 다음 필드를 선택합니다.
+
+       * `guid!:` ( <DNT>**All entities**</DNT> 열고 엔터티 레코드에서 <DNT>**...**</DNT> 아이콘을 클릭한 다음 <DNT>**See metadata &amp; tags**</DNT> 를 클릭하여 이를 찾을 수 있습니다)
+
+       * `tags!:`
+
+         * `key!:`
+         * `values:`
+
+       * `errors`
+
+         * `message`
+         * `type`
+
+    <img title="Mutation example" alt="Mutation example" src="/images/apis-and-data_screenshot-full_NerdGraph-mutation-example.webp" />
+
+    엔티티에 사용자 지정 태그를 추가할 때는 `errors` 필드를 선택해야 합니다. 그렇지 않으면 편집기에 오류가 표시됩니다.
+
+    <Callout variant="tip">
+      REST와 달리 NerdGraph와 같은 GraphQL API는 부분 응답을 반환할 수 있습니다.예를 들어 여러 엔터티에 태그를 추가하려고 하면 일부 변형은 실패하고 다른 변형은 성공할 수 있습니다. 모두 당신이 얻는 GraphQL 응답에 기록됩니다.
+    </Callout>
+  </Step>
+
+  <Step>
+    ## 터미널에서 NerdGraph 쿼리를 사용해 보세요. [#query-terminal]
+
+    만족하는 NerdGraph 쿼리를 구축했으며 다른 곳에서 테스트하려고 한다고 가정해 보겠습니다.코드 준비 쿼리 및 변형을 캡처하려면:
+
+    1. <DNT>**Tools**</DNT> 메뉴를 선택하세요.
+    2. 쿼리를 컬 호출 또는 [블루렐릭 CLI](/docs/new-relic-solutions/build-nr-ui/newrelic-cli) 명령으로 복사합니다.
+
+    <img title="NerdGraph tools menu" alt="NerdGraph tools menu" src="/images/apis-and-data_screenshot-crop_NerdGraph-tools-menu.webp" />
+
+    ```bash
+    # curl version
+    curl https://api.newrelic.com/graphql \
+      -H 'Content-Type: application/json' \
+      -H 'Api-Key: API_KEY_REDACTED' \
+      --data-binary '{"query":"{\n  actor {\n    user {\n      name\n      email\n    }\n    account(id: 12345678)\n  }\n}\n", "variables":""}'
+
+    # New Relic CLI version
+    newrelic nerdgraph query '{
+      actor {
+        user {
+          name
+          email
+        }
+        account(id: 12345678)
+      }
+    }'
+    ```
+  </Step>
+</Steps>
+
+## 다음 단계 [#next-steps]
+
+이제 NerdGraph 쿼리를 작성하고 테스트하는 기본 사항을 알았습니다. 하지만 이를 클라이언트 또는 서버 코드로 변환하는 방법은 무엇입니까?[GraphQL 코드 생성기](https://graphql-code-generator.com/) 와 같은 솔루션은 NerdGraph 쿼리를 구현을 위한 코드로 변환하는 데 도움이 될 수 있습니다.
+
+쿼리 작성기에서 필드를 클릭하고 개체를 확장하여 더 복잡한 쿼리를 만들어 보십시오(변이는 계정에 변경 사항을 초래할 수 있으므로 주의).아래 섹션에서 몇 가지 예시 요청을 확인하세요.
+
+NerdGraph에 대한 자세한 내용을 확인하고 개발자 커뮤니티의 다른 프로젝트를 탐색하려면 [Explorer&apos;s Hub 게시물](https://support.newrelic.com/s/hubtopic/Topic__c/Default?c__tags=%5B%7B%22id%22%3A%22a9P8W0000004KSqUAM%22%2C%22isCustomImage%22%3Afalse%2C%22sObjectType%22%3A%22Tag__c%22%2C%22subtitle%22%3A%22%22%2C%22title%22%3A%22nerdgraph%22%2C%22titleFormatted%22%3A%22%3Cstrong%3Enerdgra%3C%2Fstrong%3Eph%22%2C%22subtitleFormatted%22%3A%22%22%2C%22icon%22%3A%22standard%3Adefault%22%7D%5D)을 확인하십시오.
+
+## 기타 예시 요청 [#more-examples]
+
+다음은 도움이 될 수 있는 NerdGraph 요청의 몇 가지 다른 예입니다.
+
+<CollapserGroup>
+  <Collapser id="example-account-user" title="New Relic 사용자가 액세스할 수 있는 쿼리 계정">
+    `actor` (New Relic 승인 사용자)가 액세스할 수 있는 계정 이름을 쿼리할 수 있습니다.
+
+    ```graphql
+    query {
+      actor {
+        account(id: YOUR_ACCOUNT_ID) {
+          name
+        }
+      }
+    }
+    ```
+
+    응답은 요청에 정의한 쿼리 구조를 반영하므로 원하는 특정 데이터를 쉽게 요청할 수 있습니다.
+
+    ```json
+    {
+      "data": {
+        "actor": {
+          "account": {
+            "name": "Data Nerd"
+          }
+        }
+      }
+    }
+    ```
+  </Collapser>
+
+  <Collapser id="example-multiple-requests" title="한 번의 요청으로 사용자, 계정 및 NRQL 쿼리">
+    그래프 구조는 쿼리가 더 복잡해지면 기능을 보여줍니다. 예를 들어 사용자 정보, 계정 정보를 쿼리하고 한 번의 요청으로 NRQL 쿼리를 만들 수 있습니다. REST API를 사용하면 3개의 다른 엔드포인트에 대해 3개의 다른 요청이 필요합니다.
+
+    ```graphql
+    query {
+      actor {
+        account(id: YOUR_ACCOUNT_ID) {
+          name
+          nrql(query: "SELECT * FROM Transaction") {
+            results
+          }
+        }
+        user {
+          name
+          id
+        }
+      }
+    }
+    ```
+  </Collapser>
+</CollapserGroup>

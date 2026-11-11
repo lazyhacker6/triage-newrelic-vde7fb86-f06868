@@ -1,0 +1,512 @@
+---
+title: Understand the trace details UI page
+tags:
+    - Distributed tracing
+    - UI and data
+    - Trace details
+metaDescription: "Dive deeper into New Relic's distributed tracing feature: learn how to use and understand the trace details UI."
+redirects:
+    - /docs/distributed-tracing/ui-data/understand-use-distributed-tracing-ui/#trace-details
+    - /docs/distributed-tracing-attributes
+    - /docs/apm/distributed-tracing/ui-data/distributed-tracing-attributes
+    - /docs/apm/distributed-tracing/ui-data/span-event
+    - /docs/understand-dependencies/distributed-tracing/ui-data/span-attributes
+    - /docs/distributed-tracing/ui-data/span-attributes/
+freshnessValidatedDate: 2026-08-28
+---
+
+Once you select a trace from the trace list, you'll be directed to the trace details page in the UI. Use trace details to understand the flow of operations that make up a distributed trace, and adjust the view to find the information most important to you.
+
+<img
+  title="Trace details page"
+  alt="Screenshot showing the updated entity map in the trace details UI, with the Switch to old map button"
+  src="/images/distributed-tracing-trace-details-page-map-view.webp"
+/>
+
+<figcaption>
+  Select a trace from the list of traces to see details about it. By default, you'll see the <DNT>**Entity map**</DNT>, with a control to switch back to the previous map experience.
+</figcaption>
+
+The trace details page offers three ways to monitor a trace: <DNT>**Map**</DNT>, <DNT>**Timeline**</DNT>, and <DNT>**Latency**</DNT>. <DNT>**Map**</DNT> is the default view when you open a trace.
+
+<Tabs>
+  <TabsBar>
+    <TabsBarItem id="map-view">
+      Map view
+    </TabsBarItem>
+
+    <TabsBarItem id="timeline-view">
+      Timeline view
+    </TabsBarItem>
+
+    <TabsBarItem id="latency-view">
+      Latency view
+    </TabsBarItem>
+  </TabsBar>
+
+  <TabsPages>
+    <TabsPageItem id="map-view">
+      The <DNT>**Map**</DNT> view, also called the <DNT>**Entity map**</DNT>, is selected by default when you open a trace. It shows all the sampled entities in the trace and how they relate to each other, using the same isometric icons and controls as [Maps](/docs/service-architecture-intelligence/maps/advanced-maps), which covers general map navigation, node icons, and interface controls shared across all New Relic maps.
+
+      <Callout variant="tip">
+        If you'd rather use the previous map experience, click <DNT>**Switch to old map**</DNT>.
+      </Callout>
+
+      A single trace can touch hundreds of entities, which can clutter the map and make it difficult to navigate. To keep the map organized, entities with low anomaly scores are automatically grouped into a cluster, while the most important entities (for example, those with errors or anomalies) stay visible outside the cluster. To view and manage entities within a cluster:
+
+      1. Click the cluster node. A list of all entities in that cluster appears in the right panel.
+      2. To display an entity separately on the map, click its visibility icon in the right panel.
+    </TabsPageItem>
+
+    <TabsPageItem id="timeline-view">
+      In the top-right corner of the <DNT>**Trace details**</DNT> tab, change the view from <DNT>**Map**</DNT> to <DNT>**Timeline**</DNT>.
+
+      The timeline view is a high-density view of all the spans in the trace. This view allows you to quickly scroll through the entire trace and see how latency and errors propagate through the trace and across entity boundaries. You can select spans from this view to see span details in the <DNT>**waterfall view**</DNT> below it.
+    </TabsPageItem>
+
+    <TabsPageItem id="latency-view">
+      In the top-right corner of the <DNT>**Trace details**</DNT> tab, change the view from <DNT>**Map**</DNT> to <DNT>**Latency**</DNT>.
+
+      The latency view shows you how much latency is contributed by each entity in the trace, as well as the number of error spans per entity. The latency contributed by an entity is the wall-clock time that it had one or more processes running but was **not** making any external or database calls.
+      Here are two examples:
+
+      * If an entity has a process lasting 500ms, but 400ms of that time it's making an external call, it's shown as contributing 100ms of latency to the trace.
+      * If an entity has three processes running in parallel for one second, and none of them made external calls, it's shown as contributing one second of latency to the trace.
+
+        <img
+          title="Latency view"
+          alt="Screenshot showing the distributed tracing latency view"
+          src="/images/distributed-tracing-trace-details-page-latency-view.webp"
+        />
+    </TabsPageItem>
+  </TabsPages>
+</Tabs>
+
+## Monitor operations in a trace [#waterfall-view]
+
+You can monitor all the operations that make up a distributed trace, down to the exact context from which latency and errors arise, through the <DNT>**waterfall view**</DNT>. This lets you pinpoint exactly where in the trace a problem occurred.
+
+At the bottom of the <DNT>**Trace details**</DNT> tab, you can expand the trace to get the <DNT>**waterfall view**</DNT>. The UI indicates span properties with these icons:
+
+
+<CollapserGroup>
+  <Collapser id="span-icons" title="Waterfall span icons">
+    
+
+    <table id="span-types">
+      <thead>
+        <tr>
+          <th style={{ width: "130px" }}>
+            Span property
+          </th>
+
+          <th style={{ width: "110px" }}>
+            Indicator
+          </th>
+
+          <th>
+            Description
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            Service
+          </td>
+
+          <td>
+            <img
+              title="new-relic-distributed-tracing-service-span-icon.png"
+              alt="New Relic distributed tracing service icon"
+              src="/images/new-relic-distributed-tracing-service-icon.webp"
+            />
+          </td>
+
+          <td>
+            This icon represents a span that's a service's entry point.
+          </td>
+        </tr>
+
+        <tr id="in-process">
+          <td>
+            In-process
+          </td>
+
+          <td>
+            <img
+              title="new-relic-distributed-tracing-in-process-span-icon.png"
+              alt="New Relic distributed tracing in-process span icon "
+              src="/images/new-relic-distributed-tracing-inprocess-icon.webp"
+            />
+          </td>
+
+          <td>
+            This icon represents an [in-process span](#in-process), which is a span that takes place within a process (as opposed to a cross-process span). Examples: middleware instrumentation, user-created spans.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            Datastore
+          </td>
+
+          <td>
+            <img
+              title="new-relic-distributed-tracing-database-span-icon.png"
+              alt="New Relic distributed tracing datastore span icon"
+              src="/images/new-relic-distributed-tracing-databases-icon.webp"
+            />
+          </td>
+
+          <td>
+            This icon represents a span call to a datastore.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            External
+          </td>
+
+          <td>
+            <img
+              title="new-relic-distributed-tracing-external-span-icon.png"
+              alt="New Relic distributed tracing external span icon"
+              src="/images/new-relic-distributed-tracing-external-icon.webp"
+            />
+          </td>
+
+          <td>
+            This icon represents category representing a call to an external service made via HTTP.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            Browser app
+          </td>
+
+          <td>
+            <img
+              title="distributed-tracing-browser-span-icon.png"
+              alt="New Relic distributed tracing browser span icon"
+              src="/images/distributed-tracing-browser-span-icon.webp"
+            />
+          </td>
+
+          <td>
+            This icon represents a [browser application span](/docs/browser/new-relic-browser/browser-pro-features/browser-data-distributed-tracing).
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            Lambda
+          </td>
+
+          <td>
+            <img
+              title="new-relic-distributed-tracing-lambda-icon.png"
+              alt="New Relic distributed tracing external span icon"
+              src="/images/new-relic-distributed-tracing-lambda-icon.webp"
+            />
+          </td>
+
+          <td>
+            This icon represents a span from a [Lambda function](/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/introduction-new-relic-monitoring-aws-lambda).
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    Some spans will have additional indicators:
+
+    <table id="span-types-table">
+      <thead>
+        <tr>
+          <th style={{ width: "130px" }}>
+            Span property
+          </th>
+
+          <th style={{ width: "110px" }}>
+            Indicator
+          </th>
+
+          <th>
+            Description
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr id="connecting-lines">
+          <td>
+            Type of connection
+          </td>
+
+          <td>
+            <img
+              title="new-relic-distributed-tracing-lines-image.png"
+              alt="New Relic distributed tracing connecting lines image"
+              src="/images/new-relic-distributed-tracing-lines-image.webp"
+            />
+          </td>
+
+          <td>
+            Solid lines indicate a direct parent-child relationship; in other words, one process or function directly calling another. A dotted line indicates a non-direct relationship. For more on relationships between spans, see [Trace structure](/docs/understand-dependencies/distributed-tracing/get-started/how-new-relic-distributed-tracing-works#trace-structure).
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            Errors
+          </td>
+
+          <td>
+            <img
+              title="new-relic-distributed-tracing-error-icon.png"
+              alt="New Relic distributed tracing error icon"
+              src="/images/new-relic-distributed-tracing-error-icon.webp"
+            />
+          </td>
+
+          <td>
+            A span with an error. See [How to understand span errors](#error-tips).
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            Anomalous
+          </td>
+
+          <td>
+            <img
+              title="new-relic-distributed-tracing-anomalous-icon.png"
+              alt="New Relic distributed tracing datastore span icon"
+              src="/images/new-relic-distributed-tracing-anomalous-icon.webp"
+            />
+          </td>
+
+          <td>
+            This icon represents the detection of an [anomalous span](#anomalous-spans).
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            Orphaned spans
+          </td>
+
+          <td>
+            <img
+              title="new-relic-distributed-tracing-fragmented-icon.png"
+              alt="New Relic distributed tracing orphaned span icon"
+              src="/images/new-relic-distributed-tracing-orphan-icon.webp"
+            />
+          </td>
+
+          <td>
+            Some spans may be "orphaned," or separated, from the trace. These spans will appear at the bottom of the trace. For more details, see [Fragmented traces](#fragmented-traces).
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            Multiple app names
+          </td>
+
+          <td>
+            <img
+              title="new-relic-distributed-tracing-multiple-app-names-indicator.png"
+              alt="New Relic distributed tracing multiple app names indicator"
+              src="/images/new-relic-distributed-tracing-multiapp-icon.webp"
+            />
+          </td>
+
+          <td>
+            When beside a span name, this represents an entity that has had [multiple app names set](/docs/agents/manage-apm-agents/app-naming/use-multiple-names-app). Select this to see all app names it reports to. To search trace data by alternate app names, use the `appName` attribute.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            Client/server time difference
+          </td>
+
+          <td>
+            <img
+              title="new-relic-distributed-tracing-client-server-time-indicator.png"
+              alt="New Relic distributed tracing client-server time difference indicator"
+              src="/images/new-relic-distributed-tracing-client-server-time-indicator.webp"
+            />
+          </td>
+
+          <td>
+            If a span's duration indicator is not completely colored in (like in this example), it means that there is a time discrepancy between the server-side duration and the client-side duration for that activity. For details on this, see [Client/server time difference](#client-server-time).
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </Collapser>
+</CollapserGroup>
+
+## Span details pane [#span-details]
+
+When you select a span, a pane opens up with span details. These details can be helpful for troubleshooting performance issues. This page has three tabs:
+
+* <DNT>**Performance**</DNT>: You'll see charts showing the average duration and throughput for that span operation, as well as how the performance of this specific span compares to the average.
+* <DNT>**Attributes**</DNT>: You can learn more about attributes from our [data dictionary](/attribute-dictionary/?dataSource=Distributed+Tracing&event=Span).
+* <DNT>**Details**</DNT>: You can view details, such as the [span's full name](/docs/distributed-tracing/ui-data/understand-use-distributed-tracing-ui/#prettified-span-names) and data source.
+* <DNT>**Span links**</DNT>: If the span has [span links](#span-links), you'll see this tab. It shows causal relationships with spans from other traces. [Learn more about span links](#span-links).
+
+What a span displays is based on its span type. For example, the datastore span's details will include the database query. For more on the trace structure and how span properties are determined, see [Trace structure](/docs/understand-dependencies/distributed-tracing/get-started/how-new-relic-distributed-tracing-works#trace-structure).
+
+## Understanding span links [#span-links]
+
+Span links help you understand causal relationships between spans across different traces. When traces get split due to asynchronous communication or long-running processes, span links allow you to navigate between related traces and see the complete picture of your distributed system.
+
+### When traces get split [#why-traces-split]
+
+In modern distributed systems, traces can appear as separate, disconnected traces in the following scenarios:
+
+* <DNT>**Long-running workflows**</DNT>: Background jobs or workflows that exceed trace duration limits (90+ sec for head-based sampling, 20+ sec for Infinite Tracing) or run for extended periods.
+
+When tracing across message queues, it's generally recommended to use span links to associate traces from the producer(s) and consumer(s). Examples include:
+
+* <DNT>**General asynchronous message queues**</DNT>: A service publishes messages to a queue (like AWS SQS, RabbitMQ, or Kafka), and another service consumes them later
+* <DNT>**Batch-processing**</DNT>: Workers that process multiple messages in batches, where each message originated from a different trace
+* <DNT>**Fan-in pattern**</DNT>: Multiple services independently produce messages that one consumer aggregates
+* <DNT>**Fan-out pattern**</DNT>: Multiple consumers consume from one message queue - each starting its own trace
+
+When traces are split like this, traditional parent-child relationships don't capture the full picture. Span links fill this gap by creating explicit causal connections.
+
+### What are span links? [#what-are-span-links]
+
+Span links are OpenTelemetry attributes that create causal relationships between spans that don't have a direct parent-child connection. They allow you to:
+
+* Navigate from a consuming span back to the producing span
+* Understand the complete request flow even when traces are split
+* Debug issues that span across asynchronous boundaries
+
+A span link includes the trace ID and span ID of the related span, allowing New Relic to connect the traces for you.
+
+### Identifying traces with span links [#identify-span-links]
+
+In the trace details UI, traces with span links are marked in several ways:
+
+1. <DNT>**Span links filter badge**</DNT>: In the trace filter bar, you'll see a badge showing the number of spans with links (for example, `span links (2)`).
+2. <DNT>**Span count indicator**</DNT>: When viewing the list of spans, each span shows a link count if it has span links.
+
+<img
+  title="Distributed tracing span links filter"
+  alt="Screenshot showing the span links filter badge in the trace details UI"
+  src="/images/distributed-tracing-span-links-filter-badge.webp"
+/>
+
+<figcaption>
+  The span links filter badge appears in the trace filter bar when a trace contains spans with links.
+</figcaption>
+
+### Viewing span links [#view-span-links]
+
+To view and navigate span links:
+
+1. From the trace details page, select a span from the span links dropdown.
+2. In the span details pane, click the <DNT>**Span links**</DNT> tab.
+3. You'll see a list of linked traces with the following information:
+   * <DNT>**Direction badge**</DNT>: `Forward` indicates a span that occurred later in time (successor), while `Backward` indicates a span that occurred earlier (predecessor).
+   * <DNT>**Trace ID**</DNT>: The ID of the linked trace (truncated for display).
+   * <DNT>**Timestamp**</DNT>: When the linked span occurred.
+   * <DNT>**Duration**</DNT>: How long the linked span took.
+   * <DNT>**Errors**</DNT>: Number of errors in the linked trace.
+
+4. Click on a linked trace to navigate to it. Use your browser's back button to return to the original trace.
+
+<img
+  title="Span links tab showing linked traces"
+  alt="Screenshot showing the Span links tab with forward and backward linked traces"
+  src="/images/distributed-tracing-span-links-tab-detail.webp"
+/>
+
+<figcaption>
+  The Span links tab displays linked traces with direction badges (Forward/Backward), trace IDs, timestamps, durations, and error counts.
+</figcaption>
+
+<Callout variant="tip">
+  <DNT>**Understanding forward vs. backward links**</DNT>
+
+  * <DNT>**Forward links**</DNT>: Point to traces that happened as a result of the current span. Example: A message was published by this span and processed later by another trace.
+  * <DNT>**Backward links**</DNT>: Point to traces that caused the current span. Example: This span is processing a message that was published by an earlier trace.
+</Callout>
+
+### When span links don't appear [#span-links-troubleshooting]
+
+If you expect to see span links but they're not appearing, check the following:
+
+<img
+  title="Empty state when trace has no span links"
+  alt="Screenshot showing the empty state message when a trace has no span links"
+  src="/images/distributed-tracing-span-links-empty-state.webp"
+/>
+
+<figcaption>
+  When a trace has no span links, you'll see this message in the Span links tab.
+</figcaption>
+
+<CollapserGroup>
+  <Collapser
+    id="trace-context-not-propagated"
+    title="Trace context not propagated"
+  >
+    Span links require proper trace context propagation through your messaging system:
+
+    * Ensure W3C trace context headers (`traceparent`, `tracestate`) are included in message headers or metadata
+    * Verify your messaging library or framework supports context propagation
+    * When instrumenting manually, make sure you're extracting context from messages and creating span links programmatically
+
+    For implementation examples, see [OpenTelemetry span links best practices](/docs/opentelemetry/best-practices/opentelemetry-best-practices-traces/#span-links).
+  </Collapser>
+
+  <Collapser
+    id="sampling"
+    title="Sampling considerations"
+  >
+    Both the original trace and the linked trace must be sampled for span links to appear:
+
+    * If either trace is dropped by sampling, the span link won't be visible
+    * Consider using head-based or tail-based sampling strategies that preserve important traces
+    * For critical workflows with span links, you may want to adjust sampling rates
+  </Collapser>
+
+  <Collapser
+    id="data-processing"
+    title="Data not yet processed"
+  >
+    There may be a delay between when trace data is sent and when span links appear:
+
+    * Allow 1-2 minutes for data to be processed and indexed
+    * Check that both linked traces have been successfully ingested
+    * Verify that you're not hitting any data limits or rate limits
+  </Collapser>
+</CollapserGroup>
+
+For more information on implementing span links in your instrumentation, see our [OpenTelemetry best practices guide for traces](/docs/opentelemetry/best-practices/opentelemetry-best-practices-traces/#span-links).
+
+## Span attributes [#span-attributes]
+
+If you'd like to learn more about `Span` data:
+
+* Explore your span data using the [query builder](/docs/chart-builder/use-chart-builder/get-started/introduction-chart-builder).
+* To see the default attributes attached to span data, use the [data dictionary](/attribute-dictionary/?event=Span).
+* Check out these [example queries](/docs/apm/distributed-tracing/ui-data/example-insights-queries-distributed-trace-data) for help with NRQL queries using these attributes.
+
+## View related logs [#view-your-logs]
+
+If you are using our [logs in context](/docs/logs/logs-context/configure-logs-context-apm-agents/) feature, you can see any logs that are linked to your traces:
+
+1. Go to the trace details page by clicking on a trace.
+2. In the upper-left corner of the span details page, click the <DNT>**Logs**</DNT> tab.
+3. For details related to an individual log message, click directly on the message.

@@ -1,0 +1,1627 @@
+---
+title: ワークフロー定義スキーマ
+tags:
+  - workflow automation
+  - workflow schemas
+  - workflow automation API
+metaDescription: Workflow definitions are written in YAML. Keys use a camelCase naming convention.
+freshnessValidatedDate: '2026-10-27T00:00:00.000Z'
+translationType: machine
+---
+
+## 概要 [#overview]
+
+ワークフロー定義は、実行する自動化プロセスを記述します。ワークフロー定義では、`camelCase`の命名規則を持つYAMLを使用します。各ワークフローは、以下の内容によって構成されています。
+
+* **スキーマプロパティ**：基本情報（名前、説明、入力）
+* **ステップ**: 実行するアクションの順序
+* **式**: jq 構文を使用した動的な値
+* **シークレット**: 安全な資格情報参照
+
+## スキーマ構造 [#schema-structure]
+
+### スキーマプロパティ [#schema-properties]
+
+次の表は、ワークフロー定義のトップレベルのプロパティについて説明しています。
+
+<table>
+<thead>
+<tr>
+<th>
+プロパティ
+</th>
+
+<th>
+必須またはオプション
+</th>
+
+<th>
+データ型
+</th>
+
+<th>
+形式
+</th>
+
+<th>
+制約
+</th>
+
+<th>
+説明
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`name`
+</td>
+
+<td>
+必須
+</td>
+
+<td>
+弦
+</td>
+
+<td>
+正規表現に準拠する必要があります `^[A-Za-z_][A-Za-z0-9_-]*$`
+</td>
+
+<td>
+**最大長**: 100
+</td>
+
+<td>
+`name`値は大文字と小文字を区別しません。たとえば、`ExampleWorkflow`、`exampleworkflow`、および`EXAMPLEWORKFLOW`はすべて、同じワークフロー定義を表すと見なされます。
+</td>
+</tr>
+
+<tr>
+<td>
+`description`
+</td>
+
+<td>
+オプション
+</td>
+
+<td>
+弦
+</td>
+
+<td>
+正規表現に準拠する必要があります `^[A-Za-z0-9 _-]*$`
+</td>
+
+<td>
+**最大長**: 200
+</td>
+
+<td>
+ワークフローの目的の説明。
+</td>
+</tr>
+
+<tr>
+<td>
+`workflowInputs`
+</td>
+
+<td>
+オプション
+</td>
+
+<td />
+
+<td>
+地図の地図
+</td>
+
+<td>
+**最大サイズ**: 100
+</td>
+
+<td>
+ワークフローが受け入れるワークフロー入力のマップです。以下のセクションのworkflowInputsプロパティをご覧ください。
+</td>
+</tr>
+</tbody>
+</table>
+
+### ワークフロー入力（オプション） [#workflowinputs]
+
+次の例は、`workflowInputs`の定義を示しています：
+
+```yaml
+workflowInputs:
+  myInput1:
+    type: String
+  myInput2:
+    type: Number
+    defaultValue: 42
+```
+
+各入力エントリは以下のフィールドをサポートします。
+
+* `workflowInputs.<inputName>` （必須）
+
+  * **タイプ**: 文字列 ([式安全なパターン](#expression-safe-pattern)に準拠)
+  * **最小の長さ**: 1
+  * **最大長**: 50
+  * **説明**: ワークフロー入力の名前。
+
+* `workflowInputs.<inputName>.type` （必須）
+
+  * **タイプ**: 列挙型 (`Boolean, List, Map, String, Int, Float, Enum`)
+  * **説明**: ワークフロー入力のデータ型。
+
+* `workflowInputs.<inputName>.defaultValue` (オプション)
+
+  * **タイプ**：`type`に準拠する任意の値。
+  * **説明**: ワークフロー入力のデフォルト値。
+
+* `workflowInputs.<inputName>.required` (オプション)
+
+  * **タイプ**: ブール値 (`True` 、 `False`)。
+  * **説明**：このフィールドのデフォルト値は`true`です。
+
+* `workflowInputs.<inputName>.enumValues` (オプション)
+
+  * **タイプ**: リスト (`String`)。
+  * **説明**：このフィールドのデフォルトは空のリスト`{}`です。`workflowInputs`のタイプが`Enum`の場合に必須です。
+
+* `workflowInputs.<inputName>.validations` (オプション)
+
+  * **タイプ**: マップの配列。
+  * **説明**：ユーザーが提供するワークフロー入力に対して実行する検証。ここにリストされているプロパティは、すべての検証タイプに適用されます。特定の検証タイプは追加のプロパティをサポートします。詳細については、[検証タイプ](#validation-types)を参照してください。
+
+* `validations[*].type` （必須）
+
+  * **タイプ**: 文字列
+  * **説明**：このフィールドでどのような検証が行われるかを示す検証のタイプです。各検証タイプの詳細については、「[検証タイプ](#validation-types)」を参照してください。
+
+* `validations[*].errorMessage` （必須）
+
+  * **タイプ**: 文字列
+  * **説明**：特定の検証が失敗したときに表示されるエラーメッセージです。
+
+#### 検証用のサンプルYAML
+
+```yaml
+name: calendar_demo
+
+workflowInputs:
+  timezone:
+    type: String
+    defaultValue: 'America/Los_Angeles'
+    validations:
+      - type: regex
+        errorMessage: "The provided timezone is not correct"
+        pattern: "^[A-Za-z]+\/[A-Za-z_]+(?:\/[A-Za-z_]+)?$"
+
+      - type: maxLength
+        errorMessage: "Timezone length should be less than 100"
+        length: 100
+      
+  accountId:
+    type: Int
+    validations:
+      - type: minIntValue
+        errorMessage: "Account id should be greater than 100000"
+        minValue: 100000
+      - type: maxIntValue
+        errorMessage: "Account id should be less than 9999999"
+        maxValue: 9999999
+
+steps:
+  - name: getCurrentTime
+    type: action
+    action: http.get
+    version: 1
+    inputs:
+      url: 'https://worldtimeapi.org/api/timezone/${{ .workflowInputs.timezone }}'
+      selectors:
+        - name: timezone
+          expression: '.responseBody | fromjson.abbreviation'
+        - name: datetime
+          expression: '.responseBody | fromjson.datetime'
+```
+
+### ワークフロー定数（オプション） [#workflowconstants]
+
+ワークフロー定数は、現在実行中のワークフローに関するランタイムメタデータへのアクセスを提供します。これらの定数はすべてのワークフロー定義で自動的に利用可能であり、式構文`${{ .workflowConstants.<constantName> }}`を使用して参照できます。
+
+#### 利用可能な定数
+
+次の定数は、すべてのワークフロー定義で使用できます。
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+絶え間ない
+</th>
+
+<th>
+データ型
+</th>
+
+<th>
+説明
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`runId`
+</td>
+
+<td>
+弦
+</td>
+
+<td>
+現在のワークフロー実行の一意の識別子
+</td>
+</tr>
+
+<tr>
+<td>
+`accountId`
+</td>
+
+<td>
+Int
+</td>
+
+<td>
+ワークフローが実行されているアカウントID
+</td>
+</tr>
+
+<tr>
+<td>
+`organizationId`
+</td>
+
+<td>
+弦
+</td>
+
+<td>
+ワークフローに関連付けられた組織ID
+</td>
+</tr>
+
+<tr>
+<td>
+`definitionName`
+</td>
+
+<td>
+弦
+</td>
+
+<td>
+ワークフロー定義の名前
+</td>
+</tr>
+
+<tr>
+<td>
+`definitionVersion`
+</td>
+
+<td>
+弦
+</td>
+
+<td>
+ワークフロー定義のバージョン
+</td>
+</tr>
+
+<tr>
+<td>
+`definitionScopeType`
+</td>
+
+<td>
+弦
+</td>
+
+<td>
+ワークフロー定義のスコープタイプ
+</td>
+</tr>
+
+<tr>
+<td>
+`startedAt`
+</td>
+
+<td>
+タイムスタンプ
+</td>
+
+<td>
+ワークフローの実行が開始されたときのEpochミリ秒単位)
+</td>
+</tr>
+</tbody>
+</table>
+
+#### 使用例
+
+```yaml
+ name: testWorkflowConstantsWithJQ
+ description: Test workflow to demonstrate workflowConstants usage
+  steps:
+    - name: logWithConstants
+      type: action
+      action: newrelic.ingest.sendLogs
+      version: '1'
+      inputs:
+        logs:
+          - message: Workflow Execution Started
+            attributes:
+              accountId: ${{ .workflowConstants.accountId }}
+              orgId: ${{ .workflowConstants.organizationId }}
+              version: ${{ .workflowConstants.definitionVersion }}
+              scopeType: ${{ .workflowConstants.definitionScopeType }}
+              startedAt: ${{ .workflowConstants.startedAt }}
+              runId: ${{ .workflowConstants.runId }}
+              workflowDefinitionName: ${{ .workflowConstants.definitionName }}
+```
+
+値を変換するには、jq式とともにワークフロー定数を使用します：
+
+```yaml
+steps:
+    - name: transformConstants
+      type: action
+      action: newrelic.ingest.sendLogs
+      version: '1'
+      inputs:
+        logs:
+          - message: Testing JQ transformations on workflowConstants
+            attributes:
+              # Convert epoch milliseconds to ISO8601 format
+              startedAtISO8601: ${{ (.workflowConstants.startedAt / 1000) | todateiso8601 }}
+              # Convert to uppercase
+              runIdUppercase: ${{ .workflowConstants.runId | ascii_upcase }}
+              # Get string length
+              definitionNameLength: ${{ .workflowConstants.definitionName | length }}
+              # Convert to string
+              accountIdString: ${{ .workflowConstants.accountId | tostring }}
+              # Combine multiple constants
+              combinedMetadata: ${{ .workflowConstants.definitionName + "-" + .workflowConstants.runId }}
+```
+
+次の例では、`DateTime`アクションを使用してタイムスタンプを変換します：
+
+```yaml
+ steps:
+    - name: convertStartedAtFromEpoch
+      type: action
+      action: utils.datetime.fromEpoch
+      version: 1
+      inputs:
+        timestamp: ${{ .workflowConstants.startedAt }}
+        timezoneId: UTC
+        pattern: "yyyy-MM-dd HH:mm:ss"
+        timestampUnit: MILLISECONDS
+        selectors:
+          - name: datetime
+            expression: ".datetime"
+          - name: timezone
+            expression: ".timezone"
+```
+
+#### 制約と動作
+
+<Callout variant="important">
+ワークフロー定数を使用する際は、次の点に注意してください：
+
+* ランタイムはワークフロー定数を自動的に提供します。これらは読み取り専用です。
+* `startedAt`タイムスタンプはミリ秒単位（エポック形式）です。
+* 定数は、ワークフロー全体のすべての式コンテキストで使用できます。
+* `workflowInputs`とは異なり、ワークフロー定義で定数を宣言する必要はありません。
+</Callout>
+
+## 手順 [#steps]
+
+次の表は、ワークフロー定義の`steps`プロパティについて説明しています。
+
+<table>
+<thead>
+<tr>
+<th>
+プロパティ
+</th>
+
+<th>
+必須またはオプション
+</th>
+
+<th>
+データ型
+</th>
+
+<th>
+制約
+</th>
+
+<th>
+説明
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`steps`
+</td>
+
+<td>
+必須
+</td>
+
+<td>
+地図の配列
+</td>
+
+<td />
+
+<td>
+ワークフロー定義の実行時に実行するステップです。少なくとも1つのステップが必要です。ここにリストされているプロパティは、すべてのステップタイプに適用されます。特定のステップタイプは追加のプロパティをサポートします。詳細については、[「ステップタイプ」](#step-types)を参照してください。
+</td>
+</tr>
+</tbody>
+</table>
+
+<Callout variant="important">
+ステップは、`steps`配列で定義した順序で実行されます。実行順序を変更するには、`steps[*].next`プロパティをジャンプ先のステップ名に設定します。
+</Callout>
+
+### 共通ステッププロパティ [#common-step-properties]
+
+次のプロパティは、すべてのステップタイプに適用されます。
+
+<table>
+<thead>
+<tr>
+<th>
+プロパティ
+</th>
+
+<th>
+必須またはオプション
+</th>
+
+<th>
+データ型
+</th>
+
+<th>
+形式
+</th>
+
+<th>
+制約
+</th>
+
+<th>
+説明
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`steps[*].name`
+</td>
+
+<td>
+必須
+</td>
+
+<td>
+弦
+</td>
+
+<td>
+[expression-safe pattern](#expression-safe-pattern)に準拠する必要があり、`end`にすることはできません。
+</td>
+
+<td>
+**最大長:** 100
+</td>
+
+<td>
+`steps[*].next`が参照するステップの名前です。これらは終了ステップ、ループの継続、またはループの中断を示すため、特別なキーワード`end`、`continue`、または`break`にすることはできません。
+</td>
+</tr>
+
+<tr>
+<td>
+`steps[*].type`
+</td>
+
+<td>
+必須
+</td>
+
+<td>
+弦
+</td>
+
+<td />
+
+<td />
+
+<td>
+ステップのタイプ。実行時にステップが何を行うかを示します。利用可能なオプションについては、「[ステップのタイプ](#step-types)」を参照してください。
+</td>
+</tr>
+
+<tr>
+<td>
+`steps[*].next`
+</td>
+
+<td>
+オプション
+</td>
+
+<td>
+弦
+</td>
+
+<td>
+[expression-safe pattern](#expression-safe-pattern)に準拠する必要があります。
+</td>
+
+<td />
+
+<td>
+このステップが正常に完了したときに実行する次のステップの名前。特別なキーワード`end`は、これが実行する最後のステップであることを示します。`next`が省略された場合、`steps`配列の次のエントリが暗黙的な次のステップになります。次のエントリがない場合、ワークフローは完了します。
+</td>
+</tr>
+
+<tr>
+<td>
+`steps[*].ignoreErrors`
+</td>
+
+<td>
+オプション
+</td>
+
+<td>
+ブール値
+</td>
+
+<td />
+
+<td />
+
+<td>
+`ignoreErrors` はステップレベルの設定オプションであり、デフォルトは`false`です。`true`に設定すると、このステップの実行中のエラーによってワークフロー全体が失敗することはなく — ワークフローは後続のステップを続行します。
+</td>
+</tr>
+</tbody>
+</table>
+
+## ステップの種類 [#step-types]
+
+### アクション [#action]
+
+特定のアクションを実行するステップ。利用可能なオプションについては、[アクション カタログ](/docs/workflow-automation/setup-and-configure/actions-catalog/actions-catalog)を参照してください。
+
+* `steps[*].action` （必須）
+
+  * **タイプ**: 文字列
+  * **説明**：実行するアクション関数の完全修飾名。次の規則に従う必要があります： `<company domain>.<category of work>.<action name in camelCase>`
+
+次は、有効なアクション名の例です：
+
+* New Relicサービスを使用するアクション（たとえば、NerdGraph経由）： `newrelic.dashboards.getDashboard`
+
+* Slackを使ったアクション: `slack.chat.postMessage`
+
+* `steps[*].version` （必須）
+
+  * **タイプ**: 文字列
+  * **説明**: 実行するアクション関数のバージョン。
+
+* `steps[*].inputs` (オプション)
+
+  * **タイプ**: 値のマップ（式を含む）
+
+  * **説明**：
+
+    * アクション関数に渡す入力。各アクションは、受け入れる特定の入力を定義します。
+    * 式を使用できます。詳細については、式文字列のセクションを参照してください。
+
+  <Callout variant="important">
+  機密データ（APIキー、シークレット、PII、PHI、または個人を特定できるデータ）を引数として渡さないでください。
+  </Callout>
+
+* `steps[*].inputs.selectors` (オプション)
+
+  * **タイプ**: `name`と`expression`の形式のマップのリスト。
+
+  * **説明**：
+
+    * `selectors`入力を使用すると、指定された要素のみを返すように出力を再定義できます。
+    * 式を使用できます。詳細については、「[式文字列](#expression-strings)」セクションを参照してください。
+
+  * 次の例では、http.getアクションの出力から`timezone`と`datetime`を取得します。
+
+```yaml
+  name: calendar_demo
+
+  workflowInputs:
+    timezone:
+      type: String
+      defaultValue: 'America/Los_Angeles'
+    accountId:
+      type: Int
+
+  steps:
+    - name: getCurrentTime
+      type: action
+      action: http.get
+      version: 1
+      inputs:
+        url: 'https://worldtimeapi.org/api/timezone/${{ .workflowInputs.timezone }}'
+        selectors:
+          - name: timezone
+            expression: '.responseBody | fromjson.abbreviation'
+          - name: datetime
+            expression: '.responseBody | fromjson.datetime'
+```
+
+### ループ [#loop]
+
+ループはコレクション（リスト、マップ、配列）を反復処理し、各反復に対して`index`および`element`変数を自動的に作成します。これらのループ変数には、`${{ .steps.<loopStepName>.loop.element }}`または`${{ .steps.<loopStepName>.loop.index }}`を使用してループ内でのみアクセスできます。
+
+ループステップは、以下のプロパティをサポートします。
+
+* `steps[*].for` （必須）
+
+  * **タイプ**: 定数
+  * **説明**：ループの開始を示します。
+
+* `steps[*].in` （必須）
+
+  * **タイプ**: 文字列 (式)
+  * **説明**：要素のコレクションに評価される式。
+
+* `steps[*].steps` （必須）
+
+  * **説明**：各反復で実行するステップ。各ステップは、ネストされたループを含む任意のステップタイプにすることができます。
+
+<Callout variant="important">
+ループを使用する場合は、次の点に注意してください：
+
+* `for` （必須）ループの開始を示します。
+* `in` （必須）Java配列にキャスト可能なコレクションとして評価される必要があります。
+* `steps` （必須）各反復で実行されるステップを定義します。
+* ランタイムは、各反復で`element`と`index`を割り当てます。`index`はゼロベースです。`element`は複合型にすることができます。
+* ループ内で作成された変数 — ループ変数やステップの出力など — には、ループ内でのみアクセスできます。ループは終了時にこれらをクリアします。
+* ループは、ループ外で定義された変数にアクセスできます。
+</Callout>
+
+**例: 基本的なループ**
+
+```yaml
+name: myRangeIterator
+steps:
+  - name: looper
+    type: loop
+    for:
+      # iterate over [1..5]
+      in: ${{ [range(1; 6)] }}
+      steps:
+        - name: logProgress
+          type: action
+          action: newrelic.ingest.sendLogs
+          version: 1
+          inputs:
+            logs:
+              - message: "Element: ${{ .steps.looper.loop.element | tostring }}" # not exist outside of this loop
+                attributes:
+                  # ranges over [0..4]
+                  index: ${{ .steps.looper.loop.index }}
+```
+
+**例：jq式でforループを使用する**
+
+```yaml
+name: process-orders
+description: Process and validate orders
+
+workflowInputs:
+  validStatuses:
+    type: List
+    defaultValue: ["pending", "confirmed", "shipped"]
+
+steps:
+  - name: getOrders
+    type: assign
+    inputs:
+      orders:
+        - { id: "001", status: "pending", amount: 100 }
+        - { id: "002", status: "invalid", amount: 50 }
+        - { id: "003", status: "shipped", amount: 200 }
+
+  - name: processOrders
+    type: loop
+    for:
+      in: ${{ .steps.getOrders.outputs.orders }}
+      steps:
+        - name: validateStatus
+          type: switch
+          switch:
+            - condition: ${{ .steps.processOrders.loop.element.status as $status | .workflowInputs.validStatuses | index($status) != null }}
+              next: validOrder
+          next: invalidOrder
+
+        - name: invalidOrder
+          type: action
+          action: newrelic.ingest.sendLogs
+          version: 1
+          inputs:
+            logs:
+              - message: "Invalid order status"
+                attributes:
+                  orderId: ${{ .steps.processOrders.loop.element.id }}
+                  status: ${{ .steps.processOrders.loop.element.status }}
+
+        - name: validOrder
+          type: action
+          action: newrelic.ingest.sendLogs
+          version: 1
+          inputs:
+            logs:
+              - message: "Processing valid order"
+                attributes:
+                  orderId: ${{ .steps.processOrders.loop.element.id }}
+                  status: ${{ .steps.processOrders.loop.element.status }}
+                  amount: ${{ .steps.processOrders.loop.element.amount }}
+```
+
+**例: マップ上のループ**
+
+```yaml
+name: myMapIterator
+steps:
+  - name: looper
+    type: loop
+    for:
+      in: '${{ [ {"key1": "val1"}, {"key2": "val2"} ] }}'
+      steps:
+        - name: logProgress
+          type: action
+          action: newrelic.ingest.sendLogs
+          version: 1
+          inputs:
+            logs:
+              - message: "Element: ${{ .steps.looper.loop.element | tostring }}"
+```
+
+**例: ループ内でのジャンプ**
+
+同じループ内のステップ間でジャンプできます。ループへのジャンプ、ループからのジャンプ、異なるループ間のジャンプ、または親/子ループへのジャンプはできません。
+
+```yaml
+name: myLoopJump
+steps:
+  - name: fistStep
+    type: action
+    action: newrelic.ingest.sendLogs
+    version: 1
+    inputs:
+      logs:
+        - message: "the first step"
+  - name: loopStep
+    type: loop
+    for:
+      in: ${{ [range(1; 6)] }}
+      steps:
+        - name: loopStep1
+          type: action
+          action: newrelic.ingest.sendLogs
+          version: 1
+          inputs:
+            logs:
+              - message: "the loop first step"
+          next: loopStep3                         # Okay within the loop
+        - name: loopStep2
+          type: action
+          action: newrelic.ingest.sendLogs
+          version: 1
+          inputs:
+            logs:
+              - message: "the loop second step, never executed"
+        - name: loopStep3
+          type: action
+          action: newrelic.ingest.sendLogs
+          version: 1
+          inputs:
+            logs:
+              - message: "the loop third step"
+          next: fistStep                        # Not okay, first step is not in the loop context
+```
+
+**例: 中断して続行**
+
+ループのフローを制御するには、`next: break`または`next: continue`を使用します。これらはループ内の予約語です。ループの外では、ワークフローの最後にジャンプします。ループ内では、`end`は`break`のように動作します。
+
+```yaml
+name: myLoopContinueBreak
+steps:
+  - name: fistStep
+    type: action
+    action: newrelic.ingest.sendLogs
+    version: 1
+    inputs:
+      logs:
+        - message: "the first step"
+  - name: loopStep
+    type: loop
+    for:
+      in: ${{ [range(1; 6)] }}
+      steps:
+        - name: loopStep1
+          type: action
+          action: newrelic.ingest.sendLogs
+          version: 1
+          inputs:
+            logs:
+              - message: "the loop first step"
+          # continue with next iteration without executing loopStep2
+          next: continue
+        - name: loopStep2
+          type: action
+          action: newrelic.ingest.sendLogs
+          version: 1
+          inputs:
+            logs:
+              - message: "the loop second step, never executed"
+
+  - name: loopAgain
+    type: loop
+    for:
+      in: ${{ [range(1; 6)] }}
+      steps:
+        - name: loopAgainStep1
+          type: action
+          action: newrelic.ingest.sendLogs
+          version: 1
+          inputs:
+            logs:
+              - message: "the loop again first step"
+          # stop iterating and continue with next step after the loop
+          next: break
+        - name: loopAgainStep2
+          type: action
+          action: newrelic.ingest.sendLogs
+          version: 1
+          inputs:
+            logs:
+              - message: "the loop again second step, never executed"
+
+  - name: lastStep
+    type: action
+    action: newrelic.ingest.sendLogs
+    version: 1
+    inputs:
+      logs:
+        - message: "the last step"
+```
+
+### スイッチ [#switch]
+
+switchステップはさまざまな条件をチェックし、trueと評価された最初のブランチを実行します。リスト内に任意の数の`condition`要素を含めることができ、それらを順番にチェックして、trueと評価された最初の要素を処理します。どれもtrueと評価されない場合は、`steps[*].next`で定義されている`next`ステップを実行します。
+
+* `steps[*].switch` （必須）
+
+  * **タイプ**: 配列
+  * **説明**: 評価する条件の順序付きリストを指定する、スイッチ ケースの配列。
+
+* `steps[*].switch[*].condition` （必須）
+
+  * **タイプ**: 文字列 ([式](#expression-strings))
+  * **説明**：switch caseの条件。条件がtrueに評価された場合、ワークフローはcaseの`next`ステップを実行します。
+  * 詳細については、「[式文字列」](#expression-strings)セクションを参照してください。
+
+* `steps[*].switch[*].next` （必須）
+
+  * **タイプ**: 文字列 ([式安全なパターン](#expression-safe-pattern)に準拠)
+  * **説明**: ケースの条件がtrueと評価された場合に実行されるステップの名前です。特別なキーワード`end`は、これが実行する最後のステップであることを示します。
+
+```yaml
+  - name: hasCompleted
+    type: switch
+    switch:
+      - condition: ${{ .steps.waitForCompletion.outputs.automationExecutionStatus == "Failed" }}
+        next: displayError
+      - condition: ${{ .steps.waitForCompletion.outputs.automationExecutionStatus == "Success" }}
+        next: displaySuccess
+    next: displayUnexpected
+```
+
+### 待って [#wait]
+
+ワークフローの実行を指定された秒数だけ一時停止してから続行するステップ。
+
+待機ステップは、1つ以上のシグナルをリッスンすることもできます。各シグナルは、対応する次のステップを定義する必要があります。待機ステップがシグナルを受信した場合、最初に受信したシグナルを処理し、定義された次のステップを実行します。シグナルを受信しない場合、ワークフローは待機期間の終了後に次のステップに進みます。
+
+待機ステップは、受信したシグナル値を出力に保存し、後続のステップで使用できるようにします。
+
+次の例は、シグナルハンドラーを使用したwaitステップを示しています：
+
+```yaml
+name: waitSignalExample
+steps:
+  - name: waitStep
+    type: wait
+    seconds: 300
+    signals: [{name: 'mySignal', next: 'mySignalHandler'}]
+  - name: endStep
+    type: action
+    action: newrelic.ingest.sendLogs
+    version: 1
+    inputs:
+      logs:
+        - message: "didn't get signal"
+    next: end
+  - name: mySignalHandler
+    type: action
+    action: newrelic.ingest.sendLogs
+    version: 1
+    inputs:
+      logs:
+        # log entry "got signal with data bar" when using signalInputs [{"foo": "bar"}]
+        - message: "got signal with data ${{ .steps.waitStep.outputs.signalInputs.foo }}"
+```
+
+待機ステップは、以下のプロパティを受け入れます。
+
+* `steps[*].seconds` （必須）
+
+  * **タイプ**: 数値
+  * **説明**: ワークフローの実行を続行する前に待機する秒数。
+
+* `steps[*].signals`
+
+  * **タイプ**: 配列
+  * **説明**：waitステップがシグナルを受信したときにプログラムフローを分岐させるシグナルです。
+
+* `steps[*].signals[*].name`
+
+  * **タイプ**: 文字列
+  * **説明**: リッスンする信号の名前。
+
+* `steps[*].signals[*].next`
+
+  * **タイプ**: 文字列
+  * **説明**：指定されたシグナルを受信した場合に実行するステップ。
+
+### 割り当てる [#assign]
+
+ワークフロー全体で使用する変数を定義するステップ。このステップでは、後続のステップで参照できる変数に値を割り当てます。このステップタイプを使用すると、ワークフロー全体で使用するすべての変数を1か所で定義できます。
+
+次のサンプルワークフローは、assignステップの使用方法を示しています：
+
+```yaml
+name: sampleWorkflowWithAssign
+
+workflowInputs:
+  initialValue:
+    type: String
+    defaultValue: "abcd"
+  anotherValue:
+    type: Int
+    defaultValue: 1234
+
+steps:
+  - name: variableInitialization
+    type: assign
+    inputs:
+      stringVar: "${{ .workflowInputs.initialValue }}"
+      intVar: "${{ .workflowInputs.anotherValue }}"
+      concatenationVar: "${{ .workflowInputs.initialValue }} - concatenated"
+      booleanVar: true
+      mapVar:
+        key1: "value1"
+        key2: "${{ .workflowInputs.initialValue }}"
+      listVar:
+        - "listItem1"
+        - "${{ .workflowInputs.initialValue }}"
+        - "${{ .workflowInputs.anotherValue }}"
+
+  - name: logVariables
+    type: action
+    action: newrelic.ingest.sendLogs
+    version: 1
+    inputs:
+      logs:
+        - message: "stringVar: ${{ .steps.variableInitialization.outputs.stringVar }}"
+        - message: "intVar: ${{ .steps.variableInitialization.outputs.intVar }}"
+        - message: "concatenationVar: ${{ .steps.variableInitialization.outputs.concatenationVar }}"
+        - message: "booleanVar: ${{ .steps.variableInitialization.outputs.booleanVar }}"
+        - message: "mapVar: ${{ .steps.variableInitialization.outputs.mapVar | tojson }}"
+        - message: "listVar: ${{ .steps.variableInitialization.outputs.listVar | tojson }}"
+```
+
+assignステップは次の入力を受け入れます：
+
+* `steps[*].inputs` （必須）
+
+  * **タイプ**: 値のマップ（[式](#expression-strings)を含む）
+  * **説明**：
+    * 入力は、変数名とそれに割り当てられた値のマップです。シークレットの参照を変数に割り当てた場合、それらは参照のまま維持され、システムはそれらを実際の値に変換しません。ただし、ワークフローは他の式（ワークフロー入力など）を評価し、実際の値に変換します。
+  * 許可される入力タイプ: `Integer` 、 `Double` 、 `Boolean` 、 `String` 、 `Array` 、 `Map`
+
+### ステート [#state]
+
+ワークフローの共有状態にキーと値のペアを保存するステップです。値は、ワークフローの実行中保持されます。後続のステップは、`.workflowState`アクセサーを使用してこれらの値にアクセスできます。複数の状態ステップで同じキーが設定されている場合、後から設定された値が前の値を上書きします。
+
+状態ステップは以下の入力を受け付けます。
+
+* `steps[*].inputs` （必須）
+
+  * **タイプ**：キーと値のペアのマップ
+
+  * **説明**：ワークフローの状態に保存するキーと値のペア。
+
+    * キーは有効な識別子である必要があります。
+    * 値には任意のタイプを指定できます — `String`、`Integer`、`Boolean`、`List`、または`Map`（ネストされた構造を含みます）。値には式が含まれます。ランタイムはシークレットの参照を解決しません — そのまま保存します。
+
+式内の状態値にアクセスするには、stateステップに続く任意のステップで`.workflowState.<keyName>`を使用します：
+
+`${{ .workflowState.myKey }}`
+
+次の例は、値を保存および取得する状態ステップを示しています。
+
+```yaml
+name: workflow-state-example
+description: Store and retrieve state across steps
+steps:
+  - name: storeInitialData
+    type: state
+    inputs:
+      count: 1
+      foo: "bar"
+  - name: updateCount
+    type: state
+    inputs:
+      color: "green"
+      count: 2
+  - name: logState
+    type: action
+    action: newrelic.ingest.sendLogs
+    version: 1
+    inputs:
+      logs:
+        - message: "foo=${{ .workflowState.foo }}, color=${{ .workflowState.color }}, count=${{ .workflowState.count }}"
+```
+
+stateステップには次の制約があります：
+
+* キー名パターン： `^[a-zA-Z_][a-zA-Z0-9_]*$`
+* キー名の最大長：255文字
+* 状態ステップあたりの最大キー数：10
+* ワークフロー実行あたりの最大合計状態キー数：100
+* 状態値の最大長：1,000文字
+
+### エラー [#error]
+
+ワークフローを終了し、カスタムメッセージを使用して失敗を報告するステップです。`condition`が存在する場合、ワークフローは最初にそれを評価し、条件が`true`の場合にのみ停止します。`message`を指定しない場合、ステップはデフォルトのメッセージ`failed as requested from step: failureStep`を使用します。
+
+次の例は、条件付きのerrorステップを示しています：
+
+```yaml
+name: sendLogWorkflow
+description: 'This workflow send Logs to newrelic'
+steps:
+  - name: sendLog
+    type: action
+    action: newrelic.ingest.sendLogs
+    version: 1
+    inputs:
+      logs:
+        - message: Sending Logs to NewRelic
+  - name: error_4
+    type: error
+    condition: ${{.steps.sendLog.outputs.success == false}}
+    message: Terminating Workflow as sendLog failed.
+    next: end
+```
+
+次の表は、エラーステップが受け付ける入力について説明しています。
+
+<table>
+<thead>
+<tr>
+<th>
+入力フィールド
+</th>
+
+<th>
+オプション性
+</th>
+
+<th>
+データ型
+</th>
+
+<th>
+例
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`message`
+</td>
+
+<td>
+オプション
+</td>
+
+<td>
+弦
+</td>
+
+<td>
+`"Oops Something went wrong while execution"`
+</td>
+</tr>
+
+<tr>
+<td>
+`condition`
+</td>
+
+<td>
+オプション
+</td>
+
+<td>
+弦
+</td>
+
+<td>
+`${{ .steps.main.outputs.success == false }}`
+</td>
+</tr>
+</tbody>
+</table>
+
+## 検証の種類 [#validation-types]
+
+`workflowInputs`には次の検証タイプを使用できます。
+
+<table>
+<thead>
+<tr>
+<th>
+検証タイプ
+</th>
+
+<th>
+プロパティ
+</th>
+
+<th>
+必須またはオプション
+</th>
+
+<th>
+データ型
+</th>
+
+<th>
+説明
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`regex`
+</td>
+
+<td>
+`validations[*].pattern`
+</td>
+
+<td>
+必須
+</td>
+
+<td>
+弦
+</td>
+
+<td>
+指定された正規表現パターンに対してワークフロー入力値を検証します。
+</td>
+</tr>
+
+<tr>
+<td>
+`maxIntValue`
+</td>
+
+<td>
+`validations[*].maxValue`
+</td>
+
+<td>
+必須
+</td>
+
+<td>
+整数
+</td>
+
+<td>
+ワークフロー入力値が指定されたmaxValueより小さいことを検証します。
+</td>
+</tr>
+
+<tr>
+<td>
+`minIntValue`
+</td>
+
+<td>
+`validations[*].minValue`
+</td>
+
+<td>
+必須
+</td>
+
+<td>
+整数
+</td>
+
+<td>
+ワークフロー入力値が指定されたminValueより大きいことを検証します。
+</td>
+</tr>
+
+<tr>
+<td>
+`maxLength`
+</td>
+
+<td>
+`validations[*].length`
+</td>
+
+<td>
+必須
+</td>
+
+<td>
+整数
+</td>
+
+<td>
+ワークフロー入力文字列とコレクションの最大長を検証します（`Array`、`Set`、`Map`、およびその他のコレクションタイプ）。
+</td>
+</tr>
+</tbody>
+</table>
+
+## 式とシークレット [#expressions-and-secrets]
+
+### 式文字列 [#expression-strings]
+
+いくつかのプロパティは、実行時にワークフローが評価する式が埋め込まれた文字列値を受け入れ、ワークフロー定義で動的な値を有効にします。
+
+式文字列には、二重波括弧で囲まれた1つ以上の式を含めることができます。[jq](https://jqlang.org/manual/)は括弧内のコンテンツを評価し、値へのアクセス、フィルタリング、および変換を可能にします。
+
+次の例では、ワークフローの入力文字列の長さを取得します。
+
+`${{ .workflowInputs.myString | length }}`
+
+式を検証およびテストするには、 [JQ Playground](https://play.jqlang.org/)を使用します。
+
+### 式のプロパティ [#expression-properties]
+
+これらのプロパティには式を使用してアクセスできます。これらは`scope`オブジェクト内に存在するため、スコープオブジェクトのこれらのプロパティにアクセスするには、式をピリオド`(.)`で開始する必要があります。
+
+利用可能なプロパティは次のとおりです。
+
+* `workflowInputs` — 開始時にワークフローに渡される入力を含むオブジェクト。
+
+  **例**: `${{ .workflowInputs.myInput }}`
+
+* `workflowState` — 現在のワークフローの実行中に`state`ステップによって保存されたキーと値のペアを含むオブジェクト。
+
+  **例**（フラットキー、ネストされたプロパティ、配列インデックス）：`${{ .workflowState.myKey }}` · `${{ .workflowState.myMap.nestedProperty }}` · `${{ .workflowState.myList[0] }}`
+
+* `steps` — ワークフロー内の各ステップのプロパティを含むオブジェクト。
+
+  * `steps.<stepName>` — 特定のステップのプロパティを含むオブジェクト。
+  * `steps.<stepName>.outputs` — ステップまたはアクションに固有の結果プロパティを含むオブジェクト。
+
+  **例**: `${{ .steps.myStep.outputs.myResult }}`
+
+### 表現評価結果 [#expression-evaluation-results]
+
+単一の jq 式は任意の JSON 型に評価できます。ただし、式文字列の最終結果は、文字列に式のみが含まれているか、追加のコンテンツが含まれているかによって異なります。
+
+#### 単一の式（JSONタイプを保持）
+
+式文字列が周囲のコンテンツを持たない1つの式のみで構成されている場合、元のJSONタイプを維持しながらjq式の結果として評価されます。たとえば、`${{ .workflowInputs.myArray }}`は配列として評価されます。これにより、ステップ間で複雑なデータ構造を渡すときにそのタイプが保持されます。
+
+#### 複数の式または混合コンテンツ（文字列に変換されます）
+
+式文字列に単一の式以外のコンテンツが含まれている場合、文字列の結果として評価されます。これは、式の前後にコンテンツがある場合、または文字列内に複数の式がある場合に発生します。jqは各式を評価し、文字列表現に変換します。
+
+<Callout variant="important">
+jq式がnullと評価された場合、nullノードが返されます。たとえば、`missingInput`がワークフロー入力として指定されていない場合、式`${{ .workflowInputs.missingInput }}`はnullを返します。
+</Callout>
+
+次の例では、値`[1, 2, 3]`で`myArray`を使用しています。
+
+<table>
+<thead>
+<tr>
+<th>
+式文字列
+</th>
+
+<th>
+結果データ
+</th>
+
+<th>
+結果タイプ
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`${{ .workflowInputs.myArray }}`
+</td>
+
+<td>
+`[1, 2, 3]`
+</td>
+
+<td>
+数字の配列
+</td>
+</tr>
+
+<tr>
+<td>
+`${{ .workflowInputs.myArray | length }}`
+</td>
+
+<td>
+3
+</td>
+
+<td>
+数
+</td>
+</tr>
+
+<tr>
+<td>
+`${{ .workflowInputs.myArray | length > 0 }}`
+</td>
+
+<td>
+トゥルー
+</td>
+
+<td>
+ブール値
+</td>
+</tr>
+
+<tr>
+<td>
+`Input is not empty: ${{ .workflowInputs.myArray | length > 0 }}`
+</td>
+
+<td>
+`"Input is not empty: true"`
+</td>
+
+<td>
+弦
+</td>
+</tr>
+
+<tr>
+<td>
+`${{ .workflowInputs.myArray }} has length ${{ .workflowInputs.myArray | length }}`
+</td>
+
+<td>
+`"has length 3"`
+</td>
+
+<td>
+弦
+</td>
+</tr>
+</tbody>
+</table>
+
+### 表現安全なパターン [#expression-safe-pattern]
+
+式で使用するプロパティは、次に準拠する必要があります： `^[A-Za-z_][A-Za-z0-9_]*$`
+
+### 秘密の参照 [#secret-references]
+
+Secrets Serviceで検索するシークレットの名前を指定する参照文字列を提供して、アクションでシークレット値を使用します。ワークフロー定義でシークレットを参照するには、次の構文を使用します：
+
+* `${{ :secrets:<SECRET_NAME> }}` 秘密は `namespace`
+* `${{ :secrets:<NAMESPACE>:<SECRET_NAME> }}` 秘密のために `namespace`
+* `${{ :secrets:<SCOPE>:<NAMESPACE>:<SECRET_NAME> }}` スコープおよびネームスペース内のシークレットの場合
+
+`SCOPE` `ACCOUNT`または`ORGANIZATION`を受け付けます。
+
+式文字列には、jq式、シークレット参照、またはその両方を含めることができます。
+
+次は、アクションで使用されるシークレット参照の例です：
+
+```yaml
+  steps:
+  - name: mySecretStep
+    type: action
+    action: newrelic.instrumentation.log
+    inputs:
+      message: My message
+      licenseKey: ${{ :secrets:<SECRET_NAME> }}
+```
+
+```yaml
+  steps:
+    - name: bearer_auth
+      type: action
+      action: utils.http.post
+      inputs:
+        headers:
+          Authorization: Bearer ${{ :secrets:<SECRET_NAME> }}
+```
+
+## 完全な例 [#examples]
+
+### カレンダーのデモ [#calendar-demo]
+
+この完全なワークフローの例では、ワークフロー定数、セレクター、待機ステップ、NRDBクエリ、switch文など、複数のワークフロー機能を示しています。
+
+```yaml
+name: calendar_demo
+
+steps:
+  - name: getUserCreated
+    type: action
+    action: newrelic.nerdgraph.execute
+    version: 1
+    inputs:
+      graphql: |
+        {
+          actor {
+            user {
+              id
+              createdAt
+              timeZoneName
+            }
+          }
+        }
+      selectors:
+        - name: id
+          expression: ".data.actor.user.id"
+        - name: createdAt
+          expression: ".data.actor.user.createdAt"
+        - name: timeZoneName
+          expression: ".data.actor.user.timeZoneName"
+
+  - name: getCreatedTime
+    type: action
+    action: utils.datetime.fromEpoch
+    version: 1
+    inputs:
+      timestamp: ${{ .steps.getUserCreated.outputs.createdAt }}
+      pattern: "yyyy-MM-dd HH:mm:ss"
+      timezoneId: ${{ .steps.getUserCreated.outputs.timeZoneName }}
+      selectors:
+        - name: datetime
+          expression: ".datetime"
+        - name: abbreviation
+          expression: ".timezone.abbreviation"
+
+  - name: logTime
+    type: action
+    action: newrelic.ingest.sendLogs
+    version: 1
+    inputs:
+      logs:
+        - message: "Demo ${{ .workflowConstants.runId }} userId ${{ .steps.getUserCreated.outputs.id }} created at ${{ .steps.getCreatedTime.outputs.datetime }} ${{ .steps.getCreatedTime.outputs.abbreviation }}"
+
+  - name: wait
+    type: wait
+    seconds: 1
+
+  - name: queryForLog
+    type: action
+    action: newrelic.nrdb.query
+    version: 1
+    inputs:
+      query: "FROM Log SELECT message, timestamp SINCE 5 minute ago WHERE message LIKE 'Demo ${{ .workflowConstants.runId }} userId ${{ .steps.getUserCreated.outputs.id }} created at%'"
+
+  - name: checkQuery
+    type: switch
+    switch:
+      - condition: ${{ .steps.queryForLog.outputs.results | length > 0 }}
+        next: postResultsMessage
+
+  - name: postWaitingMessage
+    type: action
+    action: newrelic.ingest.sendLogs
+    version: 1
+    inputs:
+      logs:
+        - message: "Waiting for log message..."
+    next: wait
+
+  - name: postResultsMessage
+    type: action
+    action: newrelic.ingest.sendLogs
+    version: 1
+    inputs:
+      logs:
+        - message: "Found log message! ${{ .steps.queryForLog.outputs.results[0].message }}"
+```
+
+## 関連トピック [#related-topics]
+
+<DocTiles>
+<UserJourneyControls previousStep={{"path":"/docs/workflow-automation/workflow-automation-apis/using-workflow-automation-api","title":"APIリファレンスの概要","body":"ワークフロー自動化 API の完全なリファレンス ガイド"}} />
+
+<DocTile title="ワークフローの例" path="/docs/workflow-automation/workflow-examples/workflow-examples">
+実際のワークフロー例でスキーマの動作を確認する
+</DocTile>
+
+<DocTile title="ワークフロー定義を作成する" path="/docs/workflow-automation/workflow-automation-apis/create-workflow-definition">
+NerdGraph APIを使用して新しいワークフロー定義を作成する
+</DocTile>
+
+<DocTile title="ワークフロー定義の検証" path="/docs/workflow-automation/workflow-automation-apis/validate-workflow-definition">
+デプロイメントの前にワークフロー YAML 構文を検証する
+</DocTile>
+
+<DocTile title="アクションカタログ" path="/docs/workflow-automation/setup-and-configure/actions-catalog/actions-catalog">
+利用可能なすべてのアクションとその入力/出力スキーマを参照します
+</DocTile>
+</DocTiles>

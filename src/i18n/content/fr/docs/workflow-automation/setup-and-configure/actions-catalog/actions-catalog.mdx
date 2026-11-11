@@ -1,0 +1,281 @@
+---
+title: Catalogue des actions
+tags:
+  - workflow automation
+  - workflow
+  - workflow automation actions
+  - actions catalog
+  - Ansible
+  - AWS
+  - Azure
+  - GitHub
+  - HTTP
+  - New Relic
+  - Jenkins
+  - PagerDuty
+  - ServiceNow
+  - Slack
+metaDescription: 'Complete reference for all New Relic workflow automation actions. Browse actions for Ansible, AWS, Azure, GitHub, HTTP, Jenkins, New Relic, PagerDuty, ServiceNow, Slack, and more — with action identifiers, descriptions, and links to full documentation.'
+freshnessValidatedDate: '2026-09-18T00:00:00.000Z'
+translationType: machine
+---
+
+Le catalogue d’actions New Relic fournit des actions prédéfinies pour les fournisseurs cloud, les outils DevOps, les plateformes ITSM et la propre plateforme de New Relic. Utilisez ces actions comme étapes dans vos automatisations de workflow pour déclencher des déploiements, gérer les incidents et automatiser les tâches opérationnelles à travers vos outils et services.
+
+Les actions suivent une convention de dénomination hiérarchique : `company.product.action`
+
+## Actions d’authentification [#authentication]
+
+Créez un jeton Web JSON (JWT) pour un accès API sécurisé.
+
+* [**Actions JWT d&apos;authentification**](/docs/workflow-automation/setup-and-configure/actions-catalog/auth/auth-jwt-create#auth.jwt.create)
+
+## Actions Ansible [#ansible-actions]
+
+Lancer des modèles de job Ansible Automation Platform, et interroger le statut des jobs.
+
+* [**Actions de tâche Ansible**](/docs/workflow-automation/setup-and-configure/actions-catalog/ansible/ansible-job)
+* [**Lancement d&apos;un modèle de tâche Ansible**](/docs/workflow-automation/setup-and-configure/actions-catalog/ansible/ansible-job-launch)
+* [**Obtenir le statut d&apos;un job Ansible**](/docs/workflow-automation/setup-and-configure/actions-catalog/ansible/ansible-job-getstatus)
+
+## Actions AWS [#aws-actions]
+
+Automatisez la gestion de l’infrastructure AWS sur EC2, Lambda, S3, SES, et plus encore. Consultez [Configuration des identifiants AWS](/docs/workflow-automation/setup-and-configure/set-up-aws-credentials) pour les instructions de configuration.
+
+* [**AWS Athéna**](/docs/workflow-automation/setup-and-configure/actions-catalog/aws/athena/aws-athena)
+* [**Mise à l&apos;échelle automatique AWS**](/docs/workflow-automation/setup-and-configure/actions-catalog/aws/autoscaling/aws-autoscaling)
+* [**Base AWS**](/docs/workflow-automation/setup-and-configure/actions-catalog/aws/bedrock/aws-bedrock)
+* [**AWS CloudWatch**](/docs/workflow-automation/setup-and-configure/actions-catalog/aws/cloudwatch/aws-cloudwatch)
+* [**AWS DynamoDB**](/docs/workflow-automation/setup-and-configure/actions-catalog/aws/dynamodb/aws-dynamodb)
+* [**AWS EC2**](/docs/workflow-automation/setup-and-configure/actions-catalog/aws/ec2/aws-ec2)
+* [**AWS EventBridge**](/docs/workflow-automation/setup-and-configure/actions-catalog/aws/eventbridge/aws-eventbridge)
+* [**AWS Execute API**](/docs/workflow-automation/setup-and-configure/actions-catalog/aws/execute-api/aws-execute-api)
+* [**AWS Lambda**](/docs/workflow-automation/setup-and-configure/actions-catalog/aws/lambda/aws-lambda)
+* [**API de tag AWS Resource Groups**](/docs/workflow-automation/setup-and-configure/actions-catalog/aws/resourcetagging/aws-resourcetagging)
+* [**AWS S3**](/docs/workflow-automation/setup-and-configure/actions-catalog/aws/s3/aws-s3)
+* [**AWS SES**](/docs/workflow-automation/setup-and-configure/actions-catalog/aws/ses/aws-ses)
+* [**SNSAWS**](/docs/workflow-automation/setup-and-configure/actions-catalog/aws/sns/aws-sns)
+* [**AWS SQS**](/docs/workflow-automation/setup-and-configure/actions-catalog/aws/sqs/aws-sqs)
+* [**Fonctions d&apos;étape AWS**](/docs/workflow-automation/setup-and-configure/actions-catalog/aws/stepfunctions/aws-stepfunctions)
+* [**AWS Systems Manager**](/docs/workflow-automation/setup-and-configure/actions-catalog/aws/systemsmanager/aws-systemsmanager)
+
+## Actions Azure [#azure-actions]
+
+Exécutez des opérations d&apos;API Azure pour gérer et automatiser l&apos;infrastructure et les services Azure. Consultez la [documentation de l&apos;API Azure](/docs/workflow-automation/setup-and-configure/actions-catalog/azure/azure-execute-api) pour les exigences de configuration.
+
+* [**Pool de mise à l&apos;échelle Azure AKS**](/docs/workflow-automation/setup-and-configure/actions-catalog/azure/azure-aks-scalepool)
+* [**Actions d&apos;Azure App Service**](/docs/workflow-automation/setup-and-configure/actions-catalog/azure/azure-appservice)
+* [**Obtenir un Azure App Service**](/docs/workflow-automation/setup-and-configure/actions-catalog/azure/azure-appservice-get)
+* [**Lister les services d&apos;application Azure**](/docs/workflow-automation/setup-and-configure/actions-catalog/azure/azure-appservice-list)
+* [**Démarrer un service d’application Azure**](/docs/workflow-automation/setup-and-configure/actions-catalog/azure/azure-appservice-start)
+* [**Arrêter un service d&apos;application Azure**](/docs/workflow-automation/setup-and-configure/actions-catalog/azure/azure-appservice-stop)
+* [**Redémarrage d&apos;Azure App Service**](/docs/workflow-automation/setup-and-configure/actions-catalog/azure/azure-appservice-restart)
+* [**Actions Azure Cosmos DB**](/docs/workflow-automation/setup-and-configure/actions-catalog/azure/azure-cosmos-db)
+* [**Exécuter une API Azure DevOps**](/docs/workflow-automation/setup-and-configure/actions-catalog/azure/azure-devops-api)
+* [**Azure Exécuter l&apos;API**](/docs/workflow-automation/setup-and-configure/actions-catalog/azure/azure-execute-api)
+* [**Invocation d&apos;Azure Functions**](/docs/workflow-automation/setup-and-configure/actions-catalog/azure/azure-functions-invoke)
+* [**Requête de logs Azure Monitor**](/docs/workflow-automation/setup-and-configure/actions-catalog/azure/azure-monitor-querylogs)
+* [**Redémarrage de machine virtuelle Azure**](/docs/workflow-automation/setup-and-configure/actions-catalog/azure/azure-vm-restart)
+* [**Arrêt de machine virtuelle Azure**](/docs/workflow-automation/setup-and-configure/actions-catalog/azure/azure-vm-stop)
+
+## Actions GitHub [#github-actions]
+
+Gérer les tickets GitHub, et déclencher, récupérer, et lister les exécutions de workflow GitHub Actions.
+
+* [**Actions sur les tickets GitHub**](/docs/workflow-automation/setup-and-configure/actions-catalog/github/github-issue)
+* [**Créer un problème GitHub**](/docs/workflow-automation/setup-and-configure/actions-catalog/github/github-issue-create)
+* [**Mettre à jour un ticket GitHub**](/docs/workflow-automation/setup-and-configure/actions-catalog/github/github-issue-update)
+* [**Obtenir un ticket GitHub**](/docs/workflow-automation/setup-and-configure/actions-catalog/github/github-issue-get)
+* [**Lister les tickets GitHub**](/docs/workflow-automation/setup-and-configure/actions-catalog/github/github-issue-list)
+* [**Verrouiller un problème GitHub**](/docs/workflow-automation/setup-and-configure/actions-catalog/github/github-issue-lock)
+* [**Déverrouiller un ticket GitHub**](/docs/workflow-automation/setup-and-configure/actions-catalog/github/github-issue-unlock)
+* [**Commenter un problème GitHub**](/docs/workflow-automation/setup-and-configure/actions-catalog/github/github-issue-comment)
+* [**Actions d’exécution du workflow GitHub**](/docs/workflow-automation/setup-and-configure/actions-catalog/github/github-workflow-run)
+* [**Déclencher l&apos;exécution d&apos;un workflow GitHub**](/docs/workflow-automation/setup-and-configure/actions-catalog/github/github-workflow-run-trigger)
+* [**Obtenir une exécution de workflow GitHub**](/docs/workflow-automation/setup-and-configure/actions-catalog/github/github-workflow-run-get)
+* [**Lister les exécutions de workflow GitHub**](/docs/workflow-automation/setup-and-configure/actions-catalog/github/github-workflow-run-list)
+* [**Obtenir la dernière exécution de workflow GitHub**](/docs/workflow-automation/setup-and-configure/actions-catalog/github/github-workflow-run-get-latest)
+
+## Actions Jira [#jira-actions]
+
+Créer, mettre à jour, obtenir, rechercher, et faire transiter des tickets Jira.
+
+* [**Actions sur les tickets Jira**](/docs/workflow-automation/setup-and-configure/actions-catalog/jira/jira-issue)
+* [**Créer un problème Jira**](/docs/workflow-automation/setup-and-configure/actions-catalog/jira/jira-issue-create)
+* [**Mettre à jour un ticket Jira**](/docs/workflow-automation/setup-and-configure/actions-catalog/jira/jira-issue-update)
+* [**Obtenir un ticket Jira**](/docs/workflow-automation/setup-and-configure/actions-catalog/jira/jira-issue-get)
+* [**Rechercher des tickets Jira**](/docs/workflow-automation/setup-and-configure/actions-catalog/jira/jira-issue-search)
+* [**Obtenir les transitions de ticket Jira**](/docs/workflow-automation/setup-and-configure/actions-catalog/jira/jira-issue-gettransitions)
+* [**Faites la transition d’un ticket Jira**](/docs/workflow-automation/setup-and-configure/actions-catalog/jira/jira-issue-dotransition)
+
+## Actions Jenkins [#jenkins-actions]
+
+Déclencher, monitorer, arrêter, et supprimer des builds Jenkins, et gérer la file d&apos;attente des builds.
+
+* [**Actions de job Jenkins**](/docs/workflow-automation/setup-and-configure/actions-catalog/jenkins/jenkins-job)
+* [**Actions de la file d’attente Jenkins**](/docs/workflow-automation/setup-and-configure/actions-catalog/jenkins/jenkins-queue)
+
+## actions HTTP [#http-actions]
+
+Effectuer des requêtes HTTP vers n&apos;importe quelle API REST, webhook ou service Web.
+
+* [**actions HTTP**](/docs/workflow-automation/setup-and-configure/actions-catalog/http/http)
+* [**HTTP Get**](/docs/workflow-automation/setup-and-configure/actions-catalog/http/http-get)
+* [**HTTP Post**](/docs/workflow-automation/setup-and-configure/actions-catalog/http/http-post)
+* [**HTTP Put**](/docs/workflow-automation/setup-and-configure/actions-catalog/http/http-put)
+* [**HTTP Delete**](/docs/workflow-automation/setup-and-configure/actions-catalog/http/http-delete)
+
+## Actions de New Relic [#new-relic-actions]
+
+Automatiser les opérations de la plateforme New Relic directement depuis vos workflows.
+
+### IA
+
+Exécuter des agents d&apos;IA configurés dans Agentic Platform, et déclencher New Relic Autopilot.
+
+* [**Actions de l&apos;agent New Relic**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/ai/newrelic-agent)
+* [**Exécuter l’action Autopilot**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/ai/newrelic-autopilot)
+
+### Alertes
+
+Créez, mettez à jour, supprimez, récupérez, et recherchez des règles d’alerte, des conditions NRQL, et des règles de mise en sourdine.
+
+* [**Actions d&apos;alertes New Relic**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts)
+* [**Créer une règle d&apos;alerte**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-create-policy)
+* [**Mettre à jour une règle d’alerte**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-update-policy)
+* [**Supprimer une règle d’alerte**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-delete-policy)
+* [**Obtenir une règle d’alerte**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-get-policy)
+* [**Rechercher des règles d’alerte**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-search-policies)
+* [**Créer une condition NRQL statique**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-create-static-nrql-condition)
+* [**Mettre à jour une condition NRQL statique**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-update-static-nrql-condition)
+* [**Créer une condition NRQL de base de référence**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-create-baseline-nrql-condition)
+* [**Mettre à jour une condition NRQL de base de référence**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-update-baseline-nrql-condition)
+* [**Obtenir une condition NRQL**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-get-nrql-condition)
+* [**Supprimer une condition d&apos;alerte**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-delete-condition)
+* [**Rechercher des conditions NRQL**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-search-nrql-conditions)
+* [**Rechercher en tant que conditions NRQL**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-search-as-nrql-conditions)
+* [**Lister les conditions composées**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-list-compound-conditions)
+* [**Créer une règle de mise en sourdine**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-create-muting-rule)
+* [**Mettre à jour une règle de mise en sourdine**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-update-muting-rule)
+* [**Supprimer une règle de mise en sourdine**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-delete-muting-rule)
+* [**Obtenir une règle de mise en sourdine**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-get-muting-rule)
+* [**Lister les règles de mise en sourdine**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/alerts/newrelic-alerts-list-muting-rules)
+
+### Ingestion
+
+Envoyer des événements personnalisés, des logs, et des métriques à New Relic.
+
+* [**Actions New Relic Ingest**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/ingest/newrelic-ingest)
+* [**Envoyer des événements à New Relic**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/ingest/newrelic-ingest-send-events)
+* [**Envoyer les logs à New Relic**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/ingest/newrelic-ingest-send-logs)
+* [**Envoyer des métriques à New Relic**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/ingest/newrelic-ingest-send-metrics)
+
+### Problème
+
+Acquittez, désacquittez, résolvez, et listez les problèmes d&apos;Alert Intelligence.
+
+* [**Actions New Relic Issue**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/issue/newrelic-issue)
+* [**Acquitter un problème New Relic**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/issue/newrelic-issue-acknowledge)
+* [**Annuler l&apos;acquittement d&apos;un problème New Relic**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/issue/newrelic-issue-unacknowledge)
+* [**Résoudre un problème New Relic**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/issue/newrelic-issue-resolve)
+* [**Lister les problèmes New Relic**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/issue/newrelic-issue-list)
+
+### Log configurations
+
+Query log configuration resources — parsing rules, data partition rules, obfuscation expressions and rules, and pipeline settings — and validate Grok patterns and update pipeline configuration.
+
+* [**New Relic log configuration actions**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/log-configurations/newrelic-log-configurations)
+
+### Notification
+
+Envoyez des notifications aux destinations New Relic configurées, y compris l&apos;e-mail, Slack, et Microsoft Teams.
+
+* [**Actions de notification New Relic**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/notification/newrelic-notification)
+* [**Envoyer une notification**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/notification/newrelic-notification-send)
+* [**Envoyer une notification Microsoft Teams**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/notification/newrelic-notification-sendmicrosoftteams)
+* [**Envoyer un e-mail**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/notification/newrelic-notification-sendemail)
+* [**Envoyer un message Slack**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/notification/newrelic-notification-sendslack)
+* [**Créer une URL de signal**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/notification/newrelic-notification-createsignalurl)
+* [**Attendez le statut de la notification**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/notification/newrelic-notification-waitforstatus)
+* [**Exécuter un workflow**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/notification/newrelic-workflowautomation-startworkflowrun)
+
+### Qequête
+
+Exécuter des requêtes NRQL, des requêtes et des mutations NerdGraph, et des requêtes SQL Lens.
+
+* [**Actions New Relic NRDB**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/query/newrelic-nrdb)
+* [**Actions New Relic NerdGraph**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/query/newrelic-nerdgraph)
+* [**Actions New Relic Lens**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/query/newrelic-lens)
+
+### Secret
+
+Listez les secrets et l&apos;historique des versions de secrets dans New Relic Secrets Management.
+
+* [**Actions de secret New Relic**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/secret/newrelic-secret)
+
+### Niveau de service
+
+Créer, mettre à jour, supprimer, et lister des SLI.
+
+* [**Actions de niveau de service New Relic**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/service-level/newrelic-service-level)
+
+### Synthetics
+
+Déclencher des exécutions de tests à la demande, gérer les temps d’arrêt à monitorer, et lire les détails à monitorer.
+
+* [**Actions de New Relic Synthetics**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/synthetics/newrelic-synthetics)
+
+### Tag
+
+Ajoutez, remplacez, et supprimez des tags sur les entités New Relic.
+
+* [**Actions de tag New Relic**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/tagging/newrelic-tagging)
+* [**Ajoutez des tags à une entité New Relic**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/tagging/newrelic-tagging-addtags)
+* [**Remplacer les tags sur une entité New Relic**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/tagging/newrelic-tagging-replacetags)
+* [**Supprimer des tags d&apos;une entité New Relic**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/tagging/newrelic-tagging-deletetags)
+* [**Supprimer les valeurs de tag d&apos;une entité New Relic**](/docs/workflow-automation/setup-and-configure/actions-catalog/newrelic/tagging/newrelic-tagging-deletetagvalues)
+
+## Actions Slack [#slack-actions]
+
+Publier des messages sur les canaux Slack, et obtenir les réactions aux messages.
+
+* [**Actions de chat Slack**](/docs/workflow-automation/setup-and-configure/actions-catalog/slack/slack-chat)
+* [**Publier un message Slack**](/docs/workflow-automation/setup-and-configure/actions-catalog/slack/slack-chat-post-message)
+* [**Récupérer les réactions aux messages Slack**](/docs/workflow-automation/setup-and-configure/actions-catalog/slack/slack-chat-get-reactions)
+
+## Actions de PagerDuty [#pagerduty-actions]
+
+Créer, obtenir, lister, mettre à jour, et résoudre des incidents PagerDuty.
+
+* [**Actions d&apos;incident PagerDuty**](/docs/workflow-automation/setup-and-configure/actions-catalog/pagerduty/pagerduty-incident)
+* [**Créer un incident PagerDuty**](/docs/workflow-automation/setup-and-configure/actions-catalog/pagerduty/pagerduty-incident-create)
+* [**Signalez un incident PagerDuty**](/docs/workflow-automation/setup-and-configure/actions-catalog/pagerduty/pagerduty-incident-get)
+* [**Liste des incidents PagerDuty**](/docs/workflow-automation/setup-and-configure/actions-catalog/pagerduty/pagerduty-incident-list)
+* [**Mettre à jour un incident PagerDuty**](/docs/workflow-automation/setup-and-configure/actions-catalog/pagerduty/pagerduty-incident-update)
+* [**Résoudre un incident PagerDuty**](/docs/workflow-automation/setup-and-configure/actions-catalog/pagerduty/pagerduty-incident-resolve)
+
+## Actions ServiceNow [#servicenow-actions]
+
+Créez, obtenez, listez, mettez à jour, et résolvez les incidents ServiceNow.
+
+* [**Actions d&apos;incident ServiceNow**](/docs/workflow-automation/setup-and-configure/actions-catalog/servicenow/servicenow-incident)
+* [**Créer un incident ServiceNow**](/docs/workflow-automation/setup-and-configure/actions-catalog/servicenow/servicenow-incident-create)
+* [**Obtenir un incident ServiceNow**](/docs/workflow-automation/setup-and-configure/actions-catalog/servicenow/servicenow-incident-get)
+* [**Lister les incidents ServiceNow**](/docs/workflow-automation/setup-and-configure/actions-catalog/servicenow/servicenow-incident-list)
+* [**Mettre à jour un incident ServiceNow**](/docs/workflow-automation/setup-and-configure/actions-catalog/servicenow/servicenow-incident-update)
+* [**Résoudre un incident ServiceNow**](/docs/workflow-automation/setup-and-configure/actions-catalog/servicenow/servicenow-incident-resolve)
+
+## Utilitaires [#utilities]
+
+Actions d&apos;assistance pour la transformation des données, l&apos;exécution de scripts et les opérations utilitaires.
+
+* [**Exécuter un script**](/docs/workflow-automation/setup-and-configure/actions-catalog/utils/script-run)
+* [**Utilitaires Datetime**](/docs/workflow-automation/setup-and-configure/actions-catalog/utils/utils-datetime)
+* [**Utilitaires de transformation**](/docs/workflow-automation/setup-and-configure/actions-catalog/utils/utils-transform)
+* [**Utilitaires UUID**](/docs/workflow-automation/setup-and-configure/actions-catalog/utils/utils-uuid)
+
+## Et ensuite ?
+
+* **[Exemples de workflow](/docs/workflow-automation/workflow-examples/workflow-examples)**: consultez des exemples de workflow concrets utilisant ces actions.
+* **[Utilisez un modèle](/docs/workflow-automation/create-a-workflow-automation/use-a-template)**: déployez un workflow préconfiguré pour les scénarios courants.
+* **[Créez votre propre workflow](/docs/workflow-automation/create-a-workflow-automation/create-your-own)**: Concevez un workflow personnalisé à partir de zéro.

@@ -1,0 +1,80 @@
+---
+title: Create a compound alert condition
+tags:
+  - Alerts
+  - Compound alerts
+metaDescription: 'Step-by-step instructions for creating and managing compound alert conditions in New Relic.'
+freshnessValidatedDate: never
+---
+
+To create a compound alert condition,
+
+1. Go to <DNT>**Alerts > Compound Alerts**</DNT>.
+
+2. All component conditions must be from the same owning account. Select it from the dropdown.
+
+   <Callout variant="tip">
+   To include a condition that targets data from another account, set up a cross-account alert condition in the same owning account as the compound alert.
+   </Callout>
+
+3. Click <DNT>**Create a compound alert**</DNT> and enter a name for the compound alert.
+
+4. Click <DNT>**Add conditions**</DNT> and choose up to five conditions. Each condition is automatically assigned a variable <DNT>(a, b, c, d, e)</DNT> for use in the trigger expression. You can only select standard alert conditions, not other compound alert conditions. See [compound alert limitations](/docs/alerts/create-alert/create-alert-condition/compound-alerts/compound-alerts#limitations) for all restrictions.
+
+   <img
+     title="Condition selection in compound alert builder"
+     alt="A screenshot dispaying the condition selection process in the compound alert builder"
+     src="/images/select-2-5-alerts.webp"
+   />
+
+   <Callout variant="important">
+   Each condition may have multiple thresholds like warning, critical, or loss of signal. When any threshold of a condition is met, that condition is treated as triggered in the compound expression.
+   </Callout>
+
+5. If your conditions share facets, select the checkbox to trigger only when the same facet value meets thresholds across all conditions. Leave it unselected to trigger regardless of matching facet values.
+
+   <Callout variant="tip">
+   When a condition is faceted by multiple attributes, a match occurs when at least one attribute is the same across conditions.
+   </Callout>
+
+6. To define how conditions should work together, in the **Tell us how you want these conditions to work together** field, write a trigger expression using the assigned variables and logical operators <DNT>(AND, OR, NOT)</DNT>. Use parentheses to group expressions for complex logic.
+
+   Examples: <DNT>`a AND b`, `a OR b OR c`, `a AND (b OR c)`, `a AND NOT b`, `a AND (b OR c) AND NOT d`</DNT>
+
+7. Set the **Threshold duration** to control how long the trigger expression must remain true before an alert event opens.
+
+8. From the <DNT>**Policy**</DNT> dropdown, select a policy. Learn more about [alert policies](/docs/alerts/organize-alerts/create-edit-or-find-alert-policy/).
+
+   <Callout variant="tip">
+   To group compound and component alert events into the same issue, configure your component conditions to use the same policy you select here.
+   </Callout>
+
+9. (Optional) Set a <DNT>**Title template**</DNT> and <DNT>**Description template**</DNT> to customize how this condition's issues appear. See [Title and description templates](#title-description-templates) for details.
+
+10. (Optional) To link to your incident-handling procedure, add a <DNT>**Runbook URL**</DNT>. New Relic includes this URL in notifications.
+
+11. Toggle <DNT>**Enable on save**</DNT> to activate the condition immediately.
+
+12. Review your configuration, then save. The condition appears on the <DNT>**Compound Alerts**</DNT> page.
+
+## Manage compound alert conditions [#manage-compound-alerts]
+
+To view all compound alert conditions, go to <DNT>**Alerts > Compound Alerts**</DNT>.
+
+* <DNT>**Edit**</DNT>: Click any compound alert name to edit its configuration, including its title and description templates. Changes to component conditions automatically reflect in the compound alert.
+* <DNT>**Delete**</DNT>: Click <Icon name="fe-more-horizontal"/> > <DNT>**Delete**</DNT>. Deleting a compound alert doesn't delete the individual component conditions — those remain active individually.
+
+## Title and description templates [#title-description-templates]
+
+Use the <DNT>**Title template**</DNT> and <DNT>**Description template**</DNT> fields to control how a compound alert condition's issues are titled and described:
+
+* <DNT>**Title template**</DNT>: Replaces the system-generated issue title with your own text, so you can tell at a glance which issues come from a compound condition.
+* <DNT>**Description template**</DNT>: Adds a description of the compound condition. It's displayed on the issue page, under the alert events section.
+
+Both fields support Handlebars variables, such as <DNT>`{{ policy.name }}`</DNT>, to dynamically pull in condition details.
+
+<Callout variant="tip">
+If you save a template with invalid Handlebars syntax, the condition still saves. A variable that doesn't resolve simply won't render in the title or description.
+</Callout>
+
+To see how these templates appear on the issue page, see [Custom titles and descriptions](/docs/alerts/create-alert/create-alert-condition/compound-alerts/compound-alert-events#custom-title-description).

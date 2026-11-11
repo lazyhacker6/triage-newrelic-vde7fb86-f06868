@@ -1,0 +1,118 @@
+---
+title: Install the New Relic Ruby agent
+tags:
+  - Agents
+  - Ruby agent
+  - Installation
+translate:
+  - jp
+metaDescription: Install New Relic's Ruby agent to start monitoring your Ruby application.
+redirects:
+  - /docs/agents/ruby-agent/installation/install-new-relic-ruby-agent
+  - /docs/docs/ruby-agent-installation-gem
+  - /docs/ruby/manually-configuring-the-ruby-agent
+  - /docs/ruby/ruby-agent-installation
+  - /docs/agents/ruby-agent/installation-and-configuration/ruby-agent-installation
+  - /docs/agents/ruby-agent/installation-configuration/ruby-agent-installation
+  - /docs/agents/ruby-agent/installation/ruby-agent-installation
+freshnessValidatedDate: 2026-08-05
+---
+
+The Ruby agent auto-instruments your code so you can start monitoring applications.
+
+<Callout variant="tip">
+  Running on Kubernetes? See [Kubernetes APM auto-attach](/docs/kubernetes-pixie/kubernetes-integration/installation/k8s-agent-operator/).
+</Callout>
+
+## Prerequisites [#prerequisites]
+
+Check these requirements before you start.
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>Requirement</th>
+      <th>Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>**New Relic account**</td>
+      <td>You need a [New Relic account](https://newrelic.com/signup) and your <InlinePopover type="licenseKey"/>. Have it ready before you begin.</td>
+    </tr>
+    <tr>
+      <td>**Ruby version**</td>
+      <td>See [Ruby agent requirements and supported frameworks](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks) for supported Ruby versions.</td>
+    </tr>
+    <tr>
+      <td>**Operating system**</td>
+      <td>UNIX-like operating systems: Linux, Solaris, FreeBSD, and macOS. See [Ruby agent requirements and supported frameworks](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks) for details.</td>
+    </tr>
+  </tbody>
+</table>
+
+<Steps>
+  <Step>
+    ## Install the gem [#install]
+
+    Add the Ruby agent gem to your Gemfile:
+
+    ```ruby
+    gem 'newrelic_rpm'
+    ```
+
+    Then run:
+
+    ```sh
+    bundle install
+    ```
+
+    <Callout variant="important">
+      If you are using the agent in a Docker container, install the agent within each container. See [Install in GAE flexible environment](/docs/apm/agents/ruby-agent/installation/install-new-relic-ruby-agent-gae-flexible-environment) for a Docker-based deployment example.
+    </Callout>
+
+    **Framework-specific notes:**
+
+    * **Rails**: Rails automatically calls `Bundler.require`, so `newrelic_rpm` is required during startup with no additional steps.
+    * **Roda or Sinatra**: You must manually call `require 'newrelic_rpm'` in your application.
+    * **Other Rack apps**: To use automatic browser monitoring, manually include the [Rack middlewares](/docs/agents/ruby-agent/frameworks/rack-middlewares#manual) provided by the agent.
+  </Step>
+
+  <Step>
+    ## Configure the agent [#configure]
+
+    Download [`newrelic.yml`](https://github.com/newrelic/newrelic-ruby-agent/blob/dev/newrelic.yml) from the New Relic GitHub repository and copy it into the `config` directory of your application.
+
+    The only two settings you **must** change before going live:
+
+    1. Set `license_key` to your <InlinePopover type="licenseKey"/>.
+    2. Set `app_name` to a meaningful name for your application.
+
+    Alternatively, generate the config file with the CLI:
+
+    ```sh
+    newrelic install --license_key="YOUR_LICENSE_KEY" "YOUR_APP_NAME"
+    ```
+  </Step>
+
+  <Step>
+    ## Verify data is flowing [#verify]
+
+    1. Restart your web server.
+
+    2. Send at least two requests to your application.
+
+    3. Wait 2–3 minutes, then open [one.newrelic.com > APM](https://one.newrelic.com/apm) and look for your app by name.
+
+    <Callout variant="tip">
+      App not appearing? See [No data appears (Ruby)](/docs/apm/agents/ruby-agent/troubleshooting/no-data-appears-ruby).
+    </Callout>
+  </Step>
+</Steps>
+
+## Related articles [#related-docs]
+
+* [Ruby agent requirements and supported frameworks](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks) — Supported Ruby versions, operating systems, and frameworks.
+* [Ruby agent configuration](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration) — All available configuration settings.
+* [Update the Ruby agent](/docs/apm/agents/ruby-agent/installation/update-ruby-agent) — How to upgrade to a newer version.
+* [Ruby agent on Heroku](/docs/apm/agents/ruby-agent/installation/ruby-agent-heroku) — Installation steps specific to Heroku.

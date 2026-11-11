@@ -1,0 +1,27 @@
+---
+title: "NerdGraph tutorial: Export dashboards as files"
+tags:
+  - APIs
+  - NerdGraph
+  - Examples
+metaDescription: Use New Relic NerdGraph to export dashboards as PDF or PNG files programmatically.
+redirects:
+  - /docs/apis/nerdgraph/examples/export-dashboards-pdfpng-api-tutorial
+freshnessValidatedDate: never
+---
+
+You can export your <InlinePopover type="dashboards"/> as PDF or PNG files programmatically using the NerdGraph `dashboardCreateSnapshotUrl` mutation. You can also [export dashboards using the UI](/docs/query-your-data/explore-query-data/dashboards/dashboards-charts-import-export-data/#export-dashboards-pdf).
+
+For full documentation of the mutation, all available parameters, and examples — including variable overrides, custom dimensions, and per-widget chart image export — see [Export dashboards and charts via NerdGraph API](/docs/query-your-data/explore-query-data/dashboards/dashboards-charts-import-export-data/#export-api).
+
+## Troubleshooting [#troubleshooting]
+
+Here's what to do if you experience any of the following errors while trying to export a dashboard:
+
+* From New Relic UI: <DNT>**We ran into an error while creating the PDF. Please try again**</DNT>
+
+* From New Relic NerdGraph: <DNT>**Operation on dashboard entity failed with guid:YOUR_GUID with cause: Error 504: upstream request timeout**</DNT>
+
+These errors can occur if the export exceeds the API max response time. Check if any widgets on your dashboard use a large time window — for example, comparing data across an entire month. If so, try reducing the time window.
+
+Another possible cause is a dashboard with a large number of widgets. Try removing unused widgets to see if this resolves the error.

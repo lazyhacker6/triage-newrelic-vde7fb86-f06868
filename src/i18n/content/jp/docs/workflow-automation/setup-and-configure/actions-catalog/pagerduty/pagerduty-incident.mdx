@@ -1,0 +1,116 @@
+---
+title: PagerDutyインシデントアクション
+tags:
+  - workflow automation
+  - workflow
+  - workflow automation actions
+  - PagerDuty actions
+  - PagerDuty Incident actions
+metaDescription: 'Reference for all PagerDuty incident actions in the workflow automation actions catalog: create, get, list, update, and resolve incidents.'
+freshnessValidatedDate: '2026-09-18T00:00:00.000Z'
+translationType: machine
+---
+
+このページでは、ワークフロー自動化アクションカタログで利用可能なすべてのPagerDutyインシデントアクションのリファレンスを提供します。これらのアクションを使用すると、ワークフローから直接PagerDutyインシデントを作成、取得、一覧表示、更新、解決できます。
+
+## 前提条件
+
+ワークフロー自動化でPagerDutyアクションを使用する前に、以下が必要です：
+
+* インシデントを管理するための適切な権限を持つPagerDutyアカウント。
+* PagerDuty APIトークン（ユーザートークンまたはアカウントトークン）。
+* リクエストを行うユーザーの`from`メールアドレス（関連するアクションのアカウントトークンに必要）。
+
+## インシデント対応
+
+次の表に、利用可能なすべてのPagerDutyインシデントアクションを示します。
+
+<table>
+  <thead>
+    <tr>
+      <th>
+        アクション識別子
+      </th>
+
+      <th>
+        説明
+      </th>
+
+      <th>
+        参考
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        `pagerduty.incident.create`
+      </td>
+
+      <td>
+        新しいPagerDutyインシデントを作成します。
+      </td>
+
+      <td>
+        [PagerDutyインシデントを作成する](/docs/workflow-automation/setup-and-configure/actions-catalog/pagerduty/pagerduty-incident-create)
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `pagerduty.incident.get`
+      </td>
+
+      <td>
+        単一のPagerDutyインシデントの詳細を取得します。
+      </td>
+
+      <td>
+        [PagerDutyインシデントを入手](/docs/workflow-automation/setup-and-configure/actions-catalog/pagerduty/pagerduty-incident-get)
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `pagerduty.incident.list`
+      </td>
+
+      <td>
+        オプションのフィルタリングを使用してインシデントのリストを取得します。
+      </td>
+
+      <td>
+        [List PagerDuty](/docs/workflow-automation/setup-and-configure/actions-catalog/pagerduty/pagerduty-incident-list)
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `pagerduty.incident.update`
+      </td>
+
+      <td>
+        既存のPagerDutyインシデントを更新します。
+      </td>
+
+      <td>
+        [PagerDutyインシデントを更新する](/docs/workflow-automation/setup-and-configure/actions-catalog/pagerduty/pagerduty-incident-update)
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `pagerduty.incident.resolve`
+      </td>
+
+      <td>
+        PagerDutyのインシデントを解決します。
+      </td>
+
+      <td>
+        [PagerDutyを解決する](/docs/workflow-automation/setup-and-configure/actions-catalog/pagerduty/pagerduty-incident-resolve)
+      </td>
+    </tr>
+  </tbody>
+</table>

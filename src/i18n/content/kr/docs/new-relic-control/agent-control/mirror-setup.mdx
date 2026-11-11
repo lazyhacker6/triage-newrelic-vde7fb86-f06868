@@ -1,0 +1,89 @@
+---
+title: Agent Control을 위한 OCI 레지스트리 미러 구성
+metaDescription: Learn how to configure Agent Control to use an OCI registry mirror.
+tags:
+  - new-relic-control
+  - agent-control
+  - mirror-setup
+  - oci-registry
+  - artifacts
+  - linux
+  - windows
+freshnessValidatedDate: never
+translationType: machine
+---
+
+기본적으로 에이전트 컨트롤은 에이전트 패키지 및 에이전트 유형 정의를 다운로드하기 위해 docker.io를 오픈 컨테이너 이니셔티브(OCI) 레지스트리로 사용합니다. 에어 갭 환경과 같이 환경에 다른 레지스트리가 필요한 경우, 사용자 지정 OCI 레지스트리 또는 미러를 구성할 수 있습니다.
+
+## 서명된 아티팩트 미러링
+
+모든 에이전트 패키지 및 에이전트 유형 정의는 분리된 `sigstore/cosign` 서명 아티팩트로 서명됩니다. 에이전트 컨트롤 서명 확인이 계속 작동하도록 하려면 미러에서 패키지 자체와 함께 이 서명 아티팩트도 제공해야 합니다.
+
+## 시작하기 전에
+
+커스텀 OCI 레지스트리를 구성하기 전에 다음 사항을 확인하세요:
+
+1. **설치된 Agent Control:** 뉴렐릭 CLI를 사용하여 [Agent Control 설치](/docs/new-relic-control/agent-control/setup)를 완료합니다.
+2. **미러 레지스트리 사용 가능:** 호스트 머신에서 커스텀 OCI 레지스트리에 액세스할 수 있는지 확인하시기 바랍니다.
+3. **CA 인증서 설치됨:** 미러와 통신하는 데 필요한 인증 기관 인증서를 호스트 머신에 설치하십시오.
+
+## 호스트에서 구성
+
+호스트에 에이전트 제어를 설치한 후 사용자 지정 OCI 레지스트리를 구성하려면 다음 단계를 따르십시오:
+
+<Steps>
+  <Step>
+    ### 로컬 설정 파일을 수정합니다.
+
+    에이전트 컨트롤 로컬 설정 파일을 수정합니다:
+
+    * 리눅스: `/etc/newrelic-agent-control/local-data/agent-control/local_config.yaml`
+    * Windows: `C:\Program Files\New Relic\newrelic-agent-control\local-data\agent-control\local_config.yaml`
+
+    파일에 다음 설정 섹션을 추가합니다:
+
+    ```yaml
+    oci:
+      registry: YOUR_REGISTRY_URL
+    ```
+
+    사용자 이름 및 비밀번호를 설정해야 하는 경우 다음 스니펫을 사용하십시오:
+
+    ```yaml
+    oci:
+      registry: YOUR_REGISTRY_URL
+      auth:
+        basic:
+          username: YOUR_USERNAME
+          password: YOUR_PASSWORD
+    ```
+
+    플레이스홀더 값을 바꿉니다:
+
+    * `YOUR_REGISTRY_URL`: 사용자 지정 OCI 레지스트리의 URL(예: `registry.example.com:5000` 또는 `mirror.internal.company.com`)
+    * `YOUR_USERNAME`: 레지스트리 인증용 사용자 이름
+    * `YOUR_PASSWORD`: 레지스트리 인증을 위한 비밀번호
+
+    두 가지 모두 동일한 `oci.registry`을(를) 통해 가져오므로 이 설정은 에이전트 패키지와 에이전트 유형 정의 모두에 적용됩니다.
+  </Step>
+
+  <Step>
+    ### 에이전트 제어 재시작
+
+    새 설정을 적용하려면 에이전트 제어 서비스를 다시 시작하고 서비스가 성공적으로 다시 시작되었는지 확인합니다.
+
+    * 리눅스:
+
+      ```bash
+      sudo systemctl restart newrelic-agent-control
+      sudo systemctl status newrelic-agent-control
+      ```
+
+    * Windows:
+
+      ```powershell
+      Restart-Service -Name newrelic-agent-control
+      Get-Service -Name newrelic-agent-control
+      ```
+  </Step>
+</Steps>

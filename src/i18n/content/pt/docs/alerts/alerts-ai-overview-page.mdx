@@ -1,0 +1,359 @@
+---
+title: 'Visão geral, problema e atividade de alertas'
+tags:
+  - Alerts
+  - Get started
+metaDescription: How to interpret what you see on the Alerts overview page.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Na página <InlinePopover type="alerts" /><DNT>**Overview**</DNT>, você encontrará uma visão consolidada dos seus eventos de alerta atuais. A página <DNT>**Issues &amp; activity**</DNT> tem visualizações de seus problemas ativos e eventos de alerta recentes.
+
+<Callout variant="tip">
+  Para analisar as lacunas de cobertura de alertas e gerenciar a qualidade do alerta a partir de uma página <DNT>**Alerts Overview**</DNT> dedicada, consulte [alertas inteligentes](/docs/alerts/smart-alerts) (visualização pública).
+</Callout>
+
+## Por que isso importa [#why]
+
+As páginas <DNT>**Overview**</DNT> e <DNT>**Issues &amp; activity**</DNT> fornecem análises sobre como seu sistema está (ou não) funcionando. Você pode alternar rapidamente entre [<DNT>**Overview**</DNT>](#summary), [<DNT>**Issues**</DNT>](#issues) e [<DNT>**Alert events**</DNT>](#alert-events) para verificar problemas críticos que afetam seus sistemas.
+
+## Página de visão geral [#summary]
+
+A página de visão geral exibe uma visão de alto nível dos eventos de alerta recentes e atuais. Com esta página, você terá uma visão rápida de quantos eventos de alerta críticos você tem, quantos foram fechados e quais políticas estão gerando mais eventos de alerta. Esta página também mostra as principais fontes dos seus eventos de alerta silenciados.
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>
+        título dashboard
+      </th>
+
+      <th>
+        O que é isso
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        Eventos de alerta abertos por prioridade (série temporal)
+      </td>
+
+      <td>
+        Uma visualização de série temporal que conta o número de eventos de alerta abertos durante um período de tempo. Este gráfico rastreia apenas eventos abertos. Não rastreia o estado aberto ou fechado do evento de alerta.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Eventos de alerta abertos por prioridade (pizza)
+      </td>
+
+      <td>
+        Este gráfico usa os mesmos dados que o gráfico de série temporal de mesmo nome. Mostra rapidamente o detalhamento entre eventos de alerta de aviso e críticos. Clique no gráfico de pizza para filtrar toda a página por eventos de alerta de aviso ou críticos.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Durações de eventos de alerta encerrados
+      </td>
+
+      <td>
+        Uma distribuição de quanto tempo cada evento de alerta ficou aberto (duração), antes de ser fechado. Geralmente, é melhor ter durações mais curtas para seus eventos de alerta. Se você estiver vendo muitos eventos de alerta de longa duração, talvez queira criar um filtro personalizado para investigá-los mais a fundo.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Eventos de alerta silenciados
+      </td>
+
+      <td>
+        Se você criou algumas regras de silenciamento, você as verá aqui. Se você não estiver usando nenhuma regra de silenciamento, verá 100% de eventos de alerta “Não silenciados”. Clique neste gráfico para filtrar por eventos de alerta silenciados para ver rapidamente de onde eles vêm.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Principais políticas que criam eventos de alerta
+      </td>
+
+      <td>
+        Um gráfico das cinco principais políticas que geram mais eventos de alerta. Clique no nome de uma política para filtrar toda a página pelos eventos de alerta dessa política.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Principais condições que geram eventos de alerta
+      </td>
+
+      <td>
+        Um gráfico das cinco principais condições que geram mais eventos de alerta. Clique no nome de uma política para filtrar a página inteira pelos eventos de alerta dessa condição.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Principais fontes de eventos de alerta
+      </td>
+
+      <td>
+        Um gráfico das entidades que geram mais eventos de alerta. Se disponível, usa o nome da entidade. Caso contrário, usará o tipo de evento. Clique em uma entidade para filtrar toda a página pelos eventos de alerta dessa entidade.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Problemas
+
+Na página <DNT>**Issues &amp; activity**</DNT>, os problemas são grupos de eventos de alerta que descrevem o problema subjacente dos seus sintomas. Quando um novo evento de alerta é criado, a inteligência de eventos de alerta abre um problema e avalia outros problemas abertos em busca de correlações. Um problema conterá arrays de todas as tags (metadados) de todos os eventos de alerta que ele contém.
+
+O feed de problemas inclui todos os seus problemas e pode ser pesquisado e filtrado usando o componente superior da página.
+
+Por padrão, o feed de problemas é filtrado para mostrar apenas os problemas ativos. Você também pode filtrar por prioridade do problema, origem, condição do alerta, política de alerta, entidade ou ID do problema.
+
+Por padrão, os problemas são classificados pelo problema criado mais recentemente.
+
+Clique em um problema para abrir sua página de problema.
+
+### Emite colunas de feed
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>
+        Nome da coluna
+      </th>
+
+      <th>
+        Valores
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        Estado
+      </td>
+
+      <td>
+        Criado, ativo, reconhecido, investigando, fechado
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Prioridade
+      </td>
+
+      <td>
+        Baixo, médio, alto, crítico
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Nome do problema
+      </td>
+
+      <td>
+        O nome do problema
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Criada
+      </td>
+
+      <td>
+        Quando o problema foi criado (em tempo absoluto ou relativo)
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Duração
+      </td>
+
+      <td>
+        Quanto tempo se passou desde que o problema foi criado
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Entidade
+      </td>
+
+      <td>
+        Uma lista da entidade impactada. Se a lista for muito longa para ser mostrada, passe o mouse sobre o valor para ver a lista.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Resumo da análise
+      </td>
+
+      <td>
+        A saída do módulo de aprendizado de máquina para o problema
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Caminho
+      </td>
+
+      <td>
+        As Fontes -&gt; Caminho de destino
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Eventos de alerta
+      </td>
+
+      <td>
+        O número de eventos de alerta relacionados
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Eventos de alerta
+
+Na página <DNT>**Issues &amp; activity**</DNT>, eventos de alerta são eventos que descrevem os sintomas que afetam o seu sistema ao longo do tempo. Esses sintomas são detectados por suas ferramentas de monitoramento, que avaliam seus fluxos de dados e eventos.
+
+Os metadados de eventos de alerta do New Relic vêm de qualquer uma das seguintes fontes:
+
+* Herdando todas as tags da condição do alerta que o acionou
+* Todas as facetas, valores e condições where são adicionadas como tag se a condição do alerta NRQL contiver uma faceta ou condição where
+* Todas as tags de uma entidade serão adicionadas se o resultado da condição do alerta NRQL puder ser mapeado para essa única entidade
+
+Os metadados do [evento de alerta externo](/docs/data-apis/ingest-apis/event-api/incident-event-rest-api/) são o que foi recebido como tag.\*.
+
+O feed de eventos de alerta inclui todos os seus eventos de alerta: eventos de alerta do New Relic e eventos de alerta externos.
+
+Você pode filtrar o feed por origem, estado do evento de alerta e prioridade.
+
+### Comportamento padrão [#default]
+
+Por padrão, o feed é classificado pela última atualização na parte superior.
+
+Clique na linha de um evento de alerta para ver os detalhes do evento de alerta.
+
+### Colunas do feed de eventos de alerta [#alert-event-feed]
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>
+        Nome da coluna
+      </th>
+
+      <th>
+        Valores
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        Estado
+      </td>
+
+      <td>
+        Aberto fechado
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Prioridade
+      </td>
+
+      <td>
+        Baixo, Médio, Alto, Crítico
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Nome do evento de alerta
+      </td>
+
+      <td>
+        O nome do evento de alerta
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Criada
+      </td>
+
+      <td>
+        Quando o evento de alerta foi criado (em tempo absoluto ou relativo)
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Duração
+      </td>
+
+      <td>
+        Quanto tempo se passou desde que o evento de alerta foi criado
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Entidade
+      </td>
+
+      <td>
+        Uma lista das entidades impactadas pelo evento de alerta. Se a lista for muito longa para ser exibida, passe o mouse sobre o valor para ver a lista.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Resumo da análise
+      </td>
+
+      <td>
+        A saída do módulo de aprendizado de máquina para o evento de alerta
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Fonte
+      </td>
+
+      <td>
+        O sistema de origem do evento de alerta
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Evento
+      </td>
+
+      <td>
+        O número de eventos agregados no evento de alerta
+      </td>
+    </tr>
+  </tbody>
+</table>

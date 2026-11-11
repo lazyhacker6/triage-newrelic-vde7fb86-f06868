@@ -1,0 +1,92 @@
+---
+title: Docker用のNode.jsエージェントのインストール
+tags:
+  - Agents
+  - Nodejs agent
+  - Installation and configuration
+metaDescription: How to use New Relic's Node.js agent to instrument Node.js applications deployed in Docker containers.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Node.js エージェントを使用して、Docker コンテナーで Node.js アプリケーションのデプロイを計装できます。 このドキュメントでは、 New Relicでインストレーションした Dockerized Node.js アプリケーションを構築、構成、デプロイする方法について説明します。
+
+Node.js エージェント インストレーションに関する一般的なヘルプが必要な場合は、[メイン インストレーション手順を](/docs/apm/agents/nodejs-agent/installation-configuration/install-nodejs-agent)参照してください。
+
+## コンテナの計測 [#instrument]
+
+<Callout variant="caution">
+Dockerfile または Docker イメージにライセンス キーを含めないでください。詳細については[、ライセンス キーのセキュリティに関するドキュメントを](/docs/accounts/install-new-relic/account-setup/license-key#license-key-security)参照してください。
+</Callout>
+
+設定をいくつか変更し、 New Relic環境変数を既存の Dockerfile に追加することで、Node.js エージェントを使用して Docker 化されたアプリを計装できます。
+
+1. `newrelic`を`package.json`に追加します。
+
+   ```json
+   npm install newrelic --save
+   ```
+
+2. アプリケーションを計装するには、`node` の起動コマンドにエージェントを組み込みます。
+
+<CollapserGroup>
+<Collapser id="docker-cjs" title="CommonJSを使用するアプリ">
+Node.jsアプリケーションの実行方法によって、エージェントを組み込む方法が異なる場合があります。
+
+* `ENTRYPOINT`
+
+  ```bash
+  ENTRYPOINT ["node", "-r", "newrelic", "YOUR_PROGRAM.js"]
+  ```
+
+* `CMD`
+
+  ```bash
+  CMD ["node", "-r", "newrelic", "YOUR_PROGRAM.js"]
+  ```
+
+* 次のようなnpmスクリプト `npm start`
+
+  ```bash
+  npm pkg set scripts.start="node -r newrelic your-program.js"
+  ```
+</Collapser>
+
+<Collapser id="docker-esm" title="ESMを使用するアプリ">
+Node.jsアプリケーションの実行方法によって、エージェントを組み込む方法が異なる場合があります。
+
+* `ENTRYPOINT`
+
+  ```bash
+  ENTRYPOINT ["node", "--import", "newrelic/esm-loader.mjs", "-r", "newrelic", "YOUR_PROGRAM.js"]
+  ```
+
+* `CMD`
+
+  ```bash
+  CMD ["node", "--import", "newrelic/esm-loader.mjs", "-r", "newrelic", "YOUR_PROGRAM.js"]
+  ```
+
+* 次のようなnpmスクリプト `npm start`
+
+  ```bash
+  npm pkg set scripts.start="node --import newrelic/esm-loader.mjs -r newrelic your-program.js"
+  ```
+</Collapser>
+</CollapserGroup>
+
+3. 通常の方法でDockerイメージを構築します。
+
+4. エージェントを有効にしてdockerアプリを実行するには、<InlinePopover type="licenseKey" /> と[アプリ名を](/docs/agents/manage-apm-agents/app-naming/name-your-application)環境変数として `docker run` コマンドに追加します。
+
+   ```bash
+   docker run -e NEW_RELIC_LICENSE_KEY=YOUR_LICENSE_KEY \
+           -e NEW_RELIC_APP_NAME="YOUR_APP_NAME" \
+           YOUR_IMAGE_NAME:latest
+   ```
+
+<InstallFeedback />
+
+## その他の設定オプション [#configure]
+
+アプリケーション名やライセンスキーの設定に加えて、`-e` オプションを使用してコンテナを起動することで、[その他の設定オプション](/docs/agents/nodejs-agent/installation-configuration/nodejs-agent-configuration)を設定できます。

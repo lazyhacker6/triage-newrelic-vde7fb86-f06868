@@ -1,0 +1,128 @@
+---
+title: Comprendre Lambda monitoring l'interface utilisateur
+tags:
+  - Serverless function monitoring
+  - AWS Lambda monitoring
+  - UI and data
+metaDescription: 'Read about the New Relic UI for monitoring for AWS Lambda functions, including details about the UI pages and charts.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+[monitoring sans serveur pour AWS Lambda](/docs/introduction-new-relic-monitoring-aws-lambda) offre monitoring approfondie des performances de votre fonction Lambda. Ce document explique comment :
+
+* [Trouvez vos données Lambda dans l&apos;interface utilisateur](#find-data)
+* [Comprendre les composants de l&apos;interface utilisateur](#ui-pages)
+* [Comprendre les données de votre graphique](#chart-data)
+* [Comment créer des graphiques personnalisés](#chart-data)
+
+## Visualisez vos données [#find-data]
+
+<img title="new-relic-lambda-entities-screenshot.png" alt="new-relic-lambda-entities-screenshot.png" src="/images/lambda_screenshot-full_all-entities.webp" />
+
+<figcaption>
+  <DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; All entities &gt; Amazon Web Services &gt; Lambda functions**</DNT>:Cliquez sur la fonction Lambda pour voir les graphiques et les détails.
+</figcaption>
+
+Pour afficher vos données Lambda dans New Relic : Accédez à <DNT>**[one.newrelic.com](https://one.newrelic.com/all-capabilities)**</DNT>, cliquez sur <DNT>**Explorer.**</DNT> Dans le menu de navigation de gauche sous <DNT>**Amazon Web Services**</DNT>, cliquez sur <DNT>**Lambda functions.**</DNT>
+
+Pour en savoir plus sur notre interface utilisateur, consultez [Présentation de la plateforme New Relic](/docs/project-wanda-early-access-future-new-relic-platform).
+
+<Callout variant="important">
+  Si vous ne trouvez pas vos données Lambda :
+
+  * Assurez-vous d&apos;avoir suivi les [instructions pour activer le monitoring Lambda](/docs/install-enable-new-relics-monitoring-aws-lambda).
+  * Notez que cette fonctionnalité est différente de notre [monitoring d&apos;infrastructure Lambda intégration](/docs/integrations/amazon-integrations/aws-integrations-list/aws-lambda-monitoring-integration).
+</Callout>
+
+## Pages d&apos;interface utilisateur
+
+Voici les descriptions des pages d&apos;interface utilisateur disponibles pour notre Lambda monitoring:
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "150px" }}>
+        Page d&apos;UI
+      </th>
+
+      <th>
+        Fonctionnalité
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        Résumé
+      </td>
+
+      <td>
+        La page <DNT>**Summary**</DNT> affiche des graphiques qui vous donnent un aperçu rapide des données de performance les plus importantes. Si disponible, cela présentera des données recueillies à partir de l’ [instrumentation d’agent APM](/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/enable-new-relic-monitoring-aws-lambda#instrument-lambda). Les fonctions Lambda instrumentées via OpenTelemetry (couche ADOT) affichent désormais la même expérience de page de résumé que les fonctions Lambda instrumentées par APM, avec des métriques normalisées au format `apm.*` via une couche de synthèse de métrique.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        métriques CloudWatch
+      </td>
+
+      <td>
+        L’onglet <DNT>**CloudWatch metrics**</DNT> affiche les données de performances Lambda provenant d’AWS CloudWatch via la couche de synthèse de métriques de New Relic. Les graphiques incluent : le nombre d’invocations, la durée, les limitations, et le nombre d’erreurs. Cet onglet est disponible pour les fonctions Lambda instrumentées par APM, et instrumentées par OpenTelemetry (ADOT).
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Transactions
+      </td>
+
+      <td>
+        L’onglet <DNT>**Transactions**</DNT> répertorie les transactions Lambda, ainsi que les données de performances telles que la durée, et le débit. La colonne <DNT>**AWS Request ID**</DNT> identifie chaque exécution Lambda par son identifiant de requête AWS unique, ce qui vous permet d’explorer la trace de transaction APM d’une invocation spécifique.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Tracing distribué
+      </td>
+
+      <td>
+        La page <DNT>**Distributed tracing**</DNT> affiche les traces distribuées qui incluent la fonction Lambda monitorée. Pour plus de détails sur cette fonctionnalité, voir [tracing distribué](/docs/apm/distributed-tracing/getting-started/introduction-distributed-tracing).
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Erreurs
+      </td>
+
+      <td>
+        La page <DNT>**Errors**</DNT> affiche les erreurs (`AwsLambdaInvocationError` événement). Vous pouvez filtrer par taux d’erreur, pourcentage d’erreur ou classe d’erreur. Vous pouvez explorer en profondeur les erreurs et voir [les attributs](/docs/using-new-relic/welcome-new-relic/getting-started/glossary#attribute) et, si disponibles, la trace des appels.
+      </td>
+    </tr>
+
+    <tr id="logs">
+      <td>
+        Logs
+      </td>
+
+      <td>
+        La page <DNT>**Logs**</DNT> affiche les messages récents du log de votre fonction Lambda. Pour plus de détails sur cette fonctionnalité, voir [log](/docs/logs/new-relic-logs/get-started/introduction-new-relic-logs).
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Comprendre les données graphiques [#chart-data]
+
+Les graphiques de données Lambda sont générés en exécutant des [requêtes NRQL](/docs/insights/nrql-new-relic-query-language/using-nrql/introduction-nrql) sur les [données d’événement](/docs/understand-your-lambda-data#data-structure) liées à Lambda. Vous pouvez afficher la requête NRQL d’un graphique pour :
+
+* Pour mieux comprendre ce qu&apos;affiche un graphique
+* Pour obtenir des idées sur la façon de créer une requête et un graphique NRQL personnalisés
+
+Documentation associée :
+
+* [Découvrez comment afficher la requête d&apos;un graphique](/docs/new-relic-solutions/new-relic-one/introduction-new-relic-platform#view-query).
+* [En savoir plus sur le stockage et la structure des données Lambda](/docs/understand-your-lambda-data).

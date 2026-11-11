@@ -1,0 +1,210 @@
+---
+title: 차트 사용
+tags:
+  - Query your data
+  - Explore and query data
+  - Use charts
+metaDescription: 'How to customize, share, and add a chart to a dashboard in New Relic'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+차트를 만든 후에는 데이터를 가장 잘 표시할 수 있도록 차트 모양을 사용자 지정할 수 있습니다. 다양한 형식의 차트를 공유하고 새 대시보드 또는 기존 대시보드에 차트를 추가할 수 있습니다.
+
+## 차트 모양 변경 [#change-appearance]
+
+NRQL 모드에서 쿼리를 실행하거나 지표 및 이벤트를 사용하여 데이터를 지정하는 동안 차트를 볼 때 New Relic은 데이터를 분석하고 데이터에 맞는 [차트 유형을](/docs/insights/use-insights-ui/manage-dashboards/insights-chart-types) 적용합니다.
+
+선택할 수 있는 차트 유형에는 여러 가지 옵션이 있습니다. 차트 유형을 변경하려면 현재 차트 오른쪽에 있는 <DNT>**Chart type**</DNT> 메뉴를 사용하세요.
+
+<img title="Chart type menu" alt="Chart type menu" src="/images/queries-nrql.webp" />
+
+<figcaption>
+  <DNT>**[one.newrelic.com](https://one.newrelic.com/) &gt; Open the bottom Query Console drawer**.</DNT>
+</figcaption>
+
+## 차트 사용자 지정 [#customize-charts]
+
+귀하의 데이터를 표시하는 방법을 최적화하기 위해 최선을 다하고 있지만 때로는 다른 요구 사항이 있을 수 있습니다. 차트 유형에 따라 추가 사용자 지정 옵션을 사용할 수 있습니다.
+
+<Callout variant="important">
+  이 차트에서 바이트 단위(예: KB, MB, GB, TB 등)를 표시하는 데 사용되는 시스템은 지표 표현을 따릅니다. 이는 다음을 의미합니다.
+
+  * 1KB(킬로바이트) = 1,000바이트
+  * 1MB(메가바이트) = 1,000KB
+  * 1GB(기가바이트) = 1,000MB
+  * 1TB(테라바이트) = 1,000GB
+
+  이 지표 체계는 계산과 표현에 10의 거듭제곱을 사용하는 국제 단위계(SI)와 일치합니다.
+</Callout>
+
+사용자 정의 기능에 대해 자세히 알아보려면 아래 섹션을 읽으십시오. 또한 [이 블로그](https://newrelic.com/blog/how-to-relic/dashboard-chart-customizations) 와 [함께 제공되는 비디오를](https://www.youtube.com/watch?v=LA2jM_asl94) 보고 몇 가지 사용자 정의 옵션에 대한 단계별 안내를 얻을 수 있습니다.
+
+**차트 사용자 지정 옵션에 액세스하려면 다음을 수행하십시오**.
+
+1. 사용자 지정하려는 위젯에서, <Icon name="fe-more-horizontal" /> 메뉴에서 <DNT>**Edit**</DNT> 선택하세요.
+2. <DNT>**Customize this visualization**</DNT> 패널에서 아래 섹션에 설명된 옵션을 구성합니다.
+
+<CollapserGroup>
+  <Collapser id="widget-link-description" title="위젯 링크 및 설명">
+    대시보드 위젯에 링크와 설명을 추가하여 추가적인 맥락과 탐색 옵션을 제공할 수 있습니다.
+
+    **반대 링크는** 거부 제목에 클릭 가능한 링크로 표시되어 사용자가 관련 대시보드, 문서 또는 외부 리소스로 이동할 수 있도록 해줍니다. 사용자가 대시보드를 볼 때 위젯 제목을 클릭하면 구성된 링크가 열립니다.
+
+    **답변 설명은** 사용자가 답변을 가리킬 때 도구 설명으로 표시되는 답변이 표시하는 내용에 대한 추가 컨텍스트를 제공합니다.
+
+    **링크 또는 설명을 추가하려면**:
+
+    1. 링크를 추가하려면 <DNT>**URL**</DNT> 필드에 URL을 입력하세요. 다음 요구 사항에 유의하십시오.
+
+       * 최대 길이: 2,048자
+       * 지원되는 프로토콜: `http://` 및 `https://` 만 해당
+       * 유효하지 않은 URL에는 유효성 검사 오류가 표시됩니다.
+
+    2. 설명을 추가하려면 <DNT>**Description**</DNT> 필드에 일반 텍스트 설명을 입력하세요.
+
+    3. <DNT>**Apply changes**</DNT> 을(를) 클릭합니다.
+
+    **링크 또는 설명을 삭제하려면**:
+
+    1. <DNT>**URL**</DNT> 또는 <DNT>**Description**</DNT> 필드를 지우세요.
+    2. <DNT>**Apply changes**</DNT> 을(를) 클릭합니다.
+
+    **JSON을 통해 위젯 링크 및 설명을 추가, 편집 또는 삭제하려면 다음 단계를 따르세요**.
+
+    1. 대시보드에서 <Icon name="fe-more-horizontal" /> 메뉴에서 <DNT>**Manage JSON**</DNT> 선택하세요.
+
+    2. JSON 편집기에서 수정하려는 위젯을 찾아 `link` 및 `description` 필드를 업데이트합니다. 값을 추가하거나 수정하려면 값을 입력하세요. 제거하려면 필드를 `null` 로 설정하세요.
+
+       ```json
+       widgets: [{
+         id: "WIDGET_ID"
+         link: "https://example.com"  // Enter URL or null to remove
+         description: "Your widget description"  // Enter text or null to remove
+       }]
+       ```
+
+    3. <DNT>**Save changes**</DNT> 을(를) 클릭합니다.
+
+    답변 링크가 예상대로 작동하지 않는 문제가 발생하는 경우, 문제 해결, 해결 도움말에 대한 [답변 링크 문제를](/docs/query-your-data/explore-query-data/dashboards/troubleshooting-chart-errors/#widget-link-issues) 참조하세요.
+  </Collapser>
+
+  <Collapser id="custom-date-time" title="날짜 및 시간 형식 지정">
+    <DNT>**Data format**</DNT> 섹션에서 표와 게시판의 날짜 및 시간 형식을 사용자 지정하세요. 그대로 두거나 필요에 맞게 형식을 수정할 수 있는 유연성을 제공합니다. 다음 옵션 중에서 선택하세요:
+
+    * <DNT>**Numeric**</DNT>: 타임스탬프를 숫자 값으로 유지합니다.
+    * <DNT>**Date**</DNT>: 날짜를 표준 형식으로 표시합니다.
+    * <DNT>**Duration**</DNT>: 타임스탬프와 현재 순간 사이의 시간 범위를 표시합니다.
+    * <DNT>**Time to Now**</DNT>: 타임스탬프 이후 경과된 시간을 나타냅니다.
+
+    필요에 따라 데이터 표시 형식을 가장 적합한 형식으로 선택하십시오.
+  </Collapser>
+
+  <Collapser id="customize-y-axis" title="Y축 사용자 지정">
+    선 차트와 영역 차트에서 특정 값 범위의 데이터를 표시하려면 <DNT>**Y-axis**</DNT> 섹션에서 축의 최소값과 최대값을 설정하십시오.
+
+    사용자 지정 옵션을 선택하지 않은 경우 [대시보드](/docs/query-your-data/explore-query-data/dashboards/introduction-dashboards) 는 0에서 상단 값과 여백까지 전체 Y축을 자동으로 표시합니다.
+
+    선 차트, 영역 차트 및 히스토그램의 범례를 비활성화 또는 활성화하려면 <DNT>**Legend**</DNT> 섹션에서 <DNT>**Visibility**</DNT> 토글을 사용하십시오.
+  </Collapser>
+
+  <Collapser id="bar-charts-pie-charts-tables" title="막대 차트, 원형 차트 및 표">
+    바 차트, 파이 차트 또는 표의 경우 쿼리의 [패싯](/docs/query-your-data/explore-query-data/dashboards/filter-new-relic-one-dashboards-facets) 수가 5,000개를 초과하면 <DNT>**Other groups**</DNT> 패싯이 나머지 패싯을 집계합니다. <DNT>**Other groups**</DNT> 옵션을 표시하거나 숨기려면 <DNT>**Other groups**</DNT> 섹션에서 <DNT>**Visible**</DNT> 토글을 사용하십시오.
+  </Collapser>
+
+  <Collapser id="dash-color" title="색상 사용자 정의">
+    영역, 막대, 꺾은선형, 원형 및 누적 막대형 차트의 계열별로 차트 색상을 사용자 지정할 수 있습니다.
+
+    시리즈별 색상을 사용자 지정하려면 <DNT>**Colors**</DNT> 섹션에서 다음을 선택하십시오. <Icon name="fe-plus" /> 아이콘을 클릭하고 변경하려는 시리즈를 선택한 다음 원하는 색상을 선택하세요.
+  </Collapser>
+
+  <Collapser id="dash-units" title="유닛 커스터마이징">
+    Y축과 각 계열에서 단위를 사용자 정의할 수 있습니다. 영역, 선 및 누적 막대 차트에서 사용할 수 있습니다.
+
+    단위를 사용자 지정하려면 <DNT>**Units**</DNT> 섹션에서 다음을 선택하십시오. <Icon name="fe-plus" /> 아이콘을 클릭하고, 추가 장치가 필요한 시리즈를 선택한 다음, 장치를 선택합니다.
+  </Collapser>
+
+  <Collapser id="dash-null" title="Null 값 표시 옵션">
+    쿼리 중인 이벤트 속성에 0이 있으면 시계열 차트가 깨져 보이는 경우가 있습니다. 그러나 null 값이 항상 상황을 올바르게 나타내는 것은 아닙니다.
+
+    시계열 차트를 더 쉽게 이해할 수 있도록 null 값을 표시하는 옵션을 선택할 수 있습니다. 여기에는 다음이 포함됩니다.
+
+    * null로 유지(기본값): Null 값은 차트에서 간격으로 표시되어 연결이 끊긴 선이 될 수 있습니다. 보고에서 공백을 찾는 것이 중요하거나 연속선을 연결하는 것이 적절하지 않은 경우 이 옵션을 사용할 수 있습니다.
+
+    * 값 제거: 차트에 Null 포인트가 존재하지 않습니다. 예를 들어 하루에 시간당 데이터 요소를 표시하는 차트는 24개 미만의 요소를 표시합니다.
+
+    * 마지막 값 유지: Null 값은 이전 기간의 값을 유지합니다. 예를 들어 차트가 매시간 누적 판매를 보고하지만 한 시간의 데이터가 누락된 경우 누락된 시간은 이전 시간과 동일한 판매 수를 반영합니다.
+
+    * 값을 0으로 변환: 누락된 데이터가 0으로 표시됩니다. 이 옵션은 의미 있는 트랜잭션, 개수 또는 사용량이 없음을 의미하는 데이터가 없을 때 유용할 수 있습니다.
+
+      <img title="Null value chart options" alt="Null value chart options" src="/images/dashboards_screenshot-crop_null-values.webp" />
+
+      <figcaption>
+        차트에 null 값을 표시하는 네 가지 방법 중에서 선택할 수 있습니다.
+      </figcaption>
+
+    null 값의 표시 방식을 사용자 지정하려면 <DNT>**Null values**</DNT> 섹션에서 적용 옵션을 선택하세요. 시리즈별로 다른 옵션을 사용하려면 다음을 선택하십시오. <Icon name="fe-plus" /> <DNT>**Null values per series**</DNT> 옆의 아이콘을 클릭하여 설정하세요.
+  </Collapser>
+
+  <Collapser id="thresholds" title="임계값">
+    레버 값은 차트와 테이블에 컨텍스트를 추가하여 데이터 해석을 더 명확하게 만드는 시각적 단서입니다. 시각화를 향상시킬 수 있는 방법은 다음과 같습니다.
+
+    * 경계선: 시계열 차트에서 허용 가능한 최소 및 최대 값을 설정합니다.
+
+    * 색상이 지정된 영역: 레버 값 사이의 음영 영역, 정상 작동 범위를 시각적으로 식별하거나 중요 영역을 강조 표시합니다.
+
+    * 조건부 셀 색상 지정: 값에 따라 테이블 셀에 색상 코드를 적용하여 데이터 이상치 또는 추세를 즉시 드러냅니다.
+
+      <Video type="wistia" id="ikpu24sqjr" />
+
+    * 시계열 차트에서:
+
+      1. 차트를 편집하고 <DNT>**Thresholds**</DNT> 메뉴를 확장합니다.
+
+      2. 레버 값을 추가하려면 <DNT>**+**</DNT> 선택하고, <DNT>**Name**</DNT> 을 입력하세요.
+
+      3. <DNT>**From**</DNT> 및 <DNT>**To**</DNT> 값을 입력합니다. 단일 라인을 생성하려면 두 필드에 동일한 번호를 입력하십시오.
+
+      4. 심각도 수준을 선택합니다. 이는 선이나 영역의 색상을 결정합니다.
+
+         <img title="Configure chart thresholds in time series charts" alt="Screenshot of how to configure thresholds in a time series chart" src="/images/charts_screenshot-full_chart-threshold-time-series.webp" />
+
+    * 표에서:
+
+      1. 차트를 편집하고 <DNT>**Thresholds**</DNT> 메뉴를 확장합니다.
+
+      2. 레버 값을 추가하려면 <DNT>**+**</DNT> 선택하고 <DNT>**Column**</DNT> 을 선택하세요.
+
+      3. <DNT>**From**</DNT> 및 <DNT>**To**</DNT> 값을 입력합니다. 상한을 설정하려면 <DNT>**From**</DNT> 필드를 비워 두세요. 하한을 설정하려면 <DNT>**To**</DNT> 필드를 비워 두세요.
+
+         <img title="Configure chart thresholds in tables" alt="Screenshot of how to configure thresholds in a table" src="/images/charts_screenshot-full_chart-threshold-table.webp" />
+  </Collapser>
+</CollapserGroup>
+
+<Callout variant="tip">
+  더 많은 사용자 지정 옵션을 보려면 [대시보드 사용자 지정을](/docs/query-your-data/explore-query-data/dashboards/manage-your-dashboard#dash-manage) 참조하세요.
+</Callout>
+
+### 더 많은 차트별 기능 [#more-types]
+
+차트 유형별 기능에 대한 자세한 내용은 [차트 유형](/docs/insights/use-insights-ui/manage-dashboards/chart-types/) 을 참조하십시오.
+
+## 차트 공유 및 보기 옵션 [#share-charts]
+
+대부분의 차트에는 차트 내장 옵션, 차트를 이미지로 가져오기, 대시보드에 차트 추가 등 다양한 옵션이 있습니다. [대시보드 및 차트 가져오기, 내보내기, 추가를](/docs/query-your-data/explore-query-data/dashboards/dashboards-charts-import-export-data/) 참조하세요. 팀 내에서 차트를 공유하려면 [대시보드 및 차트를 내부적으로 공유하기를](/docs/query-your-data/explore-query-data/dashboards/share-charts-dashboards-internally/#share-charts-internally) 참조하세요. 차트를 외부에 공유하려면 [대시보드 및 차트를 공개적으로 공유를](/docs/query-your-data/explore-query-data/dashboards/share-charts-dashboards-externally/#chart) 참조하세요.
+
+## 예측된 추세를 보여주는 차트 [#chart-forecasted-trend]
+
+<Callout title="시사">
+  이 기능은 아직 개발 중이지만 꼭 사용해 보시기 바랍니다!
+
+  이 기능은 현재 [출시 전 정책](/docs/licenses/license-information/referenced-policies/new-relic-pre-release-policy) 에 따라 미리보기 프로그램의 일부로 제공됩니다.
+</Callout>
+
+[NRQL 예측](/docs/query-your-data/explore-query-data/use-charts/nrql-predictions) 에 등록한 경우 이력 데이터를 기반으로 미래 추세를 예측하기 위해 선 및 영역 차트에 대한 예측을 생성할 수 있습니다.
+
+## 오픈 소스 차트 라이브러리 사용 [#victory-charts]
+
+[Nerdpacks를](/docs/new-relic-solutions/build-nr-ui/nerdpack-file-structure/) 사용하면 사용자 정의 시각화를 직접 만들 수 있습니다. 또한 Formidable과 협력하여 오픈 소스 차팅 라이브러리를 사용하고 대시보드에 고유한 &quot;승리 차트&quot;를 빠르게 추가할 수 있습니다. 이러한 [맞춤형 시각화 Nerdpacks](/docs/new-relic-solutions/tutorials/customize-nerdpacks) 에 대해 알아보려면 이 짧은 영상을 시청하세요(약 4분).
+
+<Video id="WgHPo1lyf0Q" type="youtube" />

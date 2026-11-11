@@ -1,0 +1,98 @@
+---
+title: Monitoreo de OpenTelemetry Collector
+metaDescription: Monitor your OpenTelemetry collector's health and performance using its internal telemetry in a dedicated APM UI experience.
+freshnessValidatedDate: '2026-09-09T00:00:00.000Z'
+tags:
+  - Integrations
+  - Open source telemetry integrations
+  - OpenTelemetry
+  - Collector
+translationType: machine
+---
+
+<Callout title="Avance">
+Todavía estamos trabajando en esta característica, ¡pero nos encantaría que la probaras!
+
+Esta función se proporciona actualmente como parte de una vista previa de conformidad con nuestras [políticas de prelanzamiento](/docs/licenses/license-information/referenced-policies/new-relic-pre-release-policy/).
+</Callout>
+
+Monitoree la salud y el rendimiento de su [colector de OpenTelemetry](https://opentelemetry.io/docs/collector/) con una experiencia de UI de APM dedicada. Cuando su colector falla o funciona incorrectamente, puede causar una interrupción de los datos de observabilidad, pérdida permanente de datos o información distorsionada. Por eso creamos Collector Observability: una experiencia de APM diseñada para el trabajo de streaming que realizan los recopiladores. Puede aprovechar la [telemetría interna](https://opentelemetry.io/docs/collector/internal-telemetry/) del recopilador para ver de un vistazo cómo se desempeña cada componente de su recopilador, de modo que pueda detectar problemas antes de que afecten su pipeline de observabilidad.
+
+Esta experiencia se adapta a cómo se despliega su recolector. Un recolector que se ejecuta por sí solo obtiene una vista optimizada y centrada en el recolector. Un recolector adjunto a una aplicación instrumentada —que comparte el mismo <DNT>`service.name`</DNT> (y, por lo tanto, la misma entidad)— obtiene la experiencia completa de APM además de información valiosa del recolector. Consulte [Elija el modo de vista de su recolector](#view-modes) para obtener más detalles.
+
+Vaya a [Primeros pasos con la observabilidad del recolector](/docs/opentelemetry/collector-observability/collector-observability-setup) para asegurarse de que el recolector esté configurado correctamente para esta nueva experiencia.
+
+## Ver su colector en la interfaz de usuario [#view-ui]
+
+### Explore la telemetría interna en la UI de APM [#explore-ui]
+
+Para ver la telemetría interna de su colector, navegue a <DNT>**APM &amp; Services &gt; Services - OpenTelemetry &gt; your\_collector\_service\_name**</DNT> para explorar la entidad del colector.
+
+Dependiendo de los componentes que utilice su colector, es posible que algunos gráficos no se rellenen. Por ejemplo, si no procesa los logs en su colector, los gráficos relacionados con esa señal estarán vacíos.
+
+### Seleccione el modo de vista del recolector [#view-modes]
+
+La observabilidad de Collector admite dos modos de visualización: <DNT>**Standalone Collector**</DNT> y <DNT>**Attached Collector**</DNT>.
+
+* **Collector independiente (recomendado)**: una experiencia optimizada y centrada en el recolector para un recolector que se ejecuta por sí solo, representado por su propia entidad. Oculta la página estándar de <DNT>**APM Summary**</DNT> y la reemplaza con una [vista](#summary-page) centrada en la telemetría nativa del recolector.
+* **Attached Collector**: la experiencia completa de APM además de la capacidad del recolector. En este modo, la experiencia de APM continúa tratando a la aplicación como la entidad principal, pero agrega una segunda pestaña en la página <DNT>**APM Summary**</DNT> para el <DNT>**Collector**</DNT>. Este modo está diseñado para los recolectores que se ejecutan junto con la aplicación monitoreada y comparten su <DNT>`service.name`</DNT>, independientemente de cómo se desplieguen (por ejemplo, como un sidecar o en la misma máquina virtual (VM)). Si su recolector tiene un <DNT>`service.name`</DNT> diferente, lo cual recomendamos, sintetizamos una entidad dedicada para este y puede usar el modo <DNT>**Standalone Collector**</DNT> en su lugar. Consulte [Limitaciones para recolectores adjuntos](#attached-limitations) para obtener más detalles.
+
+<img title="Screenshot showing the Collector tab on the APM Summary page in 'Attached Collector' mode." alt="Screenshot showing the Collector tab on the APM Summary page in 'Attached Collector' mode." src="/images/otel_collector_o11y-attached-tabs.webp" />
+
+#### Configurar el modo
+
+Vaya a <DNT>**your collector&apos;s entity &gt; Settings &gt; Collector mode**</DNT> y elija una de las siguientes opciones:
+
+* <DNT>**Automatic**</DNT> (predeterminado): el modo sigue la etiqueta <DNT>`otelCollector.viewModeIac`</DNT> descrita a continuación; si esa etiqueta no está configurada, el modo predeterminado es <DNT>**Standalone Collector**</DNT>.
+* <DNT>**Standalone Collector**</DNT> o <DNT>**Attached Collector**</DNT>: fija la entidad a ese modo, anulando la etiqueta.
+
+Si administra una gran flota de recolectores, establezca la etiqueta de entidad <DNT>`otelCollector.viewModeIac`</DNT> en <DNT>`standalone`</DNT> o <DNT>`attached`</DNT> en lugar de visitar la configuración de cada entidad de forma individual. Esto solo tiene efecto mientras la configuración <DNT>**Collector mode**</DNT> de la entidad es <DNT>**Automatic**</DNT> —de esta manera, siempre puede anular esta configuración desde la UI, por lo que no tiene que esperar un cambio en la infraestructura para acceder a la vista que prefiere. Hay algunas formas de establecer etiquetas a escala:
+
+* **Option 1**: Set `otelCollector.viewModeIac` as a [resource attribute](https://github.com/newrelic/nrdot-collector-releases/blob/2.5.0/examples/internal-telemetry-config.yaml#L67), so that New Relic [synthesizes](https://github.com/newrelic/entity-definitions/blob/92417f8cbd88d957032150e58ee28c644361e2ca/entity-types/ext-service/definition.yml#L121) the tag on ingest for you. This is often the easiest option, but it does contribute to your ingest volume. Instead of modifying your config file, you can also pass the argument <DNT>`--config=yaml:service::telemetry::resource::otelCollector.viewModeIac: standalone`</DNT> (or <DNT>`attached`</DNT>) to the collector. Note that the tag is only cached temporarily, so if your collector stops reporting the attribute, then the tag will expire after one day.
+* **Opción 2**: use el [proveedor de Terraform](https://registry.terraform.io/providers/newrelic/newrelic/latest/docs/resources/entity_tags).
+* **Opción 3**: use la [CLI de New Relic](https://github.com/newrelic/newrelic-cli/blob/55467e869862b4a3baa6bbb62efadf35bc34d79a/docs/cli/newrelic_entity_tags_create.md).
+
+<img title="Screenshot showing the Collector mode setting" alt="Screenshot showing the Collector mode setting" src="/images/otel_collector_o11y-settings.webp" />
+
+### Página de resumen [#summary-page]
+
+La vista <DNT>**Collector**</DNT> se abre con seis mosaicos de KPI (indicadores de rendimiento clave) que le brindan una lectura rápida sobre el estado del recolector: <DNT>**Items received**</DNT>, <DNT>**Items sent**</DNT>, <DNT>**Queue saturation**</DNT>, <DNT>**Receiver refused**</DNT>, <DNT>**Export failure rate**</DNT> y <DNT>**Queue drops**</DNT>. Cada mosaico muestra el valor actual y su tendencia en comparación con hace una hora.
+
+<img title="Screenshot showing the KPI tiles" alt="Screenshot showing the KPI tiles" src="/images/otel_collector_o11y-kpi-tiles.webp" />
+
+Haga clic en cualquier mosaico de KPI para abrir una vista detallada con su gráfico completo, desglosado por señal de telemetría (métricas, logs, spans), además de gráficos de telemetría relacionados para obtener contexto adicional. Consulte la [referencia de KPI](/docs/opentelemetry/collector-observability/collector-observability-kpis) para obtener detalles sobre cada KPI y los gráficos relacionados.
+
+En caso de que se pregunte qué pasó con la vista de resumen estándar a la que está acostumbrado: la vista estándar está impulsada por métricas `apm.*` a nivel de transacción y, con el recolector y la telemetría aún en desarrollo activo, no hemos podido idear una noción sólida de una transacción que proporcione una experiencia intuitiva. En su lugar, nos basamos en la telemetría nativa emitida por el recolector y la ponemos en primer plano con los mosaicos de KPI.
+
+Debajo de los mosaicos de KPI, el resto de la telemetría del recolector está organizada en secciones plegables que puede expandir según sea necesario:
+
+* **Collector y errores**: logs de errores e instancias en ejecución.
+* **Receptores** y **Exportadores**: gráficos por componente para cada etapa del pipeline.
+* **Procesadores**: gráficos por procesador, incluido un gráfico dedicado para [memorylimiter](https://github.com/open-telemetry/opentelemetry-collector/tree/v0.161.0/processor/memorylimiterprocessor) debido a su modo de falla único.
+* **Lote**: comportamiento de procesamiento por lotes, requiere [batchprocessor](https://github.com/open-telemetry/opentelemetry-collector/tree/v0.161.0/processor/batchprocessor).
+* **Process**: el uso de recursos del propio proceso del recolector —CPU, memoria RSS y heap.
+* **Infraestructura**: relaciones de infraestructura y métricas, si está configurado (consulte [ejemplos de configuración](/docs/opentelemetry/collector-observability/collector-observability-setup#examples)).
+
+<img title="Screenshot showing the Summary page with its collapsible sections" alt="Screenshot showing the Summary page with its collapsible sections" src="/images/otel_collector_o11y-summary.webp" />
+
+<img title="Screenshot showing the Summary page with the Infrastructure section expanded" alt="Screenshot showing the Summary page with the Infrastructure section expanded" src="/images/otel_collector_o11y-summary-infra.webp" />
+
+## Limitaciones [#limitations]
+
+* **La telemetría del recopilador aún no es estable**:
+
+  * La versión admitida de telemetría interna se define implícitamente por la [versión del recopilador principal](https://github.com/open-telemetry/opentelemetry-collector) que usamos para construir NRDOT; consulte la versión del otlpreceiver en el [manifiesto de nrdot-collector](https://github.com/newrelic/nrdot-collector-releases/blob/main/distributions/nrdot-collector/manifest.yaml).
+  * Si la telemetría emitida cambia durante la Vista previa pública, nos reservamos el derecho de dar soporte solo a la versión más reciente.
+
+* **Formato de exportación**: admitimos totalmente la telemetría emitida a través del <DNT>`otlpexporter`</DNT> interno y recomendamos adoptar este formato. No brindamos soporte oficial para las métricas exportadas a través de Prometheus, pero hacemos todo lo posible para garantizar que la experiencia siga funcionando como se espera. Reescribimos las consultas para admitir los diferentes nombres de las métricas y, hasta el momento, no existen limitaciones conocidas para Prometheus.
+
+* **Métricas de componentes personalizados**: la telemetría interna que no aparece en la [documentación de telemetría interna](https://opentelemetry.io/docs/collector/internal-telemetry/) no se admite. Los componentes personalizados o [de contribución](https://github.com/open-telemetry/opentelemetry-collector-contrib) emiten métricas estándar, pero también pueden definir sus propias métricas que no se muestran en la experiencia.
+
+* **Métricas doradas para contenedores OTel**: Aún no cuenta con soporte completo, lo que significa que algunas columnas en el panel de infraestructura podrían no completarse para los contenedores.
+
+### Limitaciones para recolectores adjuntos [#attached-limitations]
+
+Como se mencionó [anteriormente](#view-modes), aunque lo admitimos, no recomendamos que el recolector y la aplicación compartan el mismo <DNT>`service.name`</DNT>, ya que existen limitaciones inherentes. Esto se debe a que un recolector es una aplicación completa que emite telemetría que se adhiere a las convenciones semánticas de OTel y, al elegir el mismo <DNT>`service.name`</DNT>, los límites entre la aplicación y el recolector pueden volverse imposibles de distinguir desde la perspectiva de la telemetría, lo que genera efectos secundarios no deseados en la experiencia:
+
+* La métrica agregada, como el rendimiento o la tasa de errores, se vuelve menos significativa, ya que se calcula a partir de una combinación de la métrica de la aplicación y del recolector.
+* Las capacidades como las transacciones y los servicios externos muestran una unión de los datos de la aplicación y del recolector, lo que requiere conocimiento sobre los detalles de implementación para interpretar los datos mostrados. A modo de ejemplo, los nombres de las transacciones a menudo se basan en los nombres de las rutas HTTP, por lo que para saber qué transacciones pertenecen a la aplicación o al recolector, debe saber qué rutas implementa cada uno.

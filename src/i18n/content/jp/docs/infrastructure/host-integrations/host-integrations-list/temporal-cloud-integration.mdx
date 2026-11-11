@@ -1,0 +1,113 @@
+---
+title: 時間的クラウド統合
+tags:
+  - Temporal Cloud integration
+  - Temporal Cloud monitoring
+  - New Relic integrations
+metaDescription: Install our Temporal Cloud dashboards and see your Temporal Cloud data in New Relic.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+当社の Temporal Cloud インテグレーションは、Temporal Cloud データのパフォーマンスを監視し、ワークフロー、ネームスペース、耐久性のあるアプリケーションの問題の診断に役立ちます。
+
+<Steps>
+  <Step>
+    ## インフラストラクチャエージェントをインストールします [#infra]
+
+    Temporal クラウド インテグレーションを使用するには、まず同じホストに[インフラストラクチャ エージェントをインストールする](/docs/infrastructure/install-infrastructure-agent/get-started/install-infrastructure-agent-new-relic/)必要があります。 インフラストラクチャエージェントはホスト自体を監視しますが、次のステップでインストールする統合は、データベースやインスタンス メトリクスなどの時間固有のデータを使用して監視を拡張します。
+  </Step>
+
+  <Step>
+    ## 設定 `nri-flex` [#configure-flex]
+
+    Temporal Cloud メトリクスには`https://metrics.temporal.io/v1/metrics`経由でアクセスできます。 [メトリクスの読み取り権限を持つ Temporal Cloud APIキーで認証する](https://docs.temporal.io/production-deployment/cloud/metrics/openmetrics/api-reference#authentication)必要があります。
+
+    <Callout title="注記" variant="tip">
+      Flex には[New Relicアカウント](/docs/accounts/accounts-billing/account-setup/create-your-new-relic-account)が必要で、次の OS/プラットフォームと互換性があります。
+
+      1. Linux
+
+      2. ウィンドウズ
+
+      3. Kubernetes
+
+         互換性のあるディストリビューションとバージョンの詳細については、 [インフラストラクチャエージェントの互換性ページ](/docs/infrastructure/new-relic-infrastructure/getting-started/compatibility-requirements-new-relic-infrastructure)を参照してください。
+    </Callout>
+
+    1. 次のパスに`nri-flex-temporal-cloud-config.yml`という名前のファイルを作成します。
+
+       ```shell
+       touch /etc/newrelic-infra/integrations.d/
+       ```
+
+    2. 以下は、 `nri-flex`設定ファイルです。 必ずその内容をコピーして、以前に作成した`nri-flex-temporal-cloud-config.yml`ファイルに貼り付け、Temporal Cloud APIキーを更新することを忘れないでください。
+
+       ```yml
+       # nri-flex configuration for Temporal Cloud OpenMetrics Endpoint
+       # Place this file in /etc/newrelic-infra/integrations.d/
+       #
+       # Prerequisites:
+       # 1. Create a Service Account in Temporal Cloud UI (Settings > Service Accounts)
+       # 2. Assign the "Metrics Read-Only" Account Level Role to the service account
+       # 3. Generate an API key for the service account
+       # 4. Set the TEMPORAL_API_KEY environment variable or replace the placeholder below
+       #
+
+       integrations:
+         - name: nri-flex
+           interval: 60s
+           timeout: 30s
+           config:
+             name: TemporalCloudMetrics
+             apis:
+               # Collect all Temporal Cloud metrics
+               - name: TemporalCloud
+                 event_type: TemporalCloudSample
+                 url: https://metrics.temporal.io/v1/metrics
+                 headers:
+                   Authorization: Bearer ${TEMPORAL_API_KEY}
+                   Accept: application/openmetrics-text
+                 prometheus:
+                   enable: true
+                 custom_attributes:
+                   integration: temporal-cloud
+                   source: openmetrics
+       ```
+
+    3. 以下の手順[に従って、インフラストラクチャ エージェントを再起動してください。](/docs/infrastructure/install-infrastructure-agent/manage-your-agent/start-stop-restart-infrastructure-agent/)
+
+       ```bash
+       sudo systemctl restart newrelic-infra.service
+       ```
+
+    4. データが[New Relic アカウント](https://one.newrelic.com/)に流れ始めるまで数分間お待ちください。
+  </Step>
+
+  <Step>
+    ## データを検索する [#find-your-data]
+
+    Temporal Cloud メトリックを監視するために、Temporal Cloud という事前に構築されたダッシュボード テンプレートを選択できます。 事前に構築されたダッシュボード テンプレートを使用するには、次の手順に従ってください。
+
+    1. [one.newrelic.com](https://one.newrelic.com/)より、 **+ Integrations &amp; Agents**ページに移動します。
+    2. **\[ダッシュボード]**をクリックします。
+    3. 検索バーに**Temporal Cloud**と入力します。
+    4. Temporal Cloud ダッシュボードが表示されます。 クリックしてインストールしてください。
+
+    Temporal Cloud ダッシュボードはカスタムダッシュボードとみなされ、ダッシュボードUIに表示されます。 ダッシュボードの使用と編集に関するドキュメントについては、[ダッシュボードのドキュメント](/docs/query-your-data/explore-query-data/dashboards/introduction-dashboards/)を参照してください。
+
+    以下は、ネームスペースと操作ごとにグループ化された Temporal Cloud フロントエンド サービス リクエストを確認するためのNRQLです。
+
+    ```sql
+    FROM TemporalCloudSample SELECT latest(`temporal_cloud_v1_frontend_service_request_count.gauge`) FACET temporal_namespace, operation
+    ```
+  </Step>
+</Steps>
+
+## 次は何ですか？
+
+NRQL クエリの作成とダッシュボードの生成の詳細については、次のドキュメントをご覧ください。
+
+* 基本的なクエリと高度なクエリを作成する[ためのクエリ ビルダーの概要](/docs/query-your-data/explore-query-data/query-builder/introduction-query-builder)。
+* [ダッシュボードをカスタマイズしてさまざまなアクションを実行するためのダッシュボードの概要](/docs/query-your-data/explore-query-data/dashboards/introduction-dashboards)。
+* ダッシュボードを[管理して、ダッシュ](/docs/query-your-data/explore-query-data/dashboards/manage-your-dashboard)ボードの表示モードを調整したり、ダッシュボードにコンテンツを追加したりします。

@@ -1,0 +1,67 @@
+---
+title: Upgrade legacy monitors to the latest runtime versions
+tags:
+  - Synthetics
+  - Synthetic monitoring
+  - Runtime conversion
+metaDescription: "Synthetic monitoring's runtime upgrade tool helps you update legacy monitors to the latest runtimes."
+freshnessValidatedDate: 2026-05-08
+---
+
+New Relic is [ending support for older runtimes](/eol/2026/05/eol-05-18-26-node-16-chrome-134-runtimes/) in 2026. To simplify migrating synthetic monitors to the latest supported runtimes, we auto-upgraded every monitor that didn't require your action. Use the runtime upgrade tool to view the remaining monitors that still need your attention.
+
+## Upgrade your remaining monitors [#upgrade-options]
+
+For each monitor that requires attention, you can choose one of two paths.
+
+<Tabs>
+  <TabsBar>
+    <TabsBarItem id="fix-manually">
+      Fix manually
+    </TabsBarItem>
+
+    <TabsBarItem id="fix-with-ai">
+      Fix with AI
+    </TabsBarItem>
+  </TabsBar>
+
+  <TabsPages>
+    <TabsPageItem id="fix-manually">
+      To update a monitor by writing or editing your monitor scripts manually, follow the steps.
+
+      1. Go to <DNT>**[one.newrelic.com](https://one.newrelic.com)** > **Synthetic Monitoring** > **Runtime Upgrades**</DNT>.
+      2. Locate the monitor and click <DNT>**Fix manually**</DNT>.
+      3. In the <DNT>**Fix script manually**</DNT> window, update your script code for the new runtime environment.
+      4. Click <DNT>**Close and start validation**</DNT>. The monitor moves to the <DNT>**Monitors we're validating**</DNT> table while the system validates the updated script.
+
+          * If validation fails, click **⋯** next to the monitor, select <DNT>**Fix manually**</DNT> from the menu, update the script, and click <DNT>**Close and start validation**</DNT> again.
+
+      5. Once validation is successful and the status shows as <DNT>**Fixed**</DNT>, click the <DNT>**Ready to update**</DNT> tab.
+      6. Select the checkbox next to the validated monitor, and click <DNT>**Upgrade selected**</DNT>.
+
+      Once finished, a confirmation notification appears and the monitor moves to the <DNT>**Updated**</DNT> tab where you can verify the successful upgrade.
+    </TabsPageItem>
+
+    <TabsPageItem id="fix-with-ai">
+      <Callout title="Note">
+        * This feature requires Advanced Compute and isn't available for <DNT>**FedRAMP**</DNT> accounts. Contact your New Relic account team for support.
+        * Always test AI-generated scripts before deploying the monitors in production.
+      </Callout>
+
+      Use this option to let <DNT>**New Relic AI (NRAI)**</DNT> generate an updated script for you. The AI-assisted script generation is mainly geared toward fixing `timeout errors` incurred during runtime upgrades. For monitors with `script errors`, the script potentially needs other changes. You can make those manually or use <DNT>[New Relic Autopilot](/docs/agentic-ai/autopilot/overview/)</DNT> to debug and get insights on potential script-related updates.
+
+      To update a monitor using AI:
+
+      1. Go to <DNT>**[one.newrelic.com](https://one.newrelic.com)** > **Synthetic Monitoring** > **Runtime Upgrades**</DNT>.
+      2. Locate the monitor and click <DNT>**Fix with AI**</DNT>.
+      3. Review the AI-suggested script. To view the specific changes made to your original code, click <DNT>**Show comparison**</DNT> to open a side-by-side diff view.
+      4. Click <DNT>**Continue to validation**</DNT>. The system temporarily places the monitor in a validation state to test the new script and ensure it executes without errors.
+      5. Once the script is validated, click the <DNT>**Ready to update**</DNT> tab.
+      6. Select the checkbox next to the validated monitor, and click <DNT>**Upgrade selected**</DNT>.
+
+      Once finished, a confirmation notification appears and the monitor moves to the <DNT>**Updated**</DNT> tab where you can verify the successful upgrade.
+    </TabsPageItem>
+  </TabsPages>
+</Tabs>
+
+You can also validate multiple monitors in parallel and share the links with teammates to split the work. Once all your scripts are validated, you can deploy the monitors to production when you're ready.

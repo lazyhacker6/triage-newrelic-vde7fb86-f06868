@@ -1,0 +1,77 @@
+---
+title: Criar uma condição de alerta composta
+tags:
+  - Alerts
+  - Compound alerts
+metaDescription: Step-by-step instructions for creating and managing compound alert conditions in New Relic.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Para criar uma condição de alerta composta,
+
+1. Vá para <DNT>**Alerts &gt; Compound Alerts**</DNT>.
+
+2. Todas as condições do componente devem ser da mesma conta proprietária. Selecione-o no dropdown.
+
+   <Callout variant="tip">
+     Para incluir uma condição que tem como destino dados de outra conta, configure uma condição de alerta entre contas na mesma conta proprietária do alerta composto.
+   </Callout>
+
+3. Clique em <DNT>**Create a compound alert**</DNT> e insira um nome para o alerta composto.
+
+4. Clique em <DNT>**Add conditions**</DNT> e escolha até cinco condições. Cada condição recebe automaticamente uma variável <DNT>(a, b, c, d, e)</DNT> para uso na expressão de acionamento. Você só pode selecionar condições do alerta padrão, não outras condições do alerta compostas. Consulte as [limitações de alertas compostos](/docs/alerts/create-alert/create-alert-condition/compound-alerts/compound-alerts#limitations) para ver todas as restrições.
+
+   <img title="Condition selection in compound alert builder" alt="A screenshot dispaying the condition selection process in the compound alert builder" src="/images/select-2-5-alerts.webp" />
+
+   <Callout variant="important">
+     Cada condição pode ter vários limites, como aviso, crítico ou perda de sinal. Quando qualquer limite de uma condição é atingido, essa condição é tratada como acionada na expressão composta.
+   </Callout>
+
+5. Se suas condições compartilharem facetas, marque a caixa de seleção para acionar apenas quando o mesmo valor de faceta atingir os limites em todas as condições. Deixe-a desmarcada para acionar independentemente dos valores de faceta correspondentes.
+
+   <Callout variant="tip">
+     Quando uma condição é facetada por vários atributos, ocorre uma correspondência quando pelo menos um atributo é o mesmo em todas as condições.
+   </Callout>
+
+6. Para definir como as condições devem funcionar juntas, no campo **Tell us how you want these conditions to work together** \[Diga-nos como você quer que essas condições funcionem em conjunto], escreva uma expressão de acionamento usando as variáveis atribuídas e os operadores lógicos <DNT>(AND, OR, NOT)</DNT>. Use parênteses para agrupar expressões para lógica complexa.
+
+   Exemplos: <DNT>`a AND b`, `a OR b OR c`, `a AND (b OR c)`, `a AND NOT b`, `a AND (b OR c) AND NOT d`</DNT>
+
+7. Defina a **Threshold duration** para controlar por quanto tempo a expressão de acionamento deve permanecer verdadeira antes que um evento de alerta seja aberto.
+
+8. Na dropdown <DNT>**Policy**</DNT>, selecione uma política. Saiba mais sobre [políticas de alertas](/docs/alerts/organize-alerts/create-edit-or-find-alert-policy/).
+
+   <Callout variant="tip">
+     Para agrupar eventos de alerta compostos e de componentes no mesmo problema, configure as condições do seu componente para usar a mesma política selecionada aqui.
+   </Callout>
+
+9. (Opcional) Defina um <DNT>**Title template**</DNT> e <DNT>**Description template**</DNT> para personalizar como os problemas desta condição aparecem. Consulte [Modelos de título e descrição](#title-description-templates) para obter detalhes.
+
+10. (Opcional) Para vincular ao seu procedimento de tratamento de incidentes, adicione um <DNT>**Runbook URL**</DNT>. O New Relic inclui este URL nas notificações.
+
+11. Alterne <DNT>**Enable on save**</DNT> para ativar a condição imediatamente.
+
+12. Revise sua configuração e, em seguida, salve. A condição aparece na página <DNT>**Compound Alerts**</DNT>.
+
+## Gerenciar condições do alerta compostas [#manage-compound-alerts]
+
+Para visualizar todas as condições do alerta compostas, acesse <DNT>**Alerts &gt; Compound Alerts**</DNT>.
+
+* <DNT>**Edit**</DNT>: Clique em qualquer nome de alerta composto para editar sua configuração, incluindo seus modelos de título e descrição. As alterações nas condições do componente refletem automaticamente no alerta composto.
+* <DNT>**Delete**</DNT>: Clique em <Icon name="fe-more-horizontal" /> &gt; <DNT>**Delete**</DNT>. Excluir um alerta composto não exclui as condições individuais do componente — elas permanecem ativas individualmente.
+
+## Modelos de título e descrição [#title-description-templates]
+
+Use os campos <DNT>**Title template**</DNT> e <DNT>**Description template**</DNT> para controlar como os problemas de uma condição do alerta composto são intitulados e descritos:
+
+* <DNT>**Title template**</DNT>: substitui o título do problema gerado pelo sistema pelo seu próprio texto, para que você possa identificar rapidamente quais problemas vêm de uma condição composta.
+* <DNT>**Description template**</DNT>: Adiciona uma descrição da condição composta. Ela é exibida na página do problema, na seção de eventos do alerta.
+
+Ambos os campos suportam variáveis do Handlebars, como <DNT>`{{ policy.name }}`</DNT>, para extrair dinamicamente os detalhes da condição.
+
+<Callout variant="tip">
+  Se você salvar um modelo com sintaxe inválida do Handlebars, a condição ainda será salva. Uma variável que não é resolvida simplesmente não será renderizada no título ou na descrição.
+</Callout>
+
+Para ver como esses modelos aparecem na página do problema, consulte [Títulos e descrições personalizados](/docs/alerts/create-alert/create-alert-condition/compound-alerts/compound-alert-events#custom-title-description).

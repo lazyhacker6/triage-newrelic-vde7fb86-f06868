@@ -1,0 +1,46 @@
+---
+title: Databricks の統合
+tags:
+  - Databricks
+  - databricks integration
+  - New Relic integration
+metaDescription: Use the Databricks integration to collect telemetry from the Databricks Data Intelligence Platform
+freshnessValidatedDate: '2026-01-26T00:00:00.000Z'
+translationType: machine
+---
+
+Databricks 統合は、Databricks 資産全体にテレメトリー収集機能の包括的なスイートを提供するオープンソース コミュニティ プロジェクトです。 これらの機能により、詳細な分析と最適化に必要な完全なコンテキスト内データを確実に得ることができます。
+
+統合では、次のタイプのテレメトリーが収集されます。
+
+* Apache Spark アプリケーション メトリクス (Spark Executor のメモリおよび CPU メトリクス、Spark ジョブの実行時間、Spark ステージおよびタスクの実行時間と I/O メトリクス、Spark RDD のメモリおよびディスク メトリクスなど)
+* Databricks Lakeflow ジョブ実行メトリクス (期間、開始時間と終了時間、ジョブとタスクの実行の終了コードとタイプなど)。
+* Databricks Lakeflow Declarative Pipelineメトリクス更新 (更新とフローの期間、開始時間と終了時間、完了ステータスなど)。
+* Databricks Lakeflow Declarative Pipelineイベントログ
+* Databricks 書き込みメトリクス (実行時間と書き込みI/Oメトリクスを含む)。
+* Databricks クラスタの健全性メトリクスとログ (ドライバーとワーカーのメモリ、CPU メトリクス、ドライバーとエグゼキューターのログなど)。
+* DBU 消費量と推定 Databricks コストを表示するために使用できる Databricks 消費量とコストのデータ。
+
+## 統合をインストールする [#setup]
+
+Databricksインテグレーションは、Databricksの汎用、ジョブ、またはパイプライン[クラスタ](https://docs.databricks.com/en/getting-started/concepts.html#cluster)のドライバーノードにデプロイすることを目的としています。この方法でインテグレーションをデプロイするには、[Databricksクラスタにインテグレーションをデプロイする](https://github.com/newrelic/newrelic-databricks-integration/blob/main/docs/installation.md#deploy-the-integration-to-a-databricks-cluster)手順に従ってください。
+
+Databricks 統合は、サポートされているホスト環境でリモートからデプロイすることもできます。 この方法で統合をデプロイするには、 [リモートで統合をデプロイする](https://github.com/newrelic/newrelic-databricks-integration/docs/installation.md#deploy-the-integration-remotely)手順に従います。
+
+## インストレーションを確認する [#verify-installation]
+
+Databricks 統合が数分間実行されたら、 New Relicの[各ビルダー](https://one.newrelic.com/data-exploration/query-builder)を使用して次のコマンドを実行します。 `[YOUR_CLUSTER_NAME]` 、*統合がインストールされている*Databricks クラスタの*名前*に置き換えます (クラスタ名に`'`が含まれている場合は、それを`\`でエスケープする必要があることに注意してください)。
+
+`SELECT uniqueCount(executorId) AS Executors FROM SparkExecutorSample WHERE databricksClusterName = '[YOUR_CLUSTER_NAME]'`
+
+クエリの結果は**0 より大きい数値**になる必要があります。
+
+## サンプルダッシュボードをインポートする（オプション） [#add-dashboard]
+
+収集したテレメトリーの使用を開始するには、[ガイド付きインスト](https://one.newrelic.com/marketplace?state=34e67b15-4fe1-28ef-ff41-99658fb36820)レーションを使用して、事前に構築されたダッシュボードをインストールします。
+
+あるいは、 [「サンプルDashboardsインポート」](https://github.com/newrelic/newrelic-databricks-integration/docs/example-dashboards.md)にある手順に従って、事前に構築されたダッシュボードをインストールすることもできます。
+
+## もっと詳しく知る
+
+Databricks 統合の詳細については、公式New Relic Databricks 統合[リポジトリ](https://github.com/newrelic/newrelic-databricks-integration)をご覧ください。

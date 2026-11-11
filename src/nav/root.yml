@@ -1,0 +1,97 @@
+title: root
+path: /
+pages:
+  - title: Start here
+  - title: Get started with New Relic
+    path: /docs/new-relic-solutions/get-started/intro-new-relic
+  - title: Tutorials and walkthroughs
+    path: tutorials
+  - title: Guides and best practices
+    path: new-relic-solutions
+  - title: Monitor your data
+  - title: New Relic Control
+    path: new-relic-control
+  - title: AI monitoring
+    path: ai-monitoring
+  - title: Application Monitoring (APM)
+    path: apm
+  - title: Browser Monitoring
+    path: browser
+  - title: eBPF Monitoring
+    path: ebpf
+  - title: Infrastructure Monitoring
+    path: infrastructure
+  - title: Kubernetes and Pixie
+    path: kubernetes-pixie
+  - title: Log Management
+    path: logs
+  - title: Mobile Monitoring
+    path: mobile-monitoring
+  - title: Model Performance Monitoring
+    path: mlops
+  - title: Queues and Streams Monitoring
+    path: message-queues-streaming
+  - title: Network Monitoring
+    path: network-performance-monitoring
+  - title: OpenTelemetry
+    path: opentelemetry
+  - title: SAP Solutions
+    path: sap-solutions
+  - title: Serverless Monitoring
+    path: serverless-function-monitoring
+  - title: Streaming Video & Ads
+    path: streaming-video-&-ads 
+  - title: Synthetic Monitoring
+    path: synthetics
+  - title: Website performance monitoring
+    path: website-performance-monitoring
+  - title: Data insights
+  - title: Agentic AI 
+    path: agentic-ai 
+  - title: Alerts
+    path: alerts
+  - title: Change Tracking
+    path: change-tracking
+  - title: Charts, dashboards, and querying
+    path: dashboards
+  - title: Cloud Cost Intelligence
+    path: cci
+  - title: Distributed Tracing
+    path: distributed-tracing
+  - title: Triage Inbox (Errors Inbox)
+    path: errors-inbox
+  - title: Workloads
+    path: workloads
+  - title: New Relic Lens
+    path: new-relic-lens
+  - title: NRQL
+    path: nrql
+  - title: Service Architecture Intelligence
+    path: service-architecture-intelligence
+  - title: Service Level Management
+    path: service-level-management
+  - title: Workflow Automation
+    path: workflow-automation
+  - title: Security
+  - title: New Relic IAST
+    path: iast
+  - title: Security RX (Remediation Explorer)
+    path: vuln-management   
+  - title: Product updates
+  - title: Release notes
+    path: release-notes
+  - title: What's new?
+    path: whats-new
+  - title: End-of-life announcements
+    path: /eol
+  - title: Admin and data
+  - title: Account & user management
+    path: accounts
+  - title: Data and APIs
+    path: telemetry-data-platform
+  - title: Data dictionary
+    path: /attribute-dictionary
+  - title: Security and privacy
+    path: new-relic-security
+  - title: Licenses
+    path: licenses

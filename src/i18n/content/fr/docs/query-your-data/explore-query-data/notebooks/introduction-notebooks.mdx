@@ -1,0 +1,275 @@
+---
+title: Créez des documents data-driven avec des carnets.
+tags:
+  - Query your data
+  - Explore and query data
+  - Notebooks
+metaDescription: 'Use New Relic notebooks to create structured, data-driven documents that combine queries, visualizations, and descriptive text into shareable assets for investigations, post-mortems, and analytical insights.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Lorsque vous enquêtez sur des problèmes complexes ou partagez des informations détaillées avec votre équipe, vous vous retrouvez souvent à jongler entre différents outils, à copier des requêtes, à prendre des captures d&apos;écran et à lutter pour maintenir le contexte tout en reconstituant un récit complet à partir de vos données. Les dashboards traditionnels sont parfaits pour monitoring, mais ils sont insuffisants lorsqu&apos;il s&apos;agit de documenter les enquêtes, de créer des analyses post-mortem détaillées ou de construire un flux de travail analytique étape par étape.
+
+Les notebooks résolvent ce problème en offrant une manière dynamique et organisée de raconter une histoire complète à partir de vos données. Ce sont des documents structurés et data-driven qui vous permettent de combiner requêtes, visualisations et textes descriptifs en un seul élément partageable, éliminant ainsi la nécessité de passer d&apos;un outil à l&apos;autre ou de perdre des informations importantes lors de votre analyse.
+
+## Cas d&apos;utilisation
+
+Utilisez des carnets pour améliorer votre workflow et transformer les données brutes en récits exploitables :
+
+* **Requête, analyse et visualisation de données**: interrogez toutes vos données d&apos;observabilité (logs, métriques, événement) et créez des visualisations pour mieux comprendre les performances de votre système.
+* **Créez des post-mortems et des documents d&apos;événements d&apos;alerte**: Collaborez avec votre équipe pour documenter les investigations et créer un registre clair et réutilisable pour les post-mortems d&apos;événements d&apos;alerte et l&apos;analyse des causes profondes.
+* **Créez des flux de travail et des manuels d&apos;exploitation réutilisables**: créez et partagez des guides étape par étape pour des analyses complexes.
+* **Ajoutez du contexte et un récit**: utilisez Markdown pour ajouter facilement des titres détaillés, des notes et des explications à votre requête et à vos graphiques, transformant ainsi des points de données disparates en une histoire cohérente.
+
+## Commencez avec les cahiers
+
+Maintenant que vous comprenez les bases des notebooks, vous êtes prêt à commencer à créer et à gérer vos propres notebooks. Vous pouvez créer des notebooks de manière interactive dans l’UI de New Relic, ou les gérer par programmation avec [Terraform](https://registry.terraform.io/providers/newrelic/newrelic/latest/docs/resources/notebook), ou l’ [API Notebooks](/docs/query-your-data/explore-query-data/notebooks/blob-storage-api-for-notebooks).
+
+### Accédez aux carnets.
+
+Pour accéder aux carnets :
+
+1. Rendez-vous sur **[one.newrelic.com](https://one.newrelic.com)**.
+2. Ouvrez la console <DNT>**Query your data**</DNT> depuis le menu latéral situé en bas de la page.
+3. Cliquez sur <DNT>**Notebooks**</DNT> dans l’en-tête du générateur de requêtes pour afficher la liste de tous les notebooks créés par votre organisation.
+
+<img title="Navigate to notebooks from query your data" alt="Screenshot showing a notebook in New Relic with NRQL queries and an area chart visualizing checkout process error rate" src="/images/notebooks-navigation.webp" />
+
+<figcaption>
+Accédez aux notebooks en allant dans <DNT>**Query your data &gt; Notebooks**</DNT>
+</figcaption>
+
+<CollapserGroup>
+<Collapser id="create-notebook" title="Créer un carnet">
+Vous avez deux façons simples de commencer un nouveau carnet :
+
+### Commencez par l&apos;index des cahiers
+
+1. Cliquez sur <DNT>**+ Create a notebook**</DNT> en haut à droite de l’index.
+2. Donnez à votre bloc-notes un nom significatif (les noms sont consultables, utilisez donc des mots-clés pertinents comme le nom de votre service ou de votre application).
+3. Cliquez sur <DNT>**Create**</DNT>.
+4. Dans le panneau de la console de requêtes, saisissez votre première requête.
+
+### Commencez par la console de requêtes
+
+1. Ouvrez la console de requêtes (le tiroir en bas de la plateforme).
+2. Créez votre requête et vos blocs Markdown souhaités.
+3. Cliquez sur le <DNT>**Save**</DNT>.
+4. Nommez votre bloc-notes et cliquez sur <DNT>**Save**</DNT>.
+</Collapser>
+
+<Collapser id="manage-notebooks" title="Gérez vos carnets">
+### Rechercher et trier les carnets
+
+Pour trouver des carnets spécifiques dans votre organisation :
+
+1. **Recherche par nom**: Utilisez la barre de recherche en haut de l’index des carnets pour trouver des carnets par nom ou par mots-clés.
+
+2. **Trier les cahiers**: Cliquez sur l&apos;icône de tri pour organiser les cahiers par :
+
+   * Nom (AZ ou ZA)
+   * Date de dernière modification (du plus récent au plus ancien)
+   * Date de création (du plus récent au plus ancien)
+   * Favoris (les carnets marqués d&apos;une étoile apparaissent en premier)
+
+3. **Filtrer par favoris**: Cliquez sur le filtre en forme d’étoile pour afficher uniquement vos carnets favoris.
+
+### Dupliquez un cahier
+
+1. Ouvrez le bloc-notes que vous souhaitez dupliquer.
+2. Cliquez sur la flèche à côté du nom de l’onglet dans le tiroir de la console et cliquez sur <DNT>**duplicate**</DNT>.
+3. Cliquez sur <DNT>**Duplicate**</DNT> dans le menu contextuel.
+4. Une copie du bloc-notes s&apos;ouvrira dans un nouvel onglet, prête à être modifiée.
+
+### Marquer un carnet comme favori
+
+Pour retrouver rapidement vos carnets les plus importants, vous pouvez les marquer comme favoris :
+
+1. Cliquez sur l&apos;icône en forme d&apos;étoile à côté du nom d&apos;un bloc-notes dans la page d&apos;index.
+2. L&apos;icône deviendra jaune et le bloc-notes sera regroupé en haut de la liste d&apos;index.
+3. Cliquez à nouveau sur l&apos;icône en forme d&apos;étoile pour la supprimer de vos favoris.
+</Collapser>
+
+<Collapser id="delete-notebook" title="Supprimer un bloc-notes">
+<Callout variant="caution">
+La suppression d&apos;un bloc-notes est définitive et ne peut être annulée. Une fois supprimé, le bloc-notes et tout son contenu sont définitivement effacés du système. Veillez à dupliquer les carnets que vous souhaitez conserver avant de les supprimer.
+</Callout>
+
+1. Dans la liste d&apos;index des blocs-notes, cliquez sur le menu d&apos;actions à trois points correspondant au bloc-notes que vous souhaitez supprimer.
+2. Cliquez sur l’option <DNT>**Delete**</DNT>.
+3. Confirmez la suppression en cliquant à nouveau sur <DNT>**Delete**</DNT>.
+</Collapser>
+</CollapserGroup>
+
+## Blocs de cahier
+
+Les blocs sont les unités de base d&apos;un cahier. Ce sont des sections individuelles que vous ajoutez pour structurer votre analyse et votre récit.
+
+### blocs de requête
+
+Utilisez des blocs de requête pour écrire des [requêtes<DNT>NRQL</DNT> ](/docs/nrql/nrql-syntax-clauses-functions/)et visualiser les résultats. Tous [les types de graphiques](https://docs.newrelic.com/docs/query-your-data/explore-query-data/use-charts/chart-types/) à requête unique et les personnalisations disponibles dans le générateur de requêtes standard sont pris en charge dans les notebooks.
+
+### Blocs de texte
+
+Utilisez Markdown pour ajouter du texte enrichi, des titres, du contexte, des explications et du texte descriptif afin de raconter l&apos;histoire de votre enquête.
+
+### Actions de blocage
+
+Chaque [bloc](/docs/query-your-data/explore-query-data/notebooks/introduction-notebooks/) peut être manipulé pour organiser votre document :
+
+* <DNT>**Duplicate**</DNT>: créer une copie du bloc
+* <DNT>**Delete**</DNT>: supprimez le bloc de votre notebook
+* <DNT>**Move Up/Down**</DNT>: réorganiser les blocs dans votre bloc-notes
+* <DNT>**Move to Top/Bottom**</DNT>: déplacer rapidement les blocs vers le début ou la fin
+
+## Autorisations des carnets
+
+Avant de commencer à créer des carnets, il est important de comprendre comment fonctionnent les autorisations et qui aura accès à vos carnets.
+
+### association d&apos;organisations
+
+Chaque carnet est une ressource qui appartient à l&apos;organisation au sein de laquelle il a été créé. Cette association est permanente et ne peut être modifiée. Les blocs-notes ne peuvent pas être partagés entre différentes organisations. Si l&apos;organisation est supprimée, le bloc-notes est également supprimé. Si un utilisateur change d&apos;organisation, il n&apos;aura plus accès aux blocs-notes de son ancienne organisation.
+
+### Modèle d&apos;autorisations actuel
+
+New Relic Notebooks utilise des rôles personnalisés avec des capacités CRUD pour contrôler l’accès. Il existe deux niveaux d’accès : au niveau de l’organisation (défini par un administrateur) et au niveau du notebook (défini pour chaque notebook par son créateur).
+
+#### Autorisations au niveau de l&apos;organisation
+
+Ceux-ci sont accordés via des rôles personnalisés dans l’interface d’administration de New Relic.
+
+<table>
+<thead>
+<tr>
+<th>
+Rôle
+</th>
+
+<th>
+Capacités
+</th>
+
+<th>
+Ce que cela permet
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+**Accès intégral**
+</td>
+
+<td>
+`notebooks.create.notebook`<br />`notebooks.read.notebook`<br />`notebooks.update.notebook`<br />`notebooks.delete.notebook`
+</td>
+
+<td>
+Créer, lire, modifier et supprimer n&apos;importe quel notebook dans l&apos;organisation
+</td>
+</tr>
+
+<tr>
+<td>
+**Créateur**
+</td>
+
+<td>
+`notebooks.create.notebook`
+</td>
+
+<td>
+Créer de nouveaux carnets (ses propres carnets uniquement)
+</td>
+</tr>
+</tbody>
+</table>
+
+#### Rôles au niveau du carnet
+
+Ils sont attribués sur un carnet spécifique, généralement par le créateur du carnet.
+
+<table>
+<thead>
+<tr>
+<th>
+Rôle
+</th>
+
+<th>
+Autorisation
+</th>
+
+<th>
+Ce que cela permet
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+**Propriétaire**
+</td>
+
+<td>
+`notebook_owner`
+</td>
+
+<td>
+Lire, modifier, supprimer et gérer les autorisations — automatiquement attribuées au créateur
+</td>
+</tr>
+
+<tr>
+<td>
+**Éditeur**
+</td>
+
+<td>
+`notebook_editor`
+</td>
+
+<td>
+Modifier le notebook
+</td>
+</tr>
+
+<tr>
+<td>
+**Lecteur**
+</td>
+
+<td>
+`notebook_reader`
+</td>
+
+<td>
+Afficher le notebook (en lecture seule)
+</td>
+</tr>
+</tbody>
+</table>
+
+#### Comment cela fonctionne ensemble
+
+1. Un administrateur attribue à un utilisateur le rôle **Creator** au niveau de l’organisation — cela lui permet de créer des carnets.
+2. Lorsqu’un utilisateur crée un carnet, il en devient automatiquement le **Owner**.
+3. Le propriétaire peut ensuite partager le notebook avec d&apos;autres personnes en leur accordant les rôles **Editor** ou **Reader** sur ce notebook spécifique.
+4. Les utilisateurs qui ont besoin d’accéder à tous les notebooks à l’échelle de l’organisation (par exemple, les administrateurs) obtiennent plutôt le rôle **Full access**.
+
+## Quelle est la prochaine étape ?
+
+Maintenant que vous comprenez les bases des cahiers, vous pouvez :
+
+* Apprenez-en davantage sur [les blocs dans un cahier](/docs/query-your-data/explore-query-data/notebooks/add-queries-to-notebooks/)
+* Utilisez des [variables dans les notebooks](/docs/query-your-data/explore-query-data/notebooks/notebook-variables) pour créer des runbooks dynamiques et paramétrés
+* Gérez les notebooks par programmation avec l&apos;[API Blob Storage pour les notebooks](/docs/query-your-data/explore-query-data/notebooks/blob-storage-api-for-notebooks), ou créez-les et versionnez-les sous forme de code avec la [ressource Terraform `newrelic_notebook`](https://registry.terraform.io/providers/newrelic/newrelic/latest/docs/resources/notebook)
+
+Vous pouvez également explorer les fonctionnalités associées :
+
+* [Dashboards](/docs/query-your-data/explore-query-data/dashboards/introduction-dashboards) pour la création de visualisations de données persistantes
+* [générateur de requêtes](/docs/query-your-data/explore-query-data/query-builder/introduction-query-builder) pour créer une requête individuelle
+* [Graphiques](/docs/query-your-data/explore-query-data/use-charts/use-your-charts) pour comprendre les options de visualisation

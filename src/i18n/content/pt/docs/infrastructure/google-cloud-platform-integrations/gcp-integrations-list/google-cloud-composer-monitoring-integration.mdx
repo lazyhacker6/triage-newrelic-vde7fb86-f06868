@@ -1,0 +1,839 @@
+---
+title: Google Cloud Composer monitoramento de integração
+tags:
+  - Integrations
+  - Google Cloud Platform integrations
+  - GCP integrations list
+metaDescription: Google Cloud Composer monitoring integration.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+[A integração da New Relic](/docs/infrastructure/introduction-infra-monitoring) com o [Google Cloud Platform (GCP)](https://cloud.google.com/) inclui uma que reporta dados do [Google Cloud Composer](https://cloud.google.com/composer) para New Relic. Este documento explica como ativar a integração do GCP Cloud Composer e descreve os dados que ela reporta.
+
+## Recurso
+
+O Cloud Composer é o serviço de orquestração de fluxo de trabalho totalmente gerenciado do Google Cloud, desenvolvido no Apache Airflow. A integração do New Relic Cloud Composer coleta métricas de ambiente, workload e fluxo de trabalho — execuções de DAG, instâncias de tarefas, heartbeats do agendador e uso de recursos do worker.
+
+## Ativar integração [#activate]
+
+Para habilitar a integração, é necessário seguir os procedimentos padrão para [conectar o serviço do GCP ao New Relic](/docs/connect-google-cloud-platform-services-infrastructure):
+
+* [Conecte-se com a Workload Identity Federation (recomendado)](/docs/connect-google-cloud-platform-services-infrastructure)
+* [Conectar com conta de serviço ou conta de usuário](/docs/connect-google-cloud-platform-services-infrastructure)
+
+## Frequência de votação [#polling]
+
+As integrações do New Relic consultam os serviços do GCP de acordo com um intervalo de sondagem que varia por integração. A frequência de sondagem do Google Cloud Composer é de 5 minutos. A resolução é 1 ponto de dados a cada minuto.
+
+## Workload Identity Federation [#wif]
+
+### Encontre e use dados [#find-data-wif]
+
+Após habilitar a integração, os recursos do Cloud Composer aparecem como entidades no explorador de entidades do New Relic. Para ver dashboards e gerenciar serviços, acesse <DNT>[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Infrastructure &gt; GCP</DNT>.
+
+Todas as métricas do Cloud Composer disponíveis no monitoramento de nuvem do GCP são coletadas como métricas dimensionais no tipo de evento `Metric`. Métricas adicionais além desta tabela são coletadas automaticamente. Consulte a [documentação de métricas do Cloud Composer do Google](https://cloud.google.com/monitoring/api/metrics_gcp#gcp-composer) para ver a lista completa.
+
+#### Entidade
+
+<CollapserGroup>
+  <Collapser id="entities-table" title="Entidades do Cloud Composer">
+    <table>
+      <thead>
+        <tr>
+          <th style={{ width: "200px" }}>
+            Entidade
+          </th>
+
+          <th style={{ width: "280px" }}>
+            Tipo de entidade
+          </th>
+
+          <th>
+            Tipo de recurso
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            Ambiente
+          </td>
+
+          <td>
+            `GCPCOMPOSERENVIRONMENT`
+          </td>
+
+          <td>
+            `cloud_composer_environment`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            Fluxo de trabalho
+          </td>
+
+          <td>
+            `GCPCOMPOSERWORKFLOW`
+          </td>
+
+          <td>
+            `cloud_composer_workflow`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            workload
+          </td>
+
+          <td>
+            `GCPCOMPOSERWORKLOAD`
+          </td>
+
+          <td>
+            `cloud_composer_workload`
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </Collapser>
+</CollapserGroup>
+
+### Dados métricos [#metrics-wif]
+
+#### Métricas Principais — Ambiente
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "440px" }}>
+        Nome da métrica
+      </th>
+
+      <th style={{ width: "100px" }}>
+        Unidade
+      </th>
+
+      <th>
+        Descrição
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        `gcp.composer.environment.healthy`
+      </td>
+
+      <td>
+        Boleano
+      </td>
+
+      <td>
+        Se o ambiente do Composer está saudável no momento.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `gcp.composer.environment.dag_processing.total_parse_time`
+      </td>
+
+      <td>
+        Segundos
+      </td>
+
+      <td>
+        Tempo total gasto analisando DAGs no ambiente.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `gcp.composer.environment.database.cpu.utilization`
+      </td>
+
+      <td>
+        Por cento
+      </td>
+
+      <td>
+        Utilização de CPU do banco de dados de metadados do ambiente.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `gcp.composer.environment.database.memory.utilization`
+      </td>
+
+      <td>
+        Por cento
+      </td>
+
+      <td>
+        Utilização de memória do banco de dados de metadados do ambiente.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `gcp.composer.environment.worker.pod_eviction_count`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Número de remoções de pod de trabalho no ambiente.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### Métricas-chave — fluxo de trabalho
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "440px" }}>
+        Nome da métrica
+      </th>
+
+      <th style={{ width: "100px" }}>
+        Unidade
+      </th>
+
+      <th>
+        Descrição
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        `gcp.composer.workflow.run_count`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Número de execuções de DAG, facetadas por estado do fluxo de trabalho.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `gcp.composer.workflow.run_duration`
+      </td>
+
+      <td>
+        Segundos
+      </td>
+
+      <td>
+        Duração das execuções de DAG em todo o fluxo de trabalho.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `gcp.composer.workflow.task_instance.finished_count`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Número de instâncias de tarefa em todo o fluxo de trabalho, facetado por estado.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `gcp.composer.workflow.task_instance.duration`
+      </td>
+
+      <td>
+        Segundos
+      </td>
+
+      <td>
+        Distribuição do tempo de execução da instância de tarefa.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+#### Métricas principais — Workload
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "440px" }}>
+        Nome da métrica
+      </th>
+
+      <th style={{ width: "100px" }}>
+        Unidade
+      </th>
+
+      <th>
+        Descrição
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        `gcp.composer.workload.cpu.usage_time`
+      </td>
+
+      <td>
+        Segundos
+      </td>
+
+      <td>
+        Segundos de CPU consumidos pelo workload do Composer.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `gcp.composer.workload.memory.bytes_used`
+      </td>
+
+      <td>
+        Bytes
+      </td>
+
+      <td>
+        Memória atualmente em uso pelo workload do Composer.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `gcp.composer.workload.pod_count`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Número de pods que dão suporte ao workload do Composer.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+Para a lista completa de métricas do Cloud Composer, consulte [a documentação de métricas do Cloud Composer do Google](https://cloud.google.com/monitoring/api/metrics_gcp#gcp-composer).
+
+## Conta de serviço ou conta de usuário [#service-account]
+
+### Encontre e use dados [#find-data]
+
+Para encontrar seus dados de integração, acesse <DNT>[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Infrastructure &gt; GCP</DNT> e selecione a integração.
+
+Os dados são anexados aos seguintes [tipos de eventos](/docs/data-apis/understand-data/new-relic-data-types/#event-data):
+
+<table>
+  <thead>
+    <tr>
+      <th>
+        Entidade
+      </th>
+
+      <th>
+        Tipo de evento
+      </th>
+
+      <th>
+        Fornecedor
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        Ambiente
+      </td>
+
+      <td>
+        `GcpComposerEnvironmentSample`
+      </td>
+
+      <td>
+        `GcpComposerEnvironment`
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Fluxo de trabalho
+      </td>
+
+      <td>
+        `GcpComposerWorkflowSample`
+      </td>
+
+      <td>
+        `GcpComposerWorkflow`
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+Para saber mais sobre como usar seus dados, consulte [Compreender e usar dados de integração](/docs/infrastructure/integrations/find-use-infrastructure-integration-data).
+
+## Dados métricos [#metrics]
+
+Esta integração coleta dados do GCP Composer para ambiente e fluxo de trabalho.
+
+### Dados do ambiente do Composer
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "275px" }}>
+        Métrica
+      </th>
+
+      <th style={{ width: "150px" }}>
+        Unidade
+      </th>
+
+      <th>
+        Descrição
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        `environment.api.Request`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Número de solicitações da API Composer vistas até agora.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.api.RequestLatencies`
+      </td>
+
+      <td>
+        Milissegundos
+      </td>
+
+      <td>
+        Distribuição da chamada de latência da API do Composer.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.dag_processing.ParseError`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Número de erros gerados durante a análise de arquivos DAG.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.dag_processing.Processes`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Número de processos de análise de DAG atualmente em execução.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.dag_processing.ProcessorTimeout`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Número de processadores de arquivos encerrados devido ao tempo limite de processamento.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.dag_processing.TotalParseTime`
+      </td>
+
+      <td>
+        Segundos
+      </td>
+
+      <td>
+        Número de segundos necessários para verificar e importar todos os arquivos DAG uma vez.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.DagbagSize`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        O tamanho atual do saco dag.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.database.cpu.ReservedCores`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Número de núcleos reservados para a instância do banco de dados.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.database.cpu.UsageTime`
+      </td>
+
+      <td>
+        Segundos
+      </td>
+
+      <td>
+        Tempo de uso da CPU da instância do banco de dados.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.database.cpu.Utilization`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Taxa de utilização da CPU (de 0,0 a 1,0) da instância do banco de dados.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.database.disk.BytesUsed`
+      </td>
+
+      <td>
+        Bytes
+      </td>
+
+      <td>
+        Espaço em disco usado em bytes na instância do banco de dados.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.database.disk.Quota`
+      </td>
+
+      <td>
+        Bytes
+      </td>
+
+      <td>
+        Tamanho máximo do disco de dados em bytes da instância do banco de dados.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.database.disk.Utilization`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Proporção de uso da cota de disco (de 0,0 a 1,0) da instância do banco de dados.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.database.memory.BytesUsed`
+      </td>
+
+      <td>
+        Bytes
+      </td>
+
+      <td>
+        Uso de memória da instância do banco de dados em bytes.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.database.memory.Quota`
+      </td>
+
+      <td>
+        Bytes
+      </td>
+
+      <td>
+        Tamanho máximo de RAM em bytes da instância do banco de dados.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.database.memory.Utilization`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Proporção de utilização de memória (de 0,0 a 1,0) da instância do banco de dados.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.executor.OpenSlots`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Número de slots abertos no executor.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.executor.RunningTasks`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Número de tarefas em execução no executor.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.FinishedTaskInstance`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Instância geral da tarefa.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.NumCeleryWorkers`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Número de trabalhadores do Celery.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.SchedulerHeartbeat`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Batimentos cardíacos do agendador.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.TaskQueueLength`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Número de tarefas na fila.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.worker.PodEviction`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        O número de remoções de pods de trabalho do Airflow.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `environment.ZombieTaskKilled`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Número de tarefas zumbis mortas.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### Dados do fluxo de trabalho do Composer
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "275px" }}>
+        Métrica
+      </th>
+
+      <th style={{ width: "150px" }}>
+        Unidade
+      </th>
+
+      <th>
+        Descrição
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        `workflow.Run`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Número de execuções de fluxo de trabalho concluídas até agora.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `workflow.RunDuration`
+      </td>
+
+      <td>
+        Segundos
+      </td>
+
+      <td>
+        Duração da conclusão da execução do fluxo de trabalho.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `workflow.task.Run`
+      </td>
+
+      <td>
+        Contar
+      </td>
+
+      <td>
+        Número de tarefas de fluxo de trabalho concluídas até agora.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `workflow.task.RunDuration`
+      </td>
+
+      <td>
+        Segundos
+      </td>
+
+      <td>
+        Duração da conclusão da tarefa.
+      </td>
+    </tr>
+  </tbody>
+</table>

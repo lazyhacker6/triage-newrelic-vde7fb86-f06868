@@ -1,0 +1,258 @@
+---
+title: Crear widgets personalizados para dashboards de streaming
+tags:
+  - Streaming Video & Ads
+  - Dashboards
+  - Custom widgets
+metaDescription: Use the NRQL editor to create custom chart widgets inside the Media Streaming Quality Metrics dashboard in New Relic.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Los widgets personalizados le permiten ampliar el dashboard de Media Streaming con visualizaciones de gráficos creadas a partir de sus propias consultas NRQL. Úselos cuando las métricas de calidad integradas no cubran un punto de datos específico que su equipo necesite monitorear.
+
+<Callout variant="important">
+Cada cuenta admite un límite flexible de **50 widgets personalizados por contexto de dashboard** —50 para <DNT>**Video quality metrics**</DNT> y 50 para <DNT>**Ad quality metrics**</DNT>, contados por separado. Si alcanza el límite, elimine un widget personalizado existente antes de agregar uno nuevo. Sus widgets existentes siguen funcionando normalmente.
+</Callout>
+
+## Antes de que empieces [#prereqs]
+
+Necesita lo siguiente antes de crear un widget personalizado:
+
+* Acceso a una cuenta de New Relic con el agente <DNT>Streaming Video &amp; Ads</DNT> instalado. Consulte [Instalar el agente de Streaming Video &amp; Ads](/docs/streaming-video-&-ads/installation/install-the-streaming-video-&-ads-agent) si aún no lo ha configurado.
+* El botón <DNT>**+ Add Custom Widget**</DNT> visible en la [sección de métricas de calidad](/docs/streaming-video-&-ads/view-data-in-newrelic/streaming-video-&-ads-features). Si no lo está, comuníquese con su equipo de cuenta de New Relic para solicitar acceso.
+
+## Escriba su consulta NRQL [#writing-queries]
+
+El editor de NRQL admite cualquier consulta NRQL válida. Para obtener una introducción a la sintaxis de NRQL, consulte [Introducción a NRQL](/docs/nrql/get-started/introduction-nrql-how-nrql-works).
+
+### Requisitos de la consulta [#query-requirements]
+
+Las consultas de widget personalizadas tienen dos requisitos adicionales además del NRQL estándar:
+
+* No escriba una cláusula `SINCE` o `UNTIL` directamente en su consulta. El selector de tiempo del dashboard agrega el rango de tiempo automáticamente cuando se ejecuta la consulta.
+* Para responder a las selecciones de la barra de filtros a nivel del dashboard, incluya un [marcador de posición de filtro](#placeholders) en su consulta.
+
+### Marcador de posición de filtro [#placeholders]
+
+El dashboard aplica filtros globales cuando se ejecuta una consulta. Si escribe una cláusula `WHERE` simple directamente en la consulta, el dashboard no puede inyectar en ella las condiciones de filtro seleccionadas por el usuario. Los marcadores de posición de filtro son comentarios especiales de NRQL que se reemplazan con las condiciones de filtro activas cuando se ejecuta la consulta.
+
+| Marcador de posición            | Reemplazado con     | Cuándo usar                                                                                                                                                |
+| ------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/* {whereClause} */`           | `WHERE [filters]`   | La consulta no tiene una cláusula `WHERE` existente                                                                                                        |
+| `/* {andWhereClause} */`        | `AND [filters]`     | La consulta ya tiene una cláusula `WHERE` —le agrega filtros                                                                                               |
+| `/* {aggregatorWhereClause} */` | `, WHERE [filters]` | La consulta usa un agregador `filter()` sin una cláusula `WHERE` interna existente —el contenedor `filter()` se elimina cuando no hay ningún filtro activo |
+
+**Ejemplo — sin cláusula WHERE existente:**
+
+```sql
+SELECT count(*) FROM VideoAction /* {whereClause} */
+```
+
+Con el filtro `City = Ashburn` aplicado:
+
+```sql
+SELECT count(*) FROM VideoAction WHERE city = 'Ashburn' SINCE 30 minutes ago UNTIL now
+```
+
+**Ejemplo — cláusula WHERE existente:**
+
+```sql
+SELECT count(*) FROM VideoAction
+WHERE actionName = 'QOE_AGGREGATE' /* {andWhereClause} */
+```
+
+Con el filtro `City = Ashburn` aplicado:
+
+```sql
+SELECT count(*) FROM VideoAction
+WHERE actionName = 'QOE_AGGREGATE' AND city = 'Ashburn' SINCE 30 minutes ago UNTIL now
+```
+
+**Ejemplo —consulta de proporción con agregadores mixtos:**
+
+```sql
+FROM VideoAction
+SELECT filter(sum(elapsedTime), WHERE actionName = 'CONTENT_HEARTBEAT' /* {andWhereClause} */)
+     / filter(uniqueCount(viewId) /* {aggregatorWhereClause} */)
+  AS 'avgWatchTime'
+TIMESERIES
+```
+
+Con el filtro `City = Ashburn` aplicado:
+
+```sql
+FROM VideoAction
+SELECT filter(sum(elapsedTime), WHERE actionName = 'CONTENT_HEARTBEAT' AND city = 'Ashburn')
+     / filter(uniqueCount(viewId), WHERE city = 'Ashburn')
+  AS 'avgWatchTime'
+TIMESERIES SINCE 30 minutes ago UNTIL now
+```
+
+Sin ningún filtro activo:
+
+```sql
+FROM VideoAction
+SELECT filter(sum(elapsedTime), WHERE actionName = 'CONTENT_HEARTBEAT')
+     / uniqueCount(viewId)
+  AS 'avgWatchTime'
+TIMESERIES SINCE 30 minutes ago UNTIL now
+```
+
+<Callout variant="tip">
+Los marcadores de posición son comentarios NRQL válidos —hacer clic en <DNT>**Run Query**</DNT> funciona incluso cuando no hay filtros activos en el dashboard.
+</Callout>
+
+### Palabras clave y caracteres bloqueados [#blocked]
+
+Para evitar la modificación accidental de datos, el editor de NRQL rechaza las consultas que contienen:
+
+* Las palabras clave `DROP`, `DELETE`, `INSERT`, `UPDATE`, `CREATE` o `ALTER`
+* Puntos y comas (`;`), que permitirían la cadena de consultas
+
+Las consultas que contienen cualquiera de estos fallan la validación y no se pueden guardar ni previsualizar.
+
+### Consultas de ejemplo [#sample-queries]
+
+Los siguientes ejemplos muestran patrones de consulta comunes para el monitoreo de video y anuncios. Cada uno usa el marcador de posición de filtro adecuado para su estructura de consulta.
+
+**Serie temporal básica — inicios totales de video:**
+
+```sql
+SELECT count(*) AS 'Video Starts'
+FROM VideoAction
+WHERE actionName = 'CONTENT_START' /* {andWhereClause} */
+TIMESERIES
+```
+
+**Recuento de espectadores únicos con integración de filtros:**
+
+```sql
+SELECT uniqueCount(viewId) AS 'Unique Viewers'
+FROM VideoAction /* {whereClause} */
+TIMESERIES
+```
+
+**Tasa de errores en todos los tipos de evento:**
+
+```sql
+SELECT count(*) AS 'Error Count'
+FROM VideoErrorAction, VideoAction
+WHERE actionName = 'CONTENT_ERROR' /* {andWhereClause} */
+TIMESERIES
+```
+
+**Tiempo de visualización promedio (proporción con agregadores anidados):**
+
+```sql
+FROM VideoAction
+SELECT filter(sum(elapsedTime), WHERE actionName = 'CONTENT_HEARTBEAT' /* {andWhereClause} */)
+     / filter(uniqueCount(viewId) /* {aggregatorWhereClause} */)
+  AS 'avgWatchTime'
+TIMESERIES
+```
+
+### Limitaciones [#known-limitations]
+
+Algunos patrones de consulta NRQL tienen soporte limitado o no probado cuando los filtros globales están activos. Consulte [Limitaciones para Streaming Video &amp; Ads](/docs/streaming-video-&-ads/limitations#nrql-patterns) para ver la lista completa.
+
+## Crear un widget personalizado [#create]
+
+Para crear un widget personalizado:
+
+1. Vaya a <DNT>**[one.newrelic.com](https://one.newrelic.com) &gt; All Capabilities &gt; Streaming Video &amp; Ads**</DNT>, luego seleccione <DNT>**Video Overview**</DNT> o <DNT>**Ads Overview**</DNT>.
+2. Desplácese hacia abajo hasta la sección <DNT>**Video Quality Metrics**</DNT> o <DNT>**Ad Quality Metrics**</DNT>.
+3. Haga clic en <DNT>**+ Add Custom Widget**</DNT> en el encabezado de la sección.
+4. Ingrese un título único para el widget.
+5. Escriba su consulta NRQL en el editor de NRQL. Consulte [Escriba su consulta NRQL](#writing-queries) arriba para obtener orientación sobre la sintaxis, los marcadores de posición de filtro y ejemplos.
+6. Haga clic en <DNT>Run Query</DNT> para obtener una vista previa de los resultados con datos en vivo. Esto no guarda el widget. Utilice la vista previa para confirmar que el gráfico representa los datos que espera, verifique que los marcadores de posición de filtro se resuelvan correctamente cuando un filtro está activo y detecte cualquier error de sintaxis o lógica antes de guardar.
+7. Cuando se carga la vista previa, aparece el selector de tipo de gráfico. El valor predeterminado es <DNT>Line</DNT>—seleccione un tipo diferente si es necesario. Algunos tipos de gráficos pueden aparecer atenuados si no se recomiendan para los resultados de su consulta, pero aún puede seleccionar cualquiera de ellos: **Billboard**, **Line**, **Area**, **Bar**, **Table** o **Pie**.
+8. Haga clic en <DNT>**Save**</DNT>. New Relic agrega el widget a la sección <DNT>**Custom Metrics**</DNT> del desplegable del selector de métricas y lo representa en la parte superior de la cuadrícula de métricas de calidad. Los widgets persisten entre sesiones.
+
+<Callout variant="tip">
+La disponibilidad del widget depende de la vista en la que lo cree:
+
+* **Vista de toda la plataforma** (Video Overview o Ads Overview): los widgets son visibles para todos los usuarios de la cuenta.
+* **Vista de una sola aplicación** (la página de una aplicación específica): los widgets son específicos de esa aplicación.
+
+El tipo de gráfico no depende de la vista —el tipo de gráfico que establezca se aplica a todos los espectadores independientemente de la vista que utilicen.
+</Callout>
+
+## Editar un widget personalizado [#edit]
+
+Para editar un widget personalizado:
+
+1. En la sección <DNT>**Quality Metrics**</DNT>, ubique el widget personalizado que desea cambiar.
+2. Haga clic en el ícono de lápiz <Icon name="fe-edit-2" /> en la tarjeta del widget. El editor se abre con su título y consulta existentes completados previamente.
+3. Realiza tus cambios, haz clic en <DNT>**Run Query**</DNT> para verificar y luego haz clic en <DNT>**Save**</DNT>.
+
+Al guardar:
+
+* Se conservan su fecha de creación original y la identidad del widget.
+* El widget se vuelve a renderizar inmediatamente con la consulta actualizada.
+* Si cambió el título, se actualiza en el desplegable del selector de métricas.
+
+## Eliminar un widget personalizado [#delete]
+
+Para eliminar un widget personalizado:
+
+1. En la sección <DNT>**Quality Metrics**</DNT>, haga clic en el icono <Icon name="fe-more-horizontal" /> en la tarjeta del widget.
+2. Seleccione <DNT>**Delete**</DNT>.
+3. Confirma en el símbolo: *&quot;¿Estás seguro de que deseas eliminar &apos;\[Título del widget]&apos;? Esta acción no se puede deshacer.&quot;*
+
+Cuando se elimina:
+
+* New Relic elimina permanentemente el widget.
+* El dashboard elimina inmediatamente la tarjeta del widget.
+* El desplegable del selector de métrica elimina la entrada del título.
+* Si el widget estaba seleccionado, el dashboard lo deselecciona automáticamente.
+
+<Callout variant="caution">
+La eliminación es permanente. Copie su consulta NRQL antes de eliminar un widget si es posible que la necesite más adelante.
+</Callout>
+
+## Solucionar problemas [#troubleshoot]
+
+Encuentre el síntoma a continuación. Los problemas están ordenados del más al menos común.
+
+### El widget no se actualiza cuando aplico un filtro de dashboard [#widget-not-responding-to-filters]
+
+A tu consulta le falta un marcador de posición de filtro. Sin `/* {whereClause} */`, `/* {andWhereClause} */` o `/* {aggregatorWhereClause} */`, el widget siempre ejecuta la consulta tal como está escrita e ignora las selecciones de la barra de filtros del dashboard. Consulta [Marcadores de posición de filtro](#placeholders) para elegir el adecuado para la estructura de tu consulta.
+
+### Los filtros se aplican, pero la consulta devuelve un error o no hay datos [#wrong-placeholder]
+
+Es posible que haya utilizado el tipo de marcador de posición incorrecto. Compruebe:
+
+* Si su consulta no tiene una cláusula `WHERE`, use `/* {whereClause} */`.
+* Si su consulta ya tiene una cláusula `WHERE` a nivel de consulta, use `/* {andWhereClause} */`.
+* Si el marcador de posición está dentro de un agregador `filter()` sin `WHERE` interno existente, utilice `/* {aggregatorWhereClause} */`.
+
+El marcador de posición incorrecto produce un NRQL no válido cuando se ejecuta la consulta, lo que hace que falle.
+
+### Mi consulta no pasa la validación o no se guarda [#query-blocked]
+
+Compruebe si su consulta contiene una [palabra clave o carácter bloqueado](#blocked), como `DROP`, `DELETE` o un punto y coma. También compruebe que la consulta cumpla con estos requisitos:
+
+* La consulta contiene las cláusulas `SELECT` y `FROM`.
+* No hay errores de sintaxis marcados por la validación en línea del editor.
+
+### El widget no se guarda —el título ya existe [#duplicate-title]
+
+Si ya existe un widget con el mismo título en el mismo contexto del dashboard (métricas de calidad de video o anuncios), el guardado falla con una notificación emergente:
+
+* **Título:** error al guardar el widget
+* **Descripción:** ya existe un widget con este nombre
+
+La coincidencia de títulos no distingue entre mayúsculas y minúsculas — `My Widget` y `MY WIDGET` se tratan como el mismo título. Elija un título distinto o cambie el nombre del widget existente primero.
+
+### El widget se guarda pero desaparece después de actualizar la página [#widget-not-saving]
+
+Esto puede indicar una falla al guardar. Busque una notificación emergente que haya aparecido al momento de guardar —indicará si el guardado falló debido a un error de red. Vuelva a intentar guardar o comuníquese con su equipo de cuenta de New Relic si el problema persiste.
+
+### No puedo agregar un nuevo widget [#limit-reached]
+
+Ha alcanzado el límite flexible de 50 widgets para este contexto de dashboard (métricas de calidad de video o anuncios). Elimine al menos un widget personalizado existente y luego intente agregar uno nuevo.
+
+### El botón + Add Custom Widget no está visible [#button-not-visible]
+
+New Relic controla el acceso a esta característica. Comuníquese con su equipo de cuenta de New Relic para solicitar acceso.

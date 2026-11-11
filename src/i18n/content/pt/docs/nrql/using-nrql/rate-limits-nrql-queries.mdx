@@ -1,0 +1,49 @@
+---
+title: Limites de taxa com NRQL
+metaDescription: 'An explanation of rate limits for NRQL, the New Relic query language'
+freshnessValidatedDate: '2026-09-11T00:00:00.000Z'
+translationType: machine
+---
+
+Nossa linguagem de consulta New Relic, NRQL, tem limites de taxa em vigor para cada organização New Relic para garantir que a taxa de consulta de nossos clientes não afete a experiência de outros clientes.
+
+Você raramente encontrará limites em sua consulta NRQL. Aqui estão algumas diretrizes a serem seguidas para garantir que a limitação de consultas seja rara:
+
+* Limite o número de consultas complexas (por exemplo, consultas com cláusulas `FACET` ou `TIMESERIES` ou consultas com mais de um milhão de eventos) executadas ao mesmo tempo.
+* Limite o número de consultas realizadas simultaneamente durante longos períodos de tempo a um máximo de cinco, especialmente se incluírem consultas complexas.
+
+Para ver se você está atingindo os limites relacionados à consulta, use a [interface Limites](/docs/data-apis/manage-data/view-system-limits/).
+
+## Limites de consulta NRQL [#query-limits]
+
+Temos limites para:
+
+* Quanto tempo uma consulta pode ser executada antes de ocorrer um erro e parar.
+* O número de consultas que você pode fazer em um determinado intervalo de tempo.
+* O número de vezes que é possível repetir a mesma consulta em um determinado intervalo de tempo.
+* O número de contas das quais você pode consultar dados de uma só vez.
+
+### Limite de duração da consulta [#query-duration]
+
+O limite de duração da consulta é quanto tempo uma consulta NRQL pode ser executada antes de parar de ser executada e ser considerada um erro. Este limite depende da sua [opção de dados](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/data-ingest-billing#data-prices):
+
+* Opção de dados original: 1 minuto
+* Dados Plus: 10 minutos
+
+O tempo limite padrão para consulta com NerdGraph é de 5 segundos.
+
+### Limites no número de consultas [#query-count-limits]
+
+Este limite se aplica apenas a consultas NRQL executadas por meio de nossa API e não se aplica a consultas executadas a partir da interface.
+
+Esse limite é de 3.000 consultas por conta por minuto. Quando esse limite é excedido, podemos rejeitar consultas até que o número de consultas não exceda mais o limite.
+
+### Limite de consultas repetitivas [#repetitive-query-limits]
+
+Uma consulta repetitiva é a mesma consulta NRQL executada pelo mesmo usuário (identificado por endereço de e-mail, ID de usuário ou chave de API) a partir da mesma origem.
+
+Limitamos as consultas repetitivas a 120 por minuto. Quando você excede esse limite, retornamos um erro HTTP 429 &quot;Too Many Requests&quot; até que a taxa caia abaixo do limite.
+
+### Limite de consulta entre contas [#cross-account-limit]
+
+Você pode consultar dados de no máximo 30 contas de uma só vez, seja usando o criador de consulta na interface ou a API NerdGraph. Consulte [Consultas entre contas](/docs/apis/nerdgraph/examples/nerdgraph-nrql-tutorial#cross-account-query) para obter mais informações.

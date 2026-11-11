@@ -1,0 +1,104 @@
+---
+title: GAE 가변형 환경에 자바 에이전트 설치
+tags:
+  - Agents
+  - Java agent
+  - Additional installation
+metaDescription: How to install the New Relic Java agent in a Google App Engine flexible environment using a custom Docker runtime.
+freshnessValidatedDate: '2026-08-05T00:00:00.000Z'
+contentType: onboarding-install
+audience:
+  - human
+  - ai
+surface:
+  - cli
+integration: apm-java-agent
+flow:
+  prev: /docs/apm/agents/java-agent/installation/java-agent-installation-overview
+  next: null
+translationType: machine
+---
+
+이 페이지에서는 사용자 지정 도커 런타임을 사용하여 [Google App Engine(GAE) 가변적 환경](https://cloud.google.com/appengine/docs/flexible/java/)에 뉴렐릭 자바 에이전트를 설치하는 방법을 설명합니다.
+
+<Callout variant="important">
+GAE 표준 환경 또는 Google App Engine의 [&quot;네이티브 모드&quot;](https://cloud.google.com/appengine/docs/flexible/java/)를 사용하지 마십시오 — 자바 에이전트에는 커스텀 런타임이 필요합니다.
+</Callout>
+
+## 호환성 및 요구 사항 [#requirements]
+
+### 지원
+
+* 자바 8, 11, 17, 21, 24, 25 및 26 *(자바 7은 에이전트 v6.5.4 및 이전 버전에서만 지원됩니다.)*
+* 사용자 지정 도커 런타임을 사용하는 Google App Engine 가변형 환경
+* 지원되는 프레임워크 및 라이브러리 버전 범위는 [호환성 및 요구 사항](/docs/apm/agents/java-agent/getting-started/compatibility-requirements-java-agent)을 참조하십시오.
+
+### 지원되지 않음
+
+* GAE 표준 환경 ― 사용자 지정 런타임이 필요합니다, 표준 환경에서는 이를 지원하지 않습니다.
+* GAE 네이티브 모드 — 자바 에이전트에는 커스텀 런타임이 필요합니다.
+* 다른 APM 에이전트와 함께 실행 — 동일한 JVM에서 다른 APM 에이전트가 활성화되어 있으면 자바 에이전트의 올바른 동작을 보장할 수 없습니다.
+
+### 필요한 사항
+
+* 뉴렐릭 계정 및<InlinePopover type="licenseKey" />
+* SHA-2(256비트) SSL을 지원하는 JVM
+* App Engine 애플리케이션이 생성된 Google Cloud Platform 프로젝트([자바용 Google App Engine 절차](https://cloud.google.com/appengine/docs/flexible/java/managing-projects-apps-billing#create) 참조)
+* 설치 및 초기화된 `gcloud` CLI([Google Cloud SDK 문서](https://cloud.google.com/sdk/gcloud/) 참조)
+* [App Engine 플러그인](https://cloud.google.com/appengine/docs/flexible/java/using-maven)이 구성된 Maven 또는 Gradle
+
+## 설치 [#install]
+
+`newrelic-java.zip`을(를) 다운로드하여 프로젝트에 압축을 해제하십시오: \[#install-step-1]
+
+```bash
+curl -O https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip
+unzip newrelic-java.zip
+```
+
+맞춤형 런타임에 맞게 `app.yaml`을(를) 구성하십시오:
+
+```yaml
+runtime: custom
+env: flex
+```
+
+에이전트를 추가하고 `-javaagent` 인수를 전달하도록 `Dockerfile`을(를) 구성하십시오. 아래 예제는 Tomcat을 사용합니다:
+
+```dockerfile
+ADD ./newrelic/newrelic.jar /usr/local/tomcat/newrelic/newrelic.jar
+ENV JAVA_OPTS="$JAVA_OPTS -javaagent:/usr/local/tomcat/newrelic/newrelic.jar"
+```
+
+프로젝트를 빌드하십시오:
+
+```bash
+mvn clean install
+```
+
+## 구성 [#configure]
+
+`newrelic/newrelic.yml`을(를) 편집하고 두 가지 필수 값을 설정하십시오:
+
+1. <InlinePopover type="licenseKey" />에 `license_key`을(를) 설정합니다.
+2. `app_name`을(를) 애플리케이션의 의미 있는 이름으로 설정해 주십시오.
+
+다른 모든 설정 옵션은 [자바 에이전트 설정](/docs/apm/agents/java-agent/configuration/java-agent-configuration-config-file)을 참조하십시오.
+
+## 설치 확인 [#verify]
+
+GAE에 배포하십시오:
+
+```bash
+gcloud --project YOUR_PROJECT_NAME app deploy
+```
+
+배포가 완료될 때까지 기다리십시오. 최소 두 개의 requests를 보낸 다음, 2～3분 기다리면 앱이 [APM &amp; 서비스](https://one.newrelic.com/nr1-core?filters=%28domain%20IN%20%28%27APM%27%2C%20%27EXT%27%29%20AND%20type%20IN%20%28%27APPLICATION%27%2C%20%27SERVICE%27%29%29)에 나타납니다.
+
+5분 후에도 데이터가 나타나지 않으면 [데이터가 나타나지 않음(자바)](/docs/apm/agents/java-agent/troubleshooting/no-data-appears-java)을 참조하십시오.
+
+## 관련 기사 [#related-articles]
+
+* [자바 에이전트 호환성 및 요구 사항](/docs/apm/agents/java-agent/getting-started/compatibility-requirements-java-agent)
+* [자바 에이전트 구성](/docs/apm/agents/java-agent/configuration/java-agent-configuration-config-file)
+* [자바용 Google App Engine 문서](https://cloud.google.com/appengine/docs/flexible/java/)

@@ -1,0 +1,219 @@
+---
+title: AWSインテグレーション入門
+tags:
+  - Integrations
+  - Amazon integrations
+  - Get started
+metaDescription: Amazon integrations let you monitor your AWS data in several New Relic features.
+freshnessValidatedDate: never
+translationType: human
+---
+
+複数のAWSサービスがあり、New Relicを使用してこれらのサービスを監視したいと考えているとします。これを行うには、サービスとNew Relicプラットフォーム間の接続を確立する必要があります。New Relicは、クラウドインテグレーションドだけでなく、さまざまなオンホストインテグレーションと組み合わせたインフラストラクチャエージェントを通じて、この接続を容易にします。
+
+リソースが非常に動的でサーバーレスアーキテクチャーが普及しているクラウド環境では、 New Relicのクラウドインテグレーションが重要な役割を果たします。これらのインテグレーションは、AWS APIと直接接続することでエージェントレス監視を提供し、AWS Lambda 、DynamoDB、Amazon S3など、従来のエージェントをインストールできないサービスからメトリクスとログを簡単に収集できるようにします。インストール作業は不要です。ガイド付きの指示に従って必要な設定を行うだけで、New RelicアカウントをAWSアカウントに接続し、AWSデータを収集できます。
+
+New Relicで可能なインテグレーション方法と種類を理解するには、次の図を参照してください。
+
+<img title="AWS Integration Architecture" alt="AWS Integration Architecture" src="/images/aws-integration-arch.webp" />
+
+<figcaption>
+この図は、AWSサービスをNew Relicと統合してログやメトリクスを取得できる方法を示しています。
+</figcaption>
+
+<Callout variant="tip">
+大半のAWSサービスは、クラウドリソースとアプリケーション間のデータレイテンシを減らすためにリージョンエンドポイントを提供します。New Relicは、中国を除くすべての[AWS地域](http://docs.aws.amazon.com/general/latest/gr/rande.html)にあるサービスとエンドポイントから監視データを取得できます。
+</Callout>
+
+## AWSメトリクスの取り込み [#aws-metrics-ingestion]
+
+メトリクスの取り込みのためにAWSアカウントをNew Relicに接続するには、次の3つの方法があります。
+
+* **CloudFormationによる自動化**：CloudFormationは、宣言型テンプレートを使用してインテグレーションセットアップをモデル化および自動化できるAWSサービスです。この方法を使用してAWSアカウントをNew Relicに接続することで、手動設定に伴うエラーを減らすことができます。New Relic UIでインテグレーションを完全に設計し、AWSコンソールで導入できます。
+
+この方法では、<DNT>IAM</DNT>ロール、<DNT>Amazon CloudWatch</DNT>メトリクスストリーム、<DNT>Amazon Kinesis Data Firehose</DNT>配信ストリームなど、メトリクスをNew Relicに転送するためのリソースをプロビジョニングします。メトリクスストリームはリージョン単位で動作するため、モニター対象の各AWSリージョンにメトリクスストリームと<DNT>Kinesis Data Firehose</DNT>配信ストリームが必要です。これらのコンポーネントの接続方法については、以下の図を参照してください。
+
+<img width="70%;" title="AWS CloudWatch Metric Streams architecture" alt="Diagram of an AWS account showing AWS services, an IAM role, a CloudWatch metric stream, and a Kinesis Data Firehose delivery stream forwarding metrics from one AWS region to New Relic." src="/images/aws-metric-streams-architecture.webp" />
+
+<figcaption>
+CloudWatch Metric StreamsインテグレーションがメトリクスをNew Relicに転送する方法。モニターする各AWSリージョンにメトリクスストリームとKinesis Data Firehose配信ストリームが必要です。
+</figcaption>
+
+* **Terraformによる自動化**：Terraformは、グラフィカルユーザーインタフェースの代わりに設定ファイルを使用してインフラストラクチャを管理できるようにする、コードとしてのインフラストラクチャ（IaC）ツールです。すでにTerraformを使用してAWSアカウントとサービスを管理している場合、 New Relic AWSインテグレーションの設定を簡素化する、AWSクラウドインテグレーションモジュールを提供します。
+* **AWSコンソールからの手動によるインテグレーション**：この方法は、CloudFormationテンプレートを使用できず、Terraformの使用を好まない顧客に適しています。New Relic UIの指示に従って、AWSコンソールで設定を行うことができます。
+
+選択した接続方法のいずれについても、AWSサービスからメトリクスを受信するための次の2つのインテグレーションタイプがあります。
+
+* **AmazonCloudWatch Metric Streamsインテグレーション**：[AmazonCloudWatch Metric Streams](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Metric-Streams.html)は、AWSサービスからNew RelicなどのパートナーソリューションにメトリクスをストリーミングできるようにするAWSサービスです。すべてのネームスペースをサポートしており、AWSスタック全体からほぼリアルタイムのデータをストリーミングできます。
+* **API**ポーリング：APIポーリングは、定期的にスケジュールされたAPIコールを実行してメトリクスとメタデータを一定間隔で収集することにより、AWSサービスからデータを取得する手法です。これはレガシーソリューションであり、各サービスに対して個別の呼び出しを行います。
+
+これら2つのインテグレーションタイプのいずれかを選択できますが、 New Relicでは**Amazon CloudWatch Metric Streamsインテグレーション**を選択することをお勧めします。以下のインテグレーションタイプの比較を参照してください。
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+**機能**
+</th>
+
+<th>
+**CloudWatch Metric Streamsインテグレーション**
+</th>
+
+<th>
+**APIポーリング**
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+データ配信
+</td>
+
+<td>
+ほぼリアルタイムのデータストリーミング
+</td>
+
+<td>
+定期的なデータ取得
+</td>
+</tr>
+
+<tr>
+<td>
+データ範囲
+</td>
+
+<td>
+継続的かつ包括的
+</td>
+
+<td>
+個々のメトリクスを指定し、データが欠落している可能性がある
+</td>
+</tr>
+
+<tr>
+<td>
+短命イベントの検出
+</td>
+
+<td>
+即時検出
+</td>
+
+<td>
+短命イベントのキャプチャに遅延が生じる可能性
+</td>
+</tr>
+
+<tr>
+<td>
+レイテンシ
+</td>
+
+<td>
+低レイテンシ
+</td>
+
+<td>
+間隔ベースの検索によるレイテンシの増加
+</td>
+</tr>
+
+<tr>
+<td>
+APIコールのオーバーヘッド
+</td>
+
+<td>
+最小限のオーバーヘッド（プッシュモデル）
+</td>
+
+<td>
+頻繁なAPIコールによる高いオーバーヘッド
+</td>
+</tr>
+
+<tr>
+<td>
+拡張性
+</td>
+
+<td>
+データ量の増加に合わせて簡単に拡張可能
+</td>
+
+<td>
+大規模環境ではスケーリングがより複雑になる
+</td>
+</tr>
+
+<tr>
+<td>
+管理の複雑さ
+</td>
+
+<td>
+簡素化されたセットアップと管理
+</td>
+
+<td>
+ポーリングスケジュールとエンドポイントの管理が必要
+</td>
+</tr>
+
+<tr>
+<td>
+コスト効率
+</td>
+
+<td>
+APIインタラクションの削減によるコスト効率の向上
+</td>
+
+<td>
+頻繁なAPIリクエストによるコストの増加
+</td>
+</tr>
+</tbody>
+</table>
+
+次のAWSサービスは、CloudWatch Metric Streamsではサポートされていません。これらのサービスでは、APIポーリングを活用します。
+
+* AWS CloudTrail
+* AWS Health
+* AWS Trusted Advisor
+* AWS X-Ray
+
+これらのいずれかと一緒に他のAWSサービスを利用する場合でも、Amazon CloudWatch Metric Streamsインテグレーションを選択できます。セットアップ中に、New Relicはこれらのサポートされていないサービス専用のAPI ポーリングを設定するオプションを提供します。
+
+AWS サービスを New Relic と統合する方法は次のとおりです。
+
+* [CloudFormation および CloudWatch メトリックストリーム経由で統合する](/docs/infrastructure/amazon-integrations/aws-integration-for-metrics/via-cloudformation-cwms)
+* [CloudFormation および API ポーリング経由で統合する](/docs/infrastructure/amazon-integrations/aws-integration-for-metrics/via-cloudformation-and-api-polling)
+* [Terraform 経由で統合する](/docs/infrastructure/amazon-integrations/aws-integration-for-metrics/terraform)
+* [AWS コンソールから手動で統合する](/docs/infrastructure/amazon-integrations/aws-integration-for-metrics/manual)
+
+API ポーリングを使用して AWS アカウントを New Relic とすでに統合している場合は、 [移行手順](/docs/infrastructure/amazon-integrations/aws-integration-for-metrics/migrate-from-api-polling-to-cwms)を参照し、CloudWatch Metric Streams に移行してください。
+
+### AWSインテグレーションにかかるコスト [#aws-costs]
+
+AWSメトリクスをNew Relicに取り込むためのインテグレーションは、AWS請求にある程度の影響を与えます。詳細については、次のAWSドキュメントを参照してください。
+
+* メトリクスの更新数に基づく料金の定義については、[AWS CloudWatchの価格設定ページ](https://aws.amazon.com/cloudwatch/pricing/)を参照してください。
+* AWSからNew Relicへのデータ配信方法としてAWS Kinesis Data Firehoseを使用することがあるため、[AWS Firehoseの価格設定ページ](https://aws.amazon.com/firehose/pricing/)を参照してください。
+* AWS Configを有効にしてリソースメタデータでCloudWatchメトリクスを強化することを計画している場合は、[AWS Configの価格設定ページ](https://aws.amazon.com/config/pricing/)を参照してください。
+* 一部のAWSサービスが、より多くのメトリクスをより高い頻度で提供するRDS拡張監視を使用している場合は、[Amazon RDSの価格設定ページ](https://aws.amazon.com/rds/pricing/)を参照してください。
+
+一部のAWS サービスにAPIポーリングインテグレーションを使用している場合、状況によってはCloudWatchの呼び出し回数が増加し、AWSから付与されたAPI100万回の無料制限を超え、[CloudWatchAWSの請求額](https://aws.amazon.com/cloudwatch/pricing/)が増加する場合があります。これは以下のような場合に発生する可能性があります。
+
+* APIポーリングによって追加のインテグレーションを有効化した場合
+* AWSリソースをインテグレーションに追加する
+* より多くの地域にわたってインテグレーションを拡張する
+
+## AWSログの取り込み [#aws-logs-ingestion]
+
+ログの取り込みのためにAWSアカウントをNew Relicに接続するには、[AWSサービスのログをNew Relicに転送する](/install/aws-logs/)を参照してください。

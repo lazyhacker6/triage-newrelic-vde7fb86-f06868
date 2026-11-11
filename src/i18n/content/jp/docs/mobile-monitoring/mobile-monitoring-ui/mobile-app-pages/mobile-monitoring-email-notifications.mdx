@@ -1,0 +1,81 @@
+---
+title: モバイルモニタリングのメール通知
+tags:
+  - Mobile monitoring
+  - Mobile monitoring UI
+  - Mobile app pages
+metaDescription: 'New Relic mobile monitoring provides two emailed types of reports: version trend emails (aka release notifications) and crash report emails.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+New Relic の<InlinePopover type="mobile" />は、次のようないくつかの電子メールレポートを提供します。
+
+* [リリース通知](#version-trends) (別名：バージョン・トレンド・メール)
+* [クラッシュレポートメール](#crash-reports)
+
+## 新しいバージョンのパフォーマンスに関するメールを受け取る [#version-trends]
+
+New Relicのモバイル監視では、 [<DNT>**Release versions**</DNT>](/docs/mobile-monitoring/mobile-monitoring-ui/mobile-app-pages/release-versions-page)ページが提供されます。 バージョン トレンド メール (リリース通知とも呼ばれます) を有効にすることもできます。 これらのレポートは、アプリの進捗状況、採用状況、その他の傾向を共有、追跡、確認するための便利なコミュニケーション ツールを提供します。 各メールには、詳細を表示するための<DNT>**Version trends**</DNT> UI へのリンクが含まれています。
+
+定期的にレポートをメールでお送りします。
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>
+        <DNT>
+          **Time period**
+        </DNT>
+      </th>
+
+      <th>
+        <DNT>
+          **Comments**
+        </DNT>
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        発売日翌日
+      </td>
+
+      <td>
+        新しいリリースが発売された翌日には、クラッシュ率、HTTPエラー、ネットワーク障害などのデータがレポートされます。これにより、そのリリースが何か大きな問題を引き起こしているかどうかを迅速に把握することができます。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        発売後1週間、1ヶ月
+      </td>
+
+      <td>
+        1週間後、1ヶ月後には、新規ユーザーがアプリをインストールしているか、既存ユーザーがこのバージョンにアップグレードしているかが、数字とパーセンテージで示されます。これは、特定のアプリバージョンの成功と、それにまつわるプロモーション活動を分析するのに役立ちます。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        時折のフォローアップメール
+      </td>
+
+      <td>
+        時間の経過とともに、開発努力を評価することができます。これにより、各リリースがアプリの安定性とパフォーマンスを維持または向上させているかどうかを判断することができます。これにより、アプリのサポートや強化に必要な変更点を特定することができます。
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### バージョン・トレンド・メール設定の編集 [#version-trend-ui]
+
+特定のモバイル アプリについて受信するメール レポートを構成するには、 <DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; (select an app) &gt; Settings &gt; Application**</DNT>に移動してリリース通知メール設定を編集します。
+
+## クラッシュレポートメール [#crash-reports]
+
+モバイルアプリで新種のクラッシュが発生した場合、何が悪かったのかを知り、今後このようなエラーを防ぐことができます。クラッシュレポートメールでは、固有のクラッシュが検出されたときに通知されます。
+
+特定のモバイル アプリのクラッシュ レポートのメールを受信するかどうかを設定するには、 <DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Mobile &gt; (select an app) &gt; Settings &gt; Application**</DNT>に移動してクラッシュ レポートのメール設定を編集します。

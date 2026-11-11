@@ -1,0 +1,94 @@
+---
+title: ESMアプリケーションでのNode.jsエージェントの使用
+tags:
+  - Agents
+  - Nodejs agent
+  - ESM
+  - ES modules
+  - Experimental
+metaDescription: How to install and configure your Node.js APM agent for an application that uses ESM.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Node.jsアプリケーションのコード管理にESMを使用している場合、Node.jsエージェントを使用してそれらのアプリケーションをモニターできるようになりました。
+
+<Callout variant="caution">
+[ESM](https://nodejs.org/api/esm.html)アプリケーションの計装に対するNode.js APMエージェントのサポートは実験的です。エージェントは、計装を登録するために実験的なNode.js機能に依存しています。[ESMローダー](https://nodejs.org/api/esm.html#loaders)のNode.js APIが安定するまで、破壊的変更が発生する可能性があります。
+</Callout>
+
+## 概要 [#overview]
+
+v12.0.0 より前は、Node.js は、CommonJS モジュールを使用したコードの管理のみを公式にサポートしていました。CommonJS モジュールは、次の例のように、 `module.exports` ステートメントと`require()`ステートメントを使用してコードを管理します。
+
+```js
+'use strict'
+
+const bar = require('./bar')
+
+function echoBar() {
+  console.log('this is bar:', bar)
+}
+
+module.exports = {
+  echoBar
+}
+```
+
+Node.js v12.0.0 以降、ECMAScript モジュール (ES モジュール/「ESM」) のサポートが追加されました。
+
+`require()`と`module.exports`の代わりに、ESMは次のような`import`と`export`のステートメントを使用します：
+
+```js
+'use strict'
+
+import bar from './bar.js'
+
+export function echoBar() {
+  console.log('this is bar:', bar)
+}
+```
+
+ESMはコード管理のための公式なECMAScript標準であり、ブラウザやその他のJSランタイムがパッケージを管理するための標準的な方法です。現在および将来にわたって進化するNode.jsエコシステムをサポートするため、エージェントはバージョン9.1.0以降、ESMを使用して記述された、インストゥルメントされたアプリケーションをサポートします。Node.js APMエージェントは、引き続きCommonJSアプリケーションもサポートします。
+
+<Callout variant="important">
+ESMアプリケーションでNode.js APMエージェントを使用する場合、サポートされるNode.jsの最小バージョンはv16.12.0です。
+</Callout>
+
+## エージェントのセットアップ [#agent-setup]
+
+エージェントがESMアプリケーションを正常に計装するためには、[インストレーションのドキュメント](/docs/apm/agents/nodejs-agent/installation-configuration/install-nodejs-agent)で説明されているように、まずNode.jsエージェントをインストールする必要があります。エージェントのインストールが完了したら、以下のセクションの設定に進んでください。
+
+### 構成 [#configuration]
+
+アプリケーションで構成ファイルを使用してエージェントを構成する場合、構成ファイルの拡張子を`.js` ではなく`.cjs`に更新する必要があります。
+
+エージェントは CommonJS モジュールとして作成されます。 `require()`を使用して、起動時に構成ファイルを読み込みます。ファイル拡張子を変更することで、エージェントの構成ファイルを CommonJS モジュールとして明示的にラベル付けし、エージェントがそれを正常にロードできるようにします。
+
+ファイル拡張子を更新しないと、エージェントの起動時に次のエラーが表示される場合があります。
+
+```
+New Relic for Node.js is disabled due to an error:
+Error [ERR_REQUIRE_ESM]: require() of ESM /path/to/your/application/newrelic.js from /path/to/your/application/node_modules/newrelic/lib/config/index.js not supported.
+```
+
+### ESMローダーの追加 [#add-loader]
+
+エージェントがESMエコシステム内で計装を適切に適用するためには、アプリケーションの呼び出し時に、エージェントとともにエージェントのESMローダーを含める必要があります。Node.jsの`--import`[CLI引数](https://nodejs.org/api/cli.html#--importmodule)を使用することで、アプリケーションにローダーを追加できます。
+
+```sh
+node --import newrelic/esm-loader.mjs -r newrelic your-program.js
+```
+
+## カスタムインストゥルメンテーション [#custom-instrumentation]
+
+Node.js APMエージェントは、ESMアプリケーションへのカスタムインストゥルメンテーションの追加をサポートしています。[APIにある計装登録手段](https://newrelic.github.io/node-newrelic/API.html#instrument)のほとんどを使用して、ESMアプリケーションで計装を作成できます。ESMインポートの性質上、エージェントは`newrelic.instrumentLoadedModule`をサポートしていません。ESMバインディングは代入できないため、モジュールのロード後にエージェントがモジュールのエクスポートされたメンバーを計装に置き換えることはできません。
+
+ESMアプリケーションでカスタムインストゥルメンテーションAPIを使用する方法のデモンストレーションを確認するには、GitHubの[例](https://github.com/newrelic/newrelic-node-examples/blob/4284ee7eab69708238db0a44f97ff7e839e165cf/esm-app/custom-instrumentation/index.js)を確認してください。
+
+## もっと詳しく知る [#learn-more]
+
+* [Node.js ESMドキュメント](https://nodejs.org/api/esm.html#introduction)
+* [Node.js パッケージのドキュメント](https://nodejs.org/api/packages.html#introduction)
+* [ECMAScript 標準ドキュメント](https://tc39.es/ecma262/#sec-modules)
+* [デモESMアプリケーション](https://github.com/newrelic/newrelic-node-examples/tree/main/esm-app)

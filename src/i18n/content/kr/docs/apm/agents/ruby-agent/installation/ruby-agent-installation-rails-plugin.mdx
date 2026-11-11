@@ -1,0 +1,112 @@
+---
+title: 'Ruby 에이전트 설치: Rails 플러그인'
+tags:
+  - Agents
+  - Ruby agent
+  - Installation
+metaDescription: Install the New Relic Ruby agent as a Rails plugin for Rails 1.2.6 and earlier.
+freshnessValidatedDate: '2026-08-05T00:00:00.000Z'
+translationType: machine
+---
+
+이 방법은 **Rails 2 이상**에서 루비 에이전트를 Rails 플러그인으로 설치하기 위한 것입니다.
+
+<Callout variant="important">
+대부분의 사용 사례에서는 대신 [루비 에이전트를 gem으로 설치하십시오](/docs/apm/agents/ruby-agent/installation/install-new-relic-ruby-agent). gem 방식은 버전과 종속성에 대한 더 나은 제어를 제공합니다.
+</Callout>
+
+## 전제 조건 [#prerequisites]
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+요구 사항
+</th>
+
+<th>
+세부
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+**New Relic 계정**
+</td>
+
+<td>
+[뉴렐릭 계정](https://newrelic.com/signup)과 <InlinePopover type="licenseKey" />이(가) 필요합니다.
+</td>
+</tr>
+
+<tr>
+<td>
+**루비 및 Rails 버전**
+</td>
+
+<td>
+지원되는 버전은 [루비 에이전트 요구사항 및 지원되는 프레임워크](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks)를 확인해 주십시오.
+</td>
+</tr>
+
+<tr>
+<td>
+**힘내**
+</td>
+
+<td>
+GitHub에서 설치하려면 명령줄에서 Git에 액세스할 수 있어야 합니다.
+</td>
+</tr>
+</tbody>
+</table>
+
+<Steps>
+<Step>
+## Rails 플러그인 설치 [#install]
+
+GitHub에서 애플리케이션의 `vendor/plugins` 디렉터리에 플러그인을 설치합니다:
+
+```sh
+script/plugin install git://github.com/newrelic/newrelic-ruby-agent.git
+mv vendor/plugins/rpm vendor/plugins/newrelic-ruby-agent
+```
+
+git URL에서 직접 설치할 수 없는 경우, 저장소를 `vendor/plugins` 디렉터리에 수동으로 클론하십시오.
+</Step>
+
+<Step>
+## 에이전트 구성 [#configure]
+
+플러그인 디렉터리에서 애플리케이션의 `config` 하위 디렉터리로 `newrelic.yml` 파일을 복사하십시오:
+
+```sh
+cp vendor/plugins/newrelic-ruby-agent/newrelic.yml config/newrelic.yml
+```
+
+`config/newrelic.yml`을(를) 편집하고 두 가지 필수 값을 설정하십시오:
+
+1. <InlinePopover type="licenseKey" />에 `license_key`을(를) 설정합니다.
+2. `app_name`을(를) 애플리케이션의 의미 있는 이름으로 설정해 주십시오.
+
+기타 모든 설정 옵션은 [루비 에이전트 설정](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration)을 참조하십시오.
+</Step>
+
+<Step>
+## 데이터가 흐르고 있는지 확인 [#verify]
+
+웹 서버를 다시 시작한 다음, 애플리케이션에 최소 두 개의 requests를 보내십시오. 2～3분 정도 기다린 후 [one.newrelic.com &gt; APM](https://one.newrelic.com/apm)을 열어 이름으로 앱을 검색하십시오.
+
+<Callout variant="tip">
+앱이 표시되지 않습니까? [데이터가 표시되지 않음(루비)](/docs/apm/agents/ruby-agent/troubleshooting/no-data-appears-ruby)을 참조하십시오.
+</Callout>
+</Step>
+</Steps>
+
+## 관련 기사 [#related-docs]
+
+* [gem으로 루비 에이전트 설치](/docs/apm/agents/ruby-agent/installation/install-new-relic-ruby-agent) — 대부분의 사용 사례에 권장되는 방법입니다.
+* [루비 에이전트 요구사항 및 지원되는 프레임워크](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks) — 지원되는 루비 및 Rails 버전.
+* [루비 에이전트 설정](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration) — 사용 가능한 모든 설정.

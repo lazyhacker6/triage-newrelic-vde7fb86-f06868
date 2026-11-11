@@ -1,0 +1,347 @@
+---
+title: profile_trace (API del agente Python)
+type: apiDoc
+shortDescription: Se utiliza para instrumentar una función y las funciones dentro de ella a una profundidad específica para funciones que no están instrumentadas por defecto.
+tags:
+  - Agents
+  - Python agent
+  - Python agent API
+metaDescription: 'Python API: Functions for adding functions to a transaction.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+## Sintaxis
+
+```py
+newrelic.agent.profile_trace(name=None, group=None, label=None, params=None, terminal=False)
+```
+
+Se utiliza para instrumentar una función y las funciones dentro de ella a una profundidad específica para funciones que no están instrumentadas por defecto.
+
+## Descripción
+
+`profile_trace` es un decorador para agregar a funciones. Agregar este decorador le permite recopilar información adicional de la [transacción](/docs/accounts-partnerships/education/getting-started-new-relic/glossary#transaction) (incluida la información de la traza de la transacción).
+
+El decorador `profile_trace` se puede usar en funciones con la versión del agente 2.102.0.85 o superior. La medición del tiempo de estos objetos comienza cuando se inicia el consumo, y termina cuando el objeto se agota o sale del ámbito.
+
+Puede utilizar el decorador junto con decoradores existentes, incluidos los de métodos estáticos y de clase. Al anidar varios decoradores, tenga el decorador `profile_trace` como el decorador más externo.
+
+## Formularios de llamada alternativos [#alternate]
+
+Para configuraciones en las que no puede utilizar el decorador, estos formularios de llamada alternativos están disponibles:
+
+### The wrapper
+
+Si sabes de antemano dónde están las funciones específicas que deseas trazar, puedes usar el decorador `profile_trace` . Sin embargo, si <DNT>**don&apos;t**</DNT> conoce todas las funciones que deben trazarse (por ejemplo, si se buscan dinámicamente como parte de un sistema de enrutamiento), entonces debe usar `ProfileTraceWrapper` para ajustar la función en el en el momento de la inscripción o en el momento de la convocatoria.
+
+### Envoltura basada en rutas [#path-based]
+
+`wrap_profile_trace` se utiliza para encapsular funciones fuera del código en el que están declaradas. Por ejemplo: podrías usar esto para instrumentar el código de la biblioteca que no deseas modificar.
+
+Para obtener más información sobre las diferencias entre estos formatos de llamadas, consulte [Diferentes formatos de llamadas](/docs/python-agent-api-different-call-forms).
+
+## Parámetros
+
+### Parámetro para decorador [#main-parameters]
+
+```py
+newrelic.agent.profile_trace(name=None, group=None, label=None, params=None, depth=3)
+```
+
+Esta convocatoria incluye estos parámetros:
+
+<table>
+<thead>
+<tr>
+<th width="25%">
+Parámetro
+</th>
+
+<th>
+Descripción
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`name`
+
+*cadena* o *función*
+</td>
+
+<td>
+Opcional. El nombre de la función. Podría ser una función que acepta los mismos parámetros que la función envuelta. Si no se establece, el valor predeterminado es el nombre capturado de la función.
+</td>
+</tr>
+
+<tr>
+<td>
+`group`
+
+*cadena* o *función*
+</td>
+
+<td>
+Opcional. El `group` representa la estructura de nombres para el parámetro `name` . Esto se utiliza en la UI para segregar los [tipos de transacciones](/docs/apm/applications-menu/monitoring/transactions-page#tx_functions).
+
+Si no se proporciona, el grupo se establecerá de forma predeterminada en `Function` con la expectativa de que el nombre tenga el formato `module:class.function` o `module:function` y represente el nombre de la función en ejecución. Si está creando un grupo personalizado, se recomienda agregarle el prefijo `Python/`. Podría ser una función que acepte los mismos parámetros que la función que se está envolviendo.
+</td>
+</tr>
+
+<tr>
+<td>
+`label`
+
+*cadena* o *función*
+</td>
+
+<td>
+Opcional. Agrega un indicador de estilo de llamada al segmento en una traza de la transacción. El valor predeterminado es `None`. Podría ser una función que acepte los mismos parámetros que la función que se está envolviendo.
+</td>
+</tr>
+
+<tr>
+<td>
+`params`
+
+*dict* o *función*
+</td>
+
+<td>
+Opcional. Parámetros personalizados para agregar al segmento en las trazas de la transacción. Podría ser una función que acepte los mismos parámetros que la función que se está envolviendo.
+</td>
+</tr>
+
+<tr>
+<td>
+`depth`
+
+*En t*
+</td>
+
+<td>
+Opcional. El valor predeterminado es 3. La profundidad del stack a la que se agregan segmentos dentro de la función.
+</td>
+</tr>
+</tbody>
+</table>
+
+### Parámetro de envoltura
+
+```py
+newrelic.agent.ProfileTraceWrapper(wrapped, name=None, group=None, label=None, params=None)
+```
+
+Los parámetros para el contenedor incluyen todos [los parámetros](#main-parameters) para `profile_trace` y un parámetro `wrapped` :
+
+<table>
+<thead>
+<tr>
+<th width="25%">
+Parámetro
+</th>
+
+<th>
+Descripción
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`wrapped`
+
+*función*
+</td>
+
+<td>
+Requerido. La función que se está envolviendo.
+</td>
+</tr>
+
+<tr>
+<td>
+`name`
+
+*cadena* o *función*
+</td>
+
+<td>
+Opcional. El nombre de la función. Podría ser una función que acepta los mismos parámetros que la función envuelta. Si no se establece, el valor predeterminado es el nombre capturado de la función.
+</td>
+</tr>
+
+<tr>
+<td>
+`group`
+
+*cadena* o *función*
+</td>
+
+<td>
+Opcional. El `group` representa la estructura de nombres para el parámetro `name` . Esto se utiliza en la UI para segregar los [tipos de transacciones](/docs/apm/applications-menu/monitoring/transactions-page#tx_functions).
+
+Si no se proporciona, el grupo se establecerá de forma predeterminada en `Function` con la expectativa de que el nombre tenga el formato `module:class.function` o `module:function` y represente el nombre de la función en ejecución. Si está creando un grupo personalizado, se recomienda agregarle el prefijo `Python/`. Podría ser una función que acepte los mismos parámetros que la función que se está envolviendo.
+</td>
+</tr>
+
+<tr>
+<td>
+`label`
+
+*cadena* o *función*
+</td>
+
+<td>
+Opcional. Agrega un indicador de estilo de llamada al segmento en una traza de la transacción. El valor predeterminado es `None`. Podría ser una función que acepte los mismos parámetros que la función que se está envolviendo.
+</td>
+</tr>
+
+<tr>
+<td>
+`params`
+
+*dict* o *función*
+</td>
+
+<td>
+Opcional. Parámetros personalizados para agregar al segmento en las trazas de la transacción. Podría ser una función que acepte los mismos parámetros que la función que se está envolviendo.
+</td>
+</tr>
+
+<tr>
+<td>
+`depth`
+
+*En t*
+</td>
+
+<td>
+Opcional. El valor predeterminado es 3. La profundidad del stack a la que se agregan segmentos dentro de la función.
+</td>
+</tr>
+</tbody>
+</table>
+
+### Parámetro de ajuste basado en ruta [#path-wrap-parameters]
+
+```py
+newrelic.agent.wrap_profile_trace(module, object_path, name=None, group=None, label=None, params=None, depth=3)
+```
+
+El parámetro incluye todos [los parámetros](#main-parameters) para `profile_trace` y estos parámetros:
+
+<table>
+<thead>
+<tr>
+<th width="25%">
+Parámetro
+</th>
+
+<th>
+Descripción
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`module`
+
+*objeto*
+</td>
+
+<td>
+Requerido. El módulo que contiene la función a instrumentar.
+</td>
+</tr>
+
+<tr>
+<td>
+`object_path`
+
+*cadena*
+</td>
+
+<td>
+La ruta a la ubicación de la función.
+</td>
+</tr>
+</tbody>
+</table>
+
+## Ejemplos
+
+### `profile_trace` [#trace_example]
+
+Un ejemplo de uso del decorador `profile_trace` :
+
+```py
+import newrelic.agent
+
+@newrelic.agent.profile_trace(depth=7)
+def find_node(tree, value):
+    if tree.value == value:
+        return tree
+    for node in tree.children:
+        found_node = find_node(node, value)
+        if found_node:
+            return found_node
+```
+
+En el ejemplo anterior, la traza de perfil envuelve a una función recursiva. Las trazas de función se agregarán hasta una profundidad de 7 llamadas recursivas de stack dentro de la función.
+
+### Ejemplo de contenedor [#trace-wrap-example]
+
+Un ejemplo de uso de `ProfileTraceWrapper`:
+
+```py
+import newrelic.agent
+
+def find_node(tree, value):
+    if tree.value == value:
+        return tree
+    for node in tree.children:
+        found_node = find_node(node, value)
+        if found_node:
+            return found_node
+
+find_node = newrelic.agent.ProfileTraceWrapper(find_node, depth=7)
+```
+
+Si desea nombrar la métrica después del nombre del extremo (en lugar de nombrar la métrica según el identificador de la función que se llama), puede proporcionar el nombre que se usará más un prefijo de ruta de métrica alternativo cuando se cree el objeto `ProfileTraceWrapper` .
+
+```py
+import newrelic.agent
+
+def find_node(tree, value):
+    if tree.value == value:
+        return tree
+    for node in tree.children:
+        found_node = find_node(node, value)
+        if found_node:
+            return found_node
+
+find_node = newrelic.agent.ProfileTraceWrapper(find_node, name="find_node", group="Python/Profile", depth=7)
+```
+
+Si desea nombrar la métrica dinámicamente (en lugar de nombrar la métrica en función del identificador de la función que se está llamando), puede proporcionar el nombre como una función cuando se crea el objeto `ProfileTraceWrapper`.
+
+```py
+import newrelic.agent
+
+def find_node(tree, value):
+    if tree.value == value:
+        return tree
+    for node in tree.children:
+        found_node = find_node(node, value)
+        if found_node:
+            return found_node
+
+find_node = newrelic.agent.ProfileTraceWrapper(find_node, name=lambda tree, value: f"find_node_{value}", depth=7)
+```

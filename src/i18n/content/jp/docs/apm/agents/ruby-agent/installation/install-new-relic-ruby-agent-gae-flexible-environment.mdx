@@ -1,0 +1,146 @@
+---
+title: GAEフレキシブル環境にRubyエージェントをインストールします。
+tags:
+  - Agents
+  - Ruby agent
+  - Installation
+metaDescription: How to install the New Relic Ruby agent in a Google App Engine flexible environment.
+freshnessValidatedDate: '2026-08-05T00:00:00.000Z'
+translationType: machine
+---
+
+GAEのネイティブモードまたはカスタムDockerランタイムのいずれかを使用して、[Google App Engine（GAE）フレキシブル環境](https://cloud.google.com/appengine/docs/flexible/ruby/)にNew Relic Rubyエージェントをインストールします。
+
+## 前提条件 [#prerequisites]
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+要件
+</th>
+
+<th>
+詳細
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+**New Relicアカウント**
+</td>
+
+<td>
+[New Relicアカウント](https://newrelic.com/signup)と<InlinePopover type="licenseKey" />が必要です。
+</td>
+</tr>
+
+<tr>
+<td>
+**Google Cloudプロジェクト**
+</td>
+
+<td>
+App Engineアプリケーションが作成されたGoogle Cloud Platformプロジェクト。[Ruby向けGoogle App Engineの手順](https://cloud.google.com/appengine/docs/flexible/ruby/managing-projects-apps-billing#create)をご覧ください。
+</td>
+</tr>
+
+<tr>
+<td>
+**Google Cloud SDK**
+</td>
+
+<td>
+インストールおよび初期化された`gcloud` CLI。[Google Cloud SDKドキュメント](https://cloud.google.com/sdk/docs/)をご覧ください。
+</td>
+</tr>
+
+<tr>
+<td>
+**Rubyバージョン**
+</td>
+
+<td>
+サポートされているバージョンについては、[Rubyエージェントの要件とサポート対象のフレームワーク](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks)を参照してください。
+</td>
+</tr>
+</tbody>
+</table>
+
+<Steps>
+<Step>
+## gemをインストールしてアプリケーションを設定します。 [#install]
+
+`newrelic_rpm` gemを`Gemfile`に追加します。
+
+```ruby
+gem 'newrelic_rpm'
+```
+
+次に、以下を実行します：
+
+```sh
+bundle install
+```
+
+<Tabs>
+<TabsBar>
+<TabsBarItem id="native-mode">ネイティブモード（RailsまたはSinatra）</TabsBarItem> <TabsBarItem id="docker-runtime">カスタムDockerランタイム</TabsBarItem>
+</TabsBar>
+
+<TabsPages>
+<TabsPageItem id="native-mode">
+GAEネイティブモードを使用する場合、アプリケーションコードと`app.yaml`を提供します。GAEは、標準の事前構築済みDockerイメージに自動的にデプロイします。追加のDockerfileは必要ありません。
+</TabsPageItem>
+
+<TabsPageItem id="docker-runtime">
+アプリに特定のライブラリやヘッダーが必要な場合は、カスタムランタイムを使用してください。`Dockerfile`を作成し、`app.yaml`を次のように設定します：
+
+```yaml
+runtime: custom
+env: flex
+```
+
+New Relicは、カスタムランタイム方式を推奨しています。また、Google App Engineにヘルスチェックを処理させることを推奨しています。
+</TabsPageItem>
+</TabsPages>
+</Tabs>
+</Step>
+
+<Step>
+## エージェントを構成します [#configure]
+
+New RelicのGitHubリポジトリから[`newrelic.yml`](https://github.com/newrelic/newrelic-ruby-agent/blob/dev/newrelic.yml)をダウンロードし、アプリケーションの`config`ディレクトリにコピーします。
+
+次の必須の2つの値を設定してください：
+
+1. `license_key`を<InlinePopover type="licenseKey" />に設定してください。
+2. `app_name`にアプリケーションのわかりやすい名前を設定してください。
+
+その他のすべての設定オプションについては、[Rubyエージェント設定](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration)を参照してください。
+</Step>
+
+<Step>
+## 導入・検証する [#verify]
+
+`gcloud` CLIを使用してアプリをデプロイします：
+
+```bash
+gcloud app deploy
+```
+
+デプロイメントが完了するまで待ちます。少なくとも2回requestsを送信してから2～3分待ち、[one.newrelic.com&gt;APM](https://one.newrelic.com/apm)を開いてアプリを名前で検索してください。
+
+<Callout variant="tip">
+アプリケーションが表示されませんか？[データが表示されない（Ruby）](/docs/apm/agents/ruby-agent/troubleshooting/no-data-appears-ruby)をご覧ください。
+</Callout>
+</Step>
+</Steps>
+
+## 関連記事 [#related-docs]
+
+* [Rubyエージェントの要件とサポート対象のフレームワーク](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks) — サポート対象のRubyバージョン。
+* [Rubyエージェント設定](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration) — 利用可能なすべての設定。
+* [Ruby向けGoogle App Engineドキュメント](https://cloud.google.com/appengine/docs/flexible/ruby/) — GAE flexリファレンス。

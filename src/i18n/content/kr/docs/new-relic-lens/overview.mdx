@@ -1,0 +1,61 @@
+---
+title: 뉴렐릭 렌즈 개요
+tags:
+  - New Relic Lens
+  - Query data
+  - SQL queries
+  - Cross-database joins
+  - Data analysis
+  - Multiple data sources
+metaDescription: 'Learn about New Relic Lens, a unified query platform for querying multiple data sources using ANSI SQL and performing cross-database joins.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+뉴렐릭 사용자로서 여러 데이터베이스, 데이터 웨어하우스 및 스프레드시트에 저장된 데이터와 함께 텔레메트리 데이터를 분석해야 할 수 있습니다. 각 소스에서 데이터를 수동으로 내보내고 오프라인에서 옵저버빌리티 데이터와 결합하는 작업은 시간이 소요되고 생산성을 저하시킬 수 있으며, 내부 정책이나 요구 사항을 충족하지 못할 수 있습니다.
+
+<DNT>New Relic Lens</DNT> 이러한 과제를 해결하는 데 도움이 됩니다. <DNT>Lens</DNT>은(는) 뉴렐릭 내의 통합 쿼리 플랫폼으로, 뉴렐릭에서 직접 특정 데이터 소스에 연결하고 쿼리할 수 있도록 합니다. ANSI SQL을 사용하여 <DNT>Lens</DNT>에서 쿼리를 작성하고 교차 데이터베이스 조인을 수행하여 다양한 소스의 데이터를 분석하고 상관관계를 파악하십시오. 원시 데이터를 뉴렐릭으로 가져오는 대신, <DNT>Lens</DNT>은(는) 쿼리의 각 부분을 데이터가 있는 데이터 소스로 전송하므로 각 소스가 자체적으로 처리하고 결과만 반환합니다. 그런 다음 <DNT>Lens</DNT>은(는) 이러한 결과를 결합하여 데이터 전송 및 외부 소스로부터의 원시 데이터 수집을 최소화합니다.
+
+<img title="New Relic Lens Architecture" alt="A schematic diagram of New Relic Lens architecture." src="/images/nr-lens-arch.webp" />
+
+## 기능 [#capabilities]
+
+<DNT>Lens</DNT> 다음을 제공합니다:
+
+* **교차 데이터베이스 SQL 쿼리**: ANSI SQL을 작성하고 단일 쿼리에서 여러 소스의 데이터를 조인하십시오.
+* **기본 제공 NRDB 액세스**: 별도의 설정 없이 기본 제공되는 <DNT>system connectors</DNT>을(를) 통해 텔레메트리, 엔티티 및 <DNT>materialized view</DNT> 데이터를 쿼리합니다.
+* **외부 데이터 커넥터**: cloud 데이터 웨어하우스, 관계형 데이터베이스, 문서 데이터베이스, 스프레드시트, 데이터 레이크 및 모니터링 도구에 연결합니다. 전체 목록은 [커넥터 설정](/docs/new-relic-lens/set-up-connectors)을 참조하십시오.
+* **구체화된 뷰**: 복잡하고 자주 실행되는 쿼리의 결과를 [구체화된 뷰](/docs/new-relic-lens/materialized-views)로 저장하여 비용을 절감하고 성능을 향상시키십시오.
+* **어디서나 쿼리**: [쿼리 빌더, 노트북 또는 커스텀 대시보드](/docs/new-relic-lens/query-data)에서 <DNT>Lens</DNT> 쿼리를 실행하십시오.
+
+## 사용 사례 [#use-cases]
+
+<DNT>Lens</DNT> 다양한 데이터 분석 시나리오를 지원합니다:
+
+* **예산 분석**: 할당된 예산 대비 지출을 추적하기 위해 <DNT>NRDB</DNT> 의 뉴렐릭 활용 데이터를 <DNT>Snowflake</DNT> 에 저장된 예산 데이터와 비교합니다.
+* **데이터베이스 최적화**: 여러 수동 내보내기/가져오기 단계(한 데이터베이스에서 다른 데이터베이스로)를 필요한 모든 데이터를 결합하는 단일 SQL 쿼리로 대체하여 비용을 절감하고 효율성을 향상시킵니다.
+* **지역별 데이터 통합**: 다양한 데이터 소스의 데이터를 통합하여 여러 지리적 지역의 사용자 트래픽을 추적합니다.
+* **<DNT>materialized views</DNT>을(를) 사용한 성능 최적화**: 임원용 대시보드는 5개 이상의 데이터베이스에서 데이터를 결합하고 매주 갱신됩니다. 다중 데이터베이스 `JOIN` 쿼리의 결과를 <DNT>materialized view</DNT>에 저장하면 누군가 대시보드를 로드할 때마다 컴퓨팅 비용이 많이 드는 쿼리를 실행하는 것을 피할 수 있습니다. 이를 통해 쿼리 비용을 절감하고 페이지 로드 속도를 향상시킬 수 있습니다.
+
+<Callout title="알림은 지원되지 않습니다" variant="important">
+  <DNT>Lens</DNT> 알림을 지원하지 않습니다. <DNT>Lens</DNT> 쿼리 결과를 기반으로 공지 조건을 생성할 수 없습니다.
+</Callout>
+
+## 가격 [#pricing]
+
+<DNT>**Lens**</DNT> 유료 비영리 계정을 포함한 유료 고객에게 제공됩니다:
+
+* [<DNT>Data + User</DNT>](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/new-relic-one-pricing-billing/) 요금제 모델에서는 추가 비용이 발생하지 않습니다.
+* [<DNT>Data + Core Compute</DNT>](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/new-relic-one-pricing-billing/) 요금 모델에서는 `telemetry.<New Relic event>` 테이블을 쿼리할 때 [Core CCU](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/new-relic-one-pricing-billing/#core-compute-capacity-unit)가 소비되며, <DNT>Lens</DNT>는 이를 API 호출로 청구합니다.
+
+## 한눈에 보는 설정 [#at-a-glance]
+
+<DNT>Lens</DNT> 설정에는 다음 단계가 포함됩니다:
+
+1. [필요한 권한](/docs/new-relic-lens/set-up-connectors#requirements)이 있는지 확인하십시오.
+2. 커넥터 설정
+3. 설정을 확인하세요
+
+## 다음: 커넥터 설정 [#next]
+
+[**커넥터 설정 →**](/docs/new-relic-lens/set-up-connectors)

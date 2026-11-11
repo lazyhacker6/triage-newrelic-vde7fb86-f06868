@@ -1,0 +1,105 @@
+---
+title: Présentation de l’interface utilisateur de workload intelligent
+tags:
+  - New Relic
+  - Use New Relic
+  - Workloads
+  - Intelligent Workloads
+metaDescription: 'Use the Intelligent Workloads Summary page to monitor transaction flows, track KPIs, and understand workload health in real time.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+La page de résumé des Workloads intelligents vous sert de cockpit opérationnel central, réunissant les dépendances full-stack, les métriques dorées et les KPI métier personnalisés dans une vue unique et unifiée. Ce guide explique comment utiliser les composants de la page de résumé pour monitorer la santé des transactions en temps réel et accélérer le tri lorsque les performances se dégradent. Au fur et à mesure que vous faites défiler, la mise en page guide systématiquement votre investigation, de l’impact sur les clients jusqu’aux facteurs de performance technique.
+
+La répartition ci-dessous utilise une dégradation de transaction de paiement comme exemple récurrent pour démontrer comment chaque vue fonctionne pendant un incident actif.
+
+<img title="Intelligent Workloads summary page" alt="Screenshot of the Intelligent Workloads summary page showing KPI tiles, golden metrics, and participating entities" src="/images/intelligent-workload-summary.webp" />
+
+## Accéder aux workloads intelligents [#access]
+
+Après avoir créé des workloads intelligents, vous pouvez y accéder depuis la page principale Workload :
+
+1. Allez à <DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Workloads**</DNT>.
+2. Utilisez le filtre <DNT>**Type**</DNT> pour sélectionner **Intelligent**.
+3. Cliquez sur un workload pour ouvrir son dashboard.
+
+## Résumé de l&apos;IA [#ai-summary]
+
+Situé en haut de la page de synthèse, le résumé de l&apos;IA analyse automatiquement les données de performances en temps réel — y compris les métriques, les traces et la santé des entités — sur toutes les entités participantes de votre workload pour accélérer la réponse aux incidents. Cliquez sur <DNT>**Generate insights**</DNT> pour faire apparaître instantanément les anomalies de performances et obtenir des suggestions sur l&apos;endroit où commencer votre investigation. Par exemple, lors d&apos;un ralentissement soudain du paiement, le résumé de l&apos;IA peut analyser votre chaîne de dépendances et mettre en évidence les appels de base de données à latence élevée avant même que vous ne récupériez une seule trace.
+
+**Exigences:**
+
+* New Relic AI doit être activé pour votre compte. [Apprenez à activer New Relic AI](/docs/new-relic-solutions/new-relic-one/core-concepts/new-relic-ai).
+* Disponible uniquement sur l’infrastructure AWS ; non disponible pour les clients FedRAMP.
+* Pour des exigences détaillées et le dépannage, consultez [Informations détaillées de l&apos;IA pour les workloads intelligents](/docs/new-relic-solutions/new-relic-one/workloads/advanced-workload-ai-insights).
+
+<Callout variant="important">
+**Tarification :** la génération d&apos;informations détaillées par l&apos;IA entraîne des frais supplémentaires en fonction de votre utilisation de New Relic AI. Pour en savoir plus sur la tarification de New Relic AI, consultez la [documentation sur la tarification de New Relic AI](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/new-relic-one-pricing-billing/).
+</Callout>
+
+## KPI de workload [#workload-kpis]
+
+Positionnées directement sous le résumé de l’IA, les tuiles de KPI personnalisés suivent les indicateurs métier clés — tels que les taux d’achèvement des commandes — directement aux côtés des performances techniques. Le suivi des KPI permet à votre équipe de définir la santé du système par l’expérience client, vous alertant au moment où les résultats de l’entreprise sont menacés. Si votre KPI de taux de réussite de paiement passe de 99 % à 92 %, vous savez immédiatement que les achats des clients échouent, plutôt qu’il ne s’agisse d’un pic de CPU bénin en arrière-plan.
+
+Vous pouvez afficher jusqu&apos;à 3 KPI simultanément sur la page de synthèse. Deux KPI par défaut sont automatiquement ajoutés lorsque vous créez un workload intelligent :
+
+* **Débit de la transaction**: suit le volume total de requests entrantes traitées par votre transaction sélectionnée au fil du temps.
+* **Taux d’erreur de transaction**: monitore le pourcentage de transactions ayant échoué, vous donnant une base de référence immédiate de la fiabilité des transactions.
+
+Pour en savoir plus sur la gestion des KPI, consultez [gérer les KPI personnalisés](/docs/new-relic-solutions/new-relic-one/workloads/intelligent-workload-kpis).
+
+## Métriques dorées de transaction focale [#golden-metrics]
+
+Trois graphiques côte à côte mettent en évidence le [temps de réponse](/docs/apm/apm-ui-pages/monitoring/response-time-chart-types-apm-browser/), le [débit](/docs/apm/apm-ui-pages/monitoring/response-time-chart-types-apm-browser/#throughput), et les [erreurs](/docs/apm/apm-ui-pages/monitoring/response-time-chart-types-apm-browser/#errors) restreints spécifiquement à votre transaction centrale, la transaction principale choisie lors de la création de votre workload. Contrairement aux vues APM standard qui mélangent tout le trafic des services, ces métriques dorées isolent le chemin d’exécution exact de ce workflow central. Lorsque votre KPI de paiement chute, l’examen de ces métriques dorées vous aide à valider si un pic de latence simultané est corrélé à l’impact commercial.
+
+## Entités participantes [#participating-entities]
+
+La section inférieure détaille les performances des 20 principaux services, bases de données et composants serverless traitant activement votre transaction focale. L&apos;analyse du temps de réponse, du débit et des taux d’erreur à travers ces dépendances vous aide à isoler précisément quels microservices sont défaillants. Par exemple, trier les entités participantes par temps de réponse lors d&apos;un incident de paiement pourrait révéler qu&apos;un composant de base de données de gateway de paiement en aval représente 85 % de la latence totale de la transaction, vous orientant directement vers le principal facteur de dégradation.
+
+Analysez les graphiques pour identifier quel service présente la latence, le volume de requêtes, ou le taux d’erreur les plus élevés ; la valeur hors norme est généralement à l&apos;origine de la dégradation.
+
+## Carte de flux dynamique [#flow-map]
+
+La carte de flux dynamique est un outil de visualisation qui affiche les données de trace agrégées pour montrer comment les changements de performances dans les dépendances en amont et en aval impactent votre service focal. En mettant en évidence les latences anormales corrélées et les erreurs dans le trafic entre les services, la carte vous aide à isoler les goulots d’étranglement des performances à travers votre flux de transaction.
+
+<img title="Dynamic Flow Map" alt="Screenshot of the Dynamic Flow Map showing service dependencies for a transaction flow" src="/images/intelligent-workload-dfm.webp" />
+
+#### Comprendre les lacunes dans les cartes de services [#flowmap-gaps]
+
+Vous pouvez remarquer des lacunes ou des services déconnectés dans vos visualisations des dépendances de service. Voici ce qui les provoque et ce que vous pouvez faire :
+
+**Causes courantes de lacunes :**
+
+* **Faible taux d&apos;échantillonnage**: Si l&apos;échantillonnage des traces est trop faible pour certaines connexions de service, New Relic peut ne pas disposer de suffisamment de données de trace pour ce lien pendant votre fenêtre de requête pour afficher ces relations.
+
+  * **Ce que vous pouvez faire**: vérifiez la dernière version de votre Agent et la configuration de l&apos;échantillonnage pour tirer parti des capacités d&apos;échantillonnage améliorées.
+
+* **Télémétrie manquante**: un service au milieu de la trace peut participer correctement à la trace mais ne pas envoyer de données de span à New Relic.
+
+  * **Ce que vous pouvez faire**:
+
+    * Vérifiez que le service est correctement instrumenté et configuré pour envoyer des données à New Relic
+    * Vérifiez la connectivité réseau et les règles de pare-feu
+    * Vérifier les logs de l&apos;agent pour détecter des erreurs
+
+  * **Lorsque vous ne pouvez pas résoudre le problème**: certains types de services ou d&apos;instrumentations (comme certains types d&apos;entités AWS) peuvent ne pas prendre en charge l&apos;envoi de données de span. Dans ces cas, des trous sont attendus et ne peuvent pas être résolus.
+
+**Services déconnectés :**
+
+Lorsqu&apos;un service au milieu de votre trace ne parvient pas à envoyer de données, vous pouvez voir des services en aval apparaître dans votre workload, mais déconnectés de votre entité focale. Ces services déconnectés :
+
+* Apparaissent car ils envoient avec succès des données de trace à New Relic
+* Apparaissent isolés car leur service parent est absent de la trace
+* Peuvent avoir leurs propres services enfants connectés formant des fragments distincts
+
+<Callout variant="tip">
+Si vous constatez des lacunes persistantes ou des services déconnectés, commencez par vérifier la configuration de l&apos;échantillonnage et l&apos;état de l&apos;instrumentation des services manquants. Concentrez-vous sur les services qui apparaissent entre votre entité focale et les fragments déconnectés.
+</Callout>
+
+## Prochaines étapes [#next-steps]
+
+* **[Enquêtez avec des expériences intégrées](/docs/new-relic-solutions/new-relic-one/workloads/intelligent-workload-integrated-experiences)**: explorez des sous-vues ciblées incluant Errors Inbox, Transaction 360, et les cartes de dépendances
+* **[Gérer les KPI personnalisés](/docs/new-relic-solutions/new-relic-one/workloads/intelligent-workload-kpis)**: Définir des métriques métier
+* **[Configurer l&apos;état de santé](/docs/new-relic-solutions/new-relic-one/workloads/workload-status-configuration)**: Personnalisez la façon dont la santé de la charge de travail est calculée
+* **[Configurer les notifications](/docs/new-relic-solutions/new-relic-one/workloads/workload-status-views-notifications)**: Recevez des alertes sur les changements de statut des charges de travail

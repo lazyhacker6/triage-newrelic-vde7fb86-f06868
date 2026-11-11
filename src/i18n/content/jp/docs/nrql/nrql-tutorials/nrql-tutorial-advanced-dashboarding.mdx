@@ -1,0 +1,387 @@
+---
+title: NRQL でダッシュボードを進化させる
+tags:
+  - NRQL tutorial
+  - 'NRQL: New Relic query language'
+  - Get started
+  - Tutorial
+metaDescription: Learn how to use NRQL to improve your dashboarding
+freshnessValidatedDate: never
+translationType: machine
+---
+
+ご自身のデータのコンテキストでサンプルのクエリや説明を確認することは、変化率や集計などのより高度な概念を使用してデータを変換するのに役立ちます。このチュートリアルでは、[NRQLの使用の基礎](/docs/query-your-data/nrql-new-relic-query-language/get-started/introduction-nrql-tutorial/)および[NRQLを使用したデータの制御](/docs/query-your-data/nrql-new-relic-query-language/get-started/nrql-tutorial-process-your-data/)にある概念を基に、より高度な概念へと発展させます。
+
+ケースごとのファセット、高度な集計関数、`EXTRAPOLATE`キーワード、集計関数のフィルタリング、および値の上書きを使用して、ダッシュボードを高度化する方法について説明します。具体的には、以下の使用方法について説明します：
+
+* `filter()`、`apdex()`、`rate()`、`funnel()`、`histogram()`などの高度な集計関数。
+* `EXTRAPOLATE`句。
+* `FACET CASES()` 属性およびグループの一致する値用です。
+* `filter()` イベントタイプを組み合わせるため。
+* 値のオーバーライド。
+
+これらの関数や機能をすべてのダッシュボードで使用するわけではないかもしれませんが、特定の問題や要件に取り組む際に役立ちます。
+
+## 高度なアグリゲータを使用する
+
+<Steps>
+  <Step>
+    ### レートを計算する
+
+    `rate()`関数から始めましょう。これにより、時間の経過に伴うイベントの頻度を視覚化でき、より大きな時間枠内の短い期間におけるパターンを特定するのに役立ちます。
+
+    以下の例では、過去 1 時間の 5 分ごとのリクエストの平均頻度を、前の 1 時間の 5 分間の平均頻度と比較して確認できます。クエリでは`SINCE 1 hour ago`が使用されていることに注目してください。これは、レートを計算する全体の時間枠です。
+
+    <SideBySide>
+      <Side>
+        ```sql
+        SELECT rate(count(*), 5 minutes) 
+        FROM Public_APICall 
+        SINCE 1 hour ago 
+        COMPARE WITH 1 hour ago
+        ```
+      </Side>
+
+      <Side>
+        <img title="Calculate range" alt="A screenshot of a query using Since and Compare to capture data within a time range" src="/images/queries-nrql_screenshot-crop-tutorial2-1.webp" />
+      </Side>
+    </SideBySide>
+
+    `rate()`を使用して、時間間隔を 1 分または 1 秒に設定することで、1 分あたりのリクエスト数または 1 秒あたりのリクエスト数を計算できます。
+  </Step>
+
+  <Step>
+    ### ファネル チャートでエンド ユーザーの行動を理解する
+
+    ファネルチャートは、複数のレコードにわたる属性値の発生を追跡し、多くの人がエンドユーザーの行動を理解するために使用します。特にカスタムアトリビュートを使用する場合に、ユーザーが定義されたパスをどれだけうまく進んでいるかを視覚化するためによく使用されます。
+
+    `funnel()`集計関数を使用すると、別のページに移動する前に特定のページにアクセスしたユーザーの数を視覚化できます。1番目のパラメーターは、カウントする一意のエントリの識別属性です。この場合、New Relicはサイト上の各ユーザーに`session ID`属性を割り当てて保持します（ユーザーがCookieを有効にしている場合）。カスタムアトリビュートを使用して、ユーザー独自のセッションIDを設定することもできます。
+
+    残りのパラメーターは、ファネルの各ステップの計算方法を決定し、 `, WHERE attr OP value`の形式で記述されます。この場合、2 つあります。1 つはホームページにアクセスしたユーザー セッションの数を示し、もう 1 つは他のページに移動したユーザー セッションの数を示します。自分のデータに対してこのようなクエリを試して、何が得られるかを確認してください。
+
+    <SideBySide>
+      <Side>
+        ```sql
+        SELECT funnel(awsAPI, WHERE http.url LIKE '%.amazonaws.com', WHERE http.url LIKE '%.us-west%.amazonaws.com') 
+        FROM Public_APICall 
+        SINCE 1 week ago 
+        UNTIL now
+        ```
+      </Side>
+
+      <Side>
+        <img title="Funnel Charts" alt="A screenshot displaying the funnel charts functionality" src="/images/queries-nrql_screenshot-crop-tutorial2-2.webp" />
+      </Side>
+    </SideBySide>
+  </Step>
+
+  <Step>
+    ### アグリゲーターフィルター
+
+    `filter()` は、単一のクエリで複数のデータポイントを集約できる汎用性の高い関数であり、関数の結果がどのイベントを返すかをより詳細に制御できます。この例では、`filter()`を使用して、合計APIコール、DynamoDBへのコール、およびSQSへのコールの個別の値を返します：
+
+    ```sql
+    SELECT count(*) AS 'All Transactions', filter(count(*), WHERE awsAPI = 'dynamodb') AS 'DynamoDB', filter(count(*), WHERE awsAPI = 'sqs') AS 'SQS' 
+    FROM Public_APICall SINCE 1 day ago
+    ```
+
+    <img title="Aggregator filters" alt="A screenshot displaying the aggregator filter functionality" src="/images/queries-nrql_screenshot-crop-tutorial2-3.webp" />
+
+    数値が返されるため、クエリの結果に対して計算を実行することもできます。 たとえば、合計 API コールをすべての API コールで割ると、そのうちの何パーセントが DynamoDB であったかを確認できます。
+
+    <SideBySide>
+      <Side>
+        ```sql
+        SELECT filter(count(*), WHERE awsAPI = 'dynamodb') / count(*) AS 'Percent of APIs that are DynamoDB' 
+        FROM Public_APICall 
+        SINCE 1 day ago
+        ```
+      </Side>
+
+      <Side>
+        <img title="Aggregator filters divided" alt="A screenshot showing the aggregator filters divided" src="/images/queries-nrql_screenshot-crop-tutorial2-4.webp" />
+      </Side>
+    </SideBySide>
+  </Step>
+
+  <Step>
+    ### ヒストグラム
+
+    ヒストグラムは、単一の平均値としてではなく、頻度バケットごとのデータの分布を示します。これにより、単なる平均だけでなく、頻度によるデータポイントのグループ化を理解できます。`histogram()`関数は、以下の3つの引数を取ります。
+
+    1. プロットする属性 (期間など)。
+    2. 考慮したい範囲の最大値(1秒以下は「1」など)。
+    3. データをグループ化するバケットの数。この例では、0 ～ 1 秒のすべての継続時間値の`histogram()`グラフを作成し、それらを 50 ミリ秒のバケットにグループ化します。これを行うには、バケットの数に「20」を指定します。1 秒を超えるすべての継続時間が最後のバケットにグループ化されます。
+
+    <SideBySide>
+      <Side>
+        ```sql
+        SELECT histogram(duration, 1, 20) 
+        FROM Public_APICall 
+        SINCE 1 day ago
+        ```
+      </Side>
+
+      <Side>
+        <img title="Histograms" alt="A screenshot showing the histogram functionality" src="/images/queries-nrql_screenshot-crop-tutorial2-5.webp" />
+      </Side>
+    </SideBySide>
+  </Step>
+
+  <Step>
+    ### Apdex
+
+    `apdex()`関数は、任意の数値（所要時間など）のApdexスコアを計算します。カスタムアトリビュート値を考慮して、1つ以上の特定のトランザクションのApdexを計算できます。アプリケーション設定に影響を与えることなく、独自のApdex-T値を指定することもできます。この例では、関数に&quot;duration&quot;という属性と0.1のApdex-T値を指定し、それを&quot;Apdex of Duration&quot;として報告します：
+
+    ```sql
+    SELECT apdex(duration, 0.1) AS 'Apdex Of Duration' 
+    FROM Public_APICall 
+    SINCE 1 week ago
+    ```
+
+    <img title="Apdex" alt="A screenshot showing the apdex functionality" src="/images/queries-nrql_screenshot-crop-tutorial2-6.webp" />
+
+    `TIMESERIES`演算子を追加して、時系列でデータをチャート化することもできます。Apdexのsatisfied、tolerating、frustratedの閾値もプロットされることに注意してください。
+
+    <SideBySide>
+      <Side>
+        ```sql
+        SELECT apdex(duration, 0.1) AS 'Apdex Of Duration' 
+        FROM Public_APICall 
+        SINCE 1 week ago 
+        TIMESERIES
+        ```
+      </Side>
+
+      <Side>
+        <img title="Apdex time series" alt="A screenshot showing an apdex time series" src="/images/queries-nrql_screenshot-crop-tutorial2-7.webp" />
+      </Side>
+    </SideBySide>
+  </Step>
+</Steps>
+
+これで、 `funnel()`と`histogram()`を使用した全く新しい一連のビジュアライゼーションを探索できました。また`filter()` `WHERE`句を使用したクエリでより具体的な情報を取得するのにどのように役立つか、また`rate()`時間の経過に伴う属性の割合を表示する方法についても学びました。
+
+これらのクエリは、NRQLの知識に基づいています。Apdexは業界標準であり、多くのシナリオに適用されます。ファネルは目的のパスを通る進行状況を追跡でき、ヒストグラムはデータの分布を視覚化します。最後に、フィルターを使用すると、返される値を正確に絞り込むことができます。次に、`EXTRAPOLATE`について学習します。
+
+## 大量のデータには外挿を使用する
+
+New Relicデータベース（NRDB）は、毎日大量のデータを受信して処理します。APMが大量のイベントデータを記録する場合、New Relicエージェントはサンプリング手法を実装して、アプリケーションへの潜在的な影響を軽減しながら意味のあるデータの収集を継続します。これは通常、アプリケーションまたはサービスの単一のイベントが非常に大量のrequestsを処理する場合にのみ発生します。
+
+サービスの複数の負荷分散されたインスタンスに複数のエージェントが分散している場合、この制限に気付くことさえないかもしれません。このような場合に何ができるかを見てみましょう。`EXTRAPOLATE`演算子は、サンプリングの影響を数学的に補うようNew Relicに指示し、それによってシステム内のアクティビティをより厳密に表現する結果を返します。制限を超えて発生した類似のイベントの数を記録するために追加の値を保存でき、これにより、サンプリングされていないデータを考慮した推定値を返すことができます。
+
+```sql
+SELECT count(*) 
+FROM Transaction 
+SINCE 60 minutes ago 
+FACET appName 
+TIMESERIES 1 minute 
+EXTRAPOLATE
+```
+
+<img title="Extrapolate" alt="A screenshot showing the extrapolate functionality" src="/images/queries-nrql_screenshot-crop-tutorial2-8.webp" />
+
+このままでは限界に達してしまうのではないかと思うかもしれません。クエリから`EXTRAPOLATE`を削除して、カウントが変化するかどうかを確認してください。そうでない場合は、制限に達していない可能性があります。
+
+クエリに`EXTRAPOLATE`を含めると、報告されたイベントと合計イベントの比率が計算されます。次に、この比率を使用して、サンプリングされていないデータの近似値を推定します。一部のクエリのみがこの使用をサポートしていることに注意してください。サポートしていない、またはサンプリングされたデータを使用していない NRQL クエリに含めても、効果はありません。
+
+スループットのような同種のデータで、`EXTRAPOLATE`関数は最大の効果を発揮します。（`uniqueCount()`または`uniques()`など）特徴的なものの数を外挿する際には、効果が少なくなります。したがって、`EXTRAPOLATE`は、以下のいずれかの集計関数を使用するNRQLクエリでのみ機能します：
+
+* `apdex`
+* `average`
+* `count`
+* `histogram`
+* `sum`
+* `percentage`
+* `rate`
+* `stddev`
+
+`EXTRAPOLATE`が完了したら、ファセット ケースの使用に進みましょう。
+
+## ファセットケースを使用する
+
+<Steps>
+  <Step>
+    以前に学習したように、`FACET`はデータをセグメント化し、異なるグループ化された視点からデータを理解するのに役立ちます（異なるレスポンスコードに基づく平均応答時間の確認など）。`FACET`を使用すると、NRDBは提供された属性の値に基づいてデータをグループに編成します。しかし、HTTPレスポンスコードの200と201など、異なる値を一緒にグループ化したい場合はどうすればよいでしょうか？
+
+    `FACET CASES()` ファセット バケットを分割する方法を選択できるようにすることで、この問題を解決します。演算子は、 `WHERE attr OP value`形式で任意の数のパラメータを受け取ります。以下の例では、「amazon」、「google」、「microsoft」で始まる`http.url`のすべてのトランザクションをバケットに分類します。また、エラー応答コードなどに対してこれを実行して、可読性を高め、アプリケーションで何が起こっているかを理解しやすくする方法でデータをグループ化することもできます。
+
+    ```sql
+    SELECT count(*) 
+    FROM Public_APICall 
+    FACET CASES(WHERE http.url LIKE '%amazon%', WHERE http.url LIKE '%google%', WHERE http.url LIKE '%microsoft%')
+    ```
+
+    <img title="Facet cases" alt="A screenshot showing the facet cases functionality" src="/images/queries-nrql_screenshot-crop-tutorial2-9.webp" />
+  </Step>
+
+  <Step>
+    ご覧のとおり、これらのグループ化には価値がありますが、読みにくい場合があります。[以前のチュートリアル](/docs/query-your-data/nrql-new-relic-query-language/get-started/nrql-tutorial-process-your-data/)で学んだことを使用して、これらを整理しましょう：
+
+    ```sql
+    SELECT count(*) 
+    FROM Public_APICall 
+    FACET CASES(WHERE http.url LIKE '%amazon%' AS 'Amazon', WHERE http.url LIKE '%google%' AS 'Google', WHERE http.url LIKE '%microsoft%' AS 'Microsoft')
+    ```
+
+    <img title="Facet cases groupings" alt="A screenshot showing the grouping functionality of facet cases" src="/images/queries-nrql_screenshot-crop-tutorial2-10.webp" />
+  </Step>
+</Steps>
+
+`FACET CASES()` 結合したい異なる値を持つ属性を照合してグループ化できます。この機能には多くの用途があり、トランザクションデータにカスタムデータをタグ付けするとさらに便利になります。これにより、データのナビゲーションとグループ化において、より詳細な粒度と制御が可能になります。次に、フィルタリングについてさらに詳しく見ていきます。今回はイベントタイプによるフィルタリングです。
+
+## イベントタイプでフィルタリングする
+
+<Steps>
+  <Step>
+    次に、New Relicの顧客のほとんどが気づいていない機能について説明します：イベントタイプへのフィルタリングです！これまでは、単一のソースからデータを取得するクエリを作成してきました。しかし、2つの異なるイベントタイプとして保存されている2つのデータポイントをプロットしたい場合はどうすればよいでしょうか？NRDBデータのクエリは単一のイベントタイプに制限されておらず、カンマで区切ることで異なるイベントタイプからクエリを実行できます。
+
+    <SideBySide>
+      <Side>
+        ```sql
+        SELECT count(*) AS 'Combined Events' 
+        FROM NrdbQuery, NrDailyUsage 
+        SINCE 1 day ago
+        ```
+      </Side>
+
+      <Side>
+        <img title="Filter event type" alt="A screenshot showing the filter event type functionality" src="/images/queries-nrql_screenshot-crop-tutorial2-11.webp" />
+      </Side>
+    </SideBySide>
+  </Step>
+
+  <Step>
+    これをさらに便利にするために、 `eventType()`関数はレコードがどのイベント タイプに由来するかを示します。これを使用してデータ出力を制御できます。この例では、 `Transaction`と`PageView`のイベントを組み合わせた合計数と、 `Transaction`と`PageView`のみの合計を確認できます。
+
+    ```sql
+    SELECT count(*) AS 'Combined Events', filter(count(*), WHERE eventType() = 'PageView') AS 'Page Views', filter(count(*), WHERE eventType()='Transaction') AS 'Transactions' 
+    FROM Transaction, PageView 
+    SINCE 1 day ago
+    ```
+
+    <img title="Event type with transaction and pageview" alt="A screenshot showing the event type functionality with transactions and pageview" src="/images/queries-nrql_screenshot-crop-tutorial2-12.webp" />
+  </Step>
+
+  <Step>
+    これをさらに詳しく見てみましょう。 `count(*)`は、 `Transaction`と`PageView`の両方のイベントの合計数を示します。ただし、最近学習したアグリゲータ関数`filter()`を使用して、何かユニークなことを行うことができます。クエリには`WHERE eventType()='PageView'`があり、フィルター関数を呼び出して、合計結果セットの一部としてイベント タイプを監視します。次に、フィルタリングして、それらの特定のイベントのみを表示します。`TIMESERIES`を追加して、直接比較できる 2 つのデータ ポイントを折れ線グラフで視覚化することもできます。
+
+    ```sql
+    SELECT count(*) AS 'Combined Events', filter(count(*), WHERE eventType() = 'PageView') AS 'Page Views', filter(count(*), WHERE eventType()='Transaction') AS 'Transactions'
+    FROM Transaction, PageView
+    SINCE 1 day ago 
+    TIMESERIES max
+    ```
+
+    <img title="Event type with count and time series" alt="A screenshot showing the event type functionality with count and time series" src="/images/queries-nrql_screenshot-crop-tutorial2-13.webp" />
+  </Step>
+</Steps>
+
+これで、2つの異なるイベントタイプからデータを特定し、返し、グラフ化しました。この例では、NRQLを使用して必要なデータをナビゲートする方法を示します。複雑な結合ステートメントは必要ありません。次に、オーバーライド値を使用する方法を学びます。
+
+## 値を上書きする
+
+<Steps>
+  <Step>
+    ### NULL値のカウント
+
+    必要な形式でデータが報告されないことがあります。例えば、計算を行うために整数として必要な場合に、整数が文字列として返されることがあります。または、データ内で`NULL`の結果が0を表す場合があります。NRQLは、これらのケースを処理する関数を提供します。
+
+    `NULL` 属性の値は、すぐに使用できるデータとカスタム データの両方に表示できます。`count()`や`average()`などのアグリゲータを使用すると、NRQL は計算から`NULL`値を自動的に削除し、 `NULL`値のないイベントに対してのみ関数を実行します。NRQL では、 `OR value`句を使用して計算で予期しない`NULL`値を考慮できます。たとえば、 `cartValue`属性の`NULL`値が 0 としてカウントされるようにしたい場合は、クエリで`cartValue OR 0`を使用できます。
+
+    この例では、「http.url」で`count()`を実行しています。「http.url」の回数のみをカウントします値があります。ただし、クエリに`OR 'Null'`を追加すると、「http.url」が含まれるすべてのトランザクションをカウントできます。が存在し、それらも`NULL`値です。
+
+    ```sql
+    SELECT count(duration) AS 'Events With Durations', count(http.url OR 'Null') AS 'Events With and Without URL' 
+    FROM Public_APICall 
+    SINCE 1 day ago
+    ```
+
+    <img title="Null values" alt="A screenshot showing the null values functionality" src="/images/queries-nrql_screenshot-crop-tutorial2-14.webp" />
+  </Step>
+
+  <Step>
+    ダッシュボードの作成を進めるために必要なすべてをほぼ学習しました。次に、強制を使用する方法を学びます。
+
+    ### 強制
+
+    NRQL は自動的に強制を適用しません。これは、文字列として保存された float を他の文字列と同様に扱い、 `sum()`や`average()`のような数学関数と一緒に使用できないことを意味します。この動作をオーバーライドするには、 `boolean()`または`numeric()`を使用して引数をブール値または数値に変換します。この例では、「duration」の`average()`関数は、この属性が文字列であるため値を提供しません。ただし、 `numeric(duration)`使用して属性を数値に変換すると、 `average()`関数を正常に使用できます。
+
+    ```sql
+    SELECT average(numeric(duration)) AS 'Ensuring stored value is treated as numeric', average(duration) AS 'Non-Converted Attribute' 
+    FROM Public_APICall 
+    SINCE 1 day ago
+    ```
+
+    <img title="Coercion" alt="A screenshot showing the coercion functionality" src="/images/queries-nrql_screenshot-crop-tutorial2-15.webp" />
+  </Step>
+
+  <Step>
+    もう1つの一般的な例は、文字列として誤ってフォーマットされることが多い`BOOLEAN`（TRUEまたはFALSE）値です。このような場合は、ソースがデータを送信する方法を変更して、適切なブール値にすることができます。または、`boolean()`関数を使用することもできます。以下のクエリ例は同じ結果を返しますが、これはエージェントが`BOOLEAN`として送信する値を使用しているためです。属性が文字列&quot;TRUE&quot;であった場合、`boolean()`はそれを適切なブール形式に変換し、クエリが意図したとおりに実行されるようにします。
+
+    ```sql
+    SELECT count(boolean(sampleDataSet)), count(sampleDataSet)  
+    FROM Public_APICall 
+    SINCE 24 hours ago
+    ```
+
+    <img title="Coercion with boolean" alt="A screenshot showing the coercion functionality with the boolean function" src="/images/queries-nrql_screenshot-crop-tutorial2-16.webp" />
+  </Step>
+
+  <Step>
+    `string()`関数を使用して、ブール値と数値を文字列に変換することもできます。数値を浮動小数点数として使用すると、オプションの`precision`引数を使用して文字列の小数点以下の桁数を制限できます。このクエリは、小数点以下 3 桁までに制限された文字列として期間値を返します。
+
+    ```sql
+    SELECT string(duration, precision: 3) 
+    FROM Public_APICall 
+    SINCE 24 hours ago
+    ```
+
+    <img title="Coercion with precision" alt="A screenshot showing the coercion functionality with precision" src="/images/queries-nrql_screenshot-crop-tutorial2-17.webp" />
+  </Step>
+</Steps>
+
+これで、データフォーマットを制御し、NRQLにどのように動作させるかを指示できるようになりました。NRQLは最も論理的と思われる方法で動作しますが、それが独自のシナリオに合わない場合は、このレッスンで学習する関数を使用してそれらの値を上書きできます。学習すべきことはあと1つだけです：文字列の連結です。
+
+## 文字列連結を使用して引数を追加する
+
+<Steps>
+  <Step>
+    属性の戻り値の末尾または先頭にテキストを追加する必要がある場合があります。これは、`concat()`関数を使用して実現できます。`concat()`関数には、文字列に連結するための引数を最大20個指定できます。
+
+    ```sql
+    SELECT concat('The duration of ', http.url, ' is ', duration, ' seconds') 
+    FROM Public_APICall
+    ```
+
+    <img title="Concatenation" alt="A screenshot showing the concatenation functionality" src="/images/queries-nrql_screenshot-crop-tutorial2-18.webp" />
+  </Step>
+
+  <Step>
+    連結された属性の値内の浮動小数点数に使用する小数点以下の桁数を制限できます。これを行うには、オプションの`precision:`引数を最後の値として使用します。この例では、秒を示すために「s」を追加し、値を小数点以下 3 桁に制限します。
+
+    ```sql
+    SELECT http.url, concat(duration, 's', precision: 3) 
+    FROM Public_APICall
+    ```
+
+    <img title="Concatenation with precision" alt="A screenshot showing the concatenation functionality with precision" src="/images/queries-nrql_screenshot-crop-tutorial2-19.webp" />
+  </Step>
+
+  <Step>
+    New Relicは、`http(s)`で始まる値を、クリックして新しいページを開くことができるリンクとして自動的に表示します。つまり、動的URLがエンティティの関連ページを開くことができるソリューションへのインテグレーションを作成できます。次の例は、属性値によってクエリパラメーターの値を設定するURLの例を示しています。
+
+    ```sql
+    SELECT http.url, concat('https://www.example.com/?appId=', api, '&error=', error) AS 'URL' 
+    FROM Public_APICall
+    ```
+
+    <img title="Concatenation with URLs" alt="A screenshot showing the concatenation functionality with a URL" src="/images/queries-nrql_screenshot-crop-tutorial2-20.webp" />
+
+    `concat()`関数を使用すると、場所の都市と国などの値を組み合わせたり、必要に応じて追加の文字列を先頭または末尾に追加してデータを表示したりできます。
+  </Step>
+</Steps>
+
+このチュートリアルでは、高度なNRQL機能について学習しました。これらのスキルは、実際の多くのNRQLシナリオに適用できます。
+
+これで、3つ目のNRQLチュートリアルは完了です。準備ができたら、このシリーズの最後となる次のチュートリアルをご覧ください。より高度な機能について説明しています：[NRQLの高度な機能](/docs/query-your-data/nrql-new-relic-query-language/get-started/nrql-tutorial-advanced-functions/)。

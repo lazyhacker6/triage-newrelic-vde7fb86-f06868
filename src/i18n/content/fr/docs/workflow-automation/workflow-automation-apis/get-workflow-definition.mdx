@@ -1,0 +1,127 @@
+---
+title: Obtenir la définition du workflow
+tags:
+  - workflow automation
+  - workflow
+  - Get Workflow Definition
+  - workflow automation API
+metaDescription: Used to get and return a workflow definition.
+freshnessValidatedDate: '2026-10-27T00:00:00.000Z'
+translationType: machine
+---
+
+Utilisez la requête `workflowAutomation.workflow` pour récupérer et renvoyer une définition de workflow.
+
+## Paramètres d&apos;entrée [#input-parameters]
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+paramètres
+</th>
+
+<th>
+Type de données
+</th>
+
+<th>
+Description
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`account.id`
+</td>
+
+<td>
+Nombre
+</td>
+
+<td>
+(Requis) Votre ID de compte.
+</td>
+</tr>
+
+<tr>
+<td>
+`workflow.name`
+</td>
+
+<td>
+Chaîne
+</td>
+
+<td>
+(Requis) Le nom de la définition du workflow à récupérer.
+</td>
+</tr>
+
+<tr>
+<td>
+`workflow.version`
+</td>
+
+<td>
+Nombre
+</td>
+
+<td>
+(Requis) La version de la définition du workflow à récupérer.
+</td>
+</tr>
+</tbody>
+</table>
+
+## Demande d&apos;échantillon [#sample-request]
+
+Utilisez le [générateur de requêtes](https://one.newrelic.com/nerdgraph-graphiql?state=c8579e50-f154-fec6-22b8-f9fdcfc1990a) pour créer et éditer un workflow. Voir [l&apos;explorateur d&apos;API NerdGraph](/docs/apis/nerdgraph/get-started/nerdgraph-explorer).
+
+```graphql
+{
+  actor {
+    account(id: 12345678) {
+      workflowAutomation {
+        workflow(name: "my-workflow", version: 1) {
+          definition {
+            name
+            version
+            yaml
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+## Exemple de réponse [#sample-response]
+
+La requête retourne :
+
+* `definition.name`: Le nom de la définition du workflow
+* `definition.version`: Le numéro de version de la définition du workflow
+* `definition.yaml`: La définition de workflow YAML encodée en base64
+
+## Sujets connexes [#related-topics]
+
+<DocTiles>
+<DocTile title="Obtenir les définitions de workflow" path="/docs/workflow-automation/workflow-automation-apis/get-workflow-definitions">
+Lister toutes les définitions de workflow pour trouver le nom et la version
+</DocTile>
+
+<DocTile title="Mettre à jour la définition du workflow" path="/docs/workflow-automation/workflow-automation-apis/update-workflow-definition">
+Modifier la définition du workflow récupérée
+</DocTile>
+
+<DocTile title="Démarrer l'exécution du workflow" path="/docs/workflow-automation/workflow-automation-apis/start-workflow-run">
+Exécuter cette définition de workflow
+</DocTile>
+
+<DocTile title="Schéma de définition" path="/docs/workflow-automation/workflow-automation-apis/definition-schema">
+Comprendre la structure YAML du workflow
+</DocTile>
+</DocTiles>

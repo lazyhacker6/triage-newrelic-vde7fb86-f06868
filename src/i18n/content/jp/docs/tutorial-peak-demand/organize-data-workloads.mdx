@@ -1,0 +1,96 @@
+---
+title: チームをワークロードに合わせて調整する
+metaDescription: 'If you''re preparing for a peak event day, you can set up workloads that put the most relevant data in front of the teams that need it.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+試合当日に有利な状況からスタートするには、計画段階でワークロードを作成することをお勧めします。アプリケーションの健全性とリソース割り当てを超えて、試合当日の振り付けはデータの調整と強力なコミュニケーションに依存します。ワークロードを使用すると、New Relic に報告されたデータのエクスペリエンスをカスタマイズできます。イベント、チーム、責任など、特定のニーズに合わせてワークロードを作成できます。ワークロードを作成すると、システム全体にわたってフロントエンド サービスからバックエンド サービスまで集計された正常性およびアクティビティ データを表示できるようになります。
+
+<img title="Workload_health_tab" alt="Workload_health_tab" src="/images/workloads_screenshot-full_workload-health-tab.webp" />
+
+## 目的 [#objective]
+
+このチュートリアルでは、最高のパフォーマンスを実現するためにワークロードを使用するための入門書を提供します。あなたはするであろう：
+
+* 最初のワークロードを作成する
+* 試合当日のイベントに合わせてワークロードをカスタマイズする
+
+## 試合当日のワークロードを作成する [#create]
+
+ワークロードを開始するには、 <DNT>**[one.newrelic.com &gt; Workloads](https://one.newrelic.com/workloads)**</DNT>に移動して<DNT>**Create a workload**</DNT>をクリックします。
+
+<img title="Add sources to workload" alt="Add your sources to the workload" src="/images/apm_screenshot-crop_add-sources-to-workload.webp" />
+
+<Steps>
+  <Step>
+    ### 最初のワークロードを作成する
+
+    <DNT>**Create a workload**</DNT>ページには、アクセスできるすべてのアカウントのデータ ソースが一覧表示されます。New Relic にレポートする機能、サービス、コンポーネント、またはリソースがある場合は、それをワークロードに追加できます。
+
+    ワークロードを作成するには:
+
+    1. ワークロードを所有するアカウントを選択します。
+    2. ワークロードに、 `Peak Demand Data` などのチームにとって意味のある名前を付けます。
+    3. ワークロード内で表現したいソースをクエリします。
+  </Step>
+
+  <Step>
+    ### ワークロードのデータ ソースを選択する
+
+    ワークロードを最大限に活用するには、以下を追加することをお勧めします。
+
+    * APM サービス、ホスト、サービス レベル、合成モニター、ロード バランサー、Kubernetes ポッド、さらにはその他のワークロード。
+    * `log` ワークロード クエリにアクセスして、ログ UI ページに簡単にアクセスできます。
+    * KPI のみを表示するダッシュボードやビジネス クリティカルなトランザクションのダッシュボードなど、ワークロードに関連するダッシュボード。
+  </Step>
+
+  <Step>
+    ### データソースをワークロードに追加する
+
+    選択を絞り込んだら、ワークロードにデータ ソースを追加するための 2 つのオプションがあります。どちらも少し異なることを行います。
+
+    * <DNT>**Add**</DNT> ソースを静的な状態で追加します。たとえば、午前 10 時にダッシュボードを追加し、午前 11 時にそのダッシュボードにさらにウィジェットを追加した場合、それらの追加ウィジェットはワークロードに表示されません。
+    * <DNT>**Add this query**</DNT> エンティティを動的に追加します。同じダッシュボードの例を使用すると、午前 11 時の変更 (および将来の変更) がワークロードに自動的に表示されます。
+  </Step>
+
+  <Step>
+    ### ダッシュボードをワークロードに追加する
+
+    カスタムダッシュボードをお持ちで、どのデータがチームに関連しているかがすでにわかっている場合は、ワークロードからそれらの<InlinePopover type="dashboards" />をリンクできます。 ダッシュボードにフィルターを設定して、ワークロード固有のコンテキストに範囲を限定することもできます。ワークロードからそのダッシュボードを選択すると、フィルターがすでに適用された状態で開きます。
+
+    <img title="new-relic-workloads-add-dashboards.png" alt="New Relic workloads - add dashboards" src="/images/workloads_screenshot-full_workloads-dashboard-entities.webp" />
+
+    <figcaption>
+      <DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Apps &gt; Workloads**</DNT>: ワークロードにダッシュボードを追加できます。
+    </figcaption>
+  </Step>
+</Steps>
+
+## ゲームデイでのワークロードの使用 [#gameday]
+
+あなたのワークロードは、ゲームデーの原点です。試合当日には、チームの全員が、その役割に関係なく、同じワークロードからスタートし、集中イベントについて連絡するときにそれを参照する必要があります。 チームを同じデータセットに沿って調整することで、誤解を避け、停止をより早く解決できるようになります。
+
+<DocTiles numbered>
+  <DocTile title="始めましょう" path="/docs/journey-demand/get-started">
+    APM とインフラストラクチャ エージェントを使用してアーキテクチャに関するデータを取得する
+  </DocTile>
+
+  <DocTile title="試合当日のサービスレベルを作成する" path="/docs/journey-demand/find-your-baseline/">
+    ベースラインに基づいてサービス レベルを作成する
+  </DocTile>
+</DocTiles>
+
+<DocTiles>
+  <DocTile title="品質アラートでノイズを軽減" number="3" path="/docs/journey-demand/create-quality-alerts/">
+    アラート品質管理でアラートを評価する
+  </DocTile>
+
+  <DocTile title="チームをワークロードに合わせて調整する" number="4" path="/docs/journey-demand/organize-data-workloads/" label={{text: "You are here", color: "orange"}}>
+    同じデータを中心にチームを調整する
+  </DocTile>
+
+  <DocTile title="Kubernetes を使用してインフラストラクチャを自動スケールする" number="5" path="/docs/journey-demand/autoscale-your-infra/">
+    需要のピークに合わせてリソースを拡張
+  </DocTile>
+</DocTiles>

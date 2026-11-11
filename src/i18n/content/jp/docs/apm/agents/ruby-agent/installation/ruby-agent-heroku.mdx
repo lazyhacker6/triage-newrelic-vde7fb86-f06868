@@ -1,0 +1,130 @@
+---
+title: HerokuへのRubyエージェントのインストール
+tags:
+  - Agents
+  - Ruby agent
+  - Installation
+metaDescription: How to install the New Relic Ruby agent on Heroku using the New Relic add-on.
+freshnessValidatedDate: '2026-08-05T00:00:00.000Z'
+translationType: machine
+---
+
+New Relicアドオンを使用して、HerokuにNew Relic Rubyエージェントをインストールします。
+
+## 前提条件 [#prerequisites]
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+要件
+</th>
+
+<th>
+詳細
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+**New Relicアカウント**
+</td>
+
+<td>
+Herokuアドオンをインストールすると、New Relicアカウントが自動的に作成されます。
+</td>
+</tr>
+
+<tr>
+<td>
+**Herokuアカウント**
+</td>
+
+<td>
+Rubyアプリがすでにデプロイされている[Heroku](https://www.heroku.com/)アカウント。
+</td>
+</tr>
+
+<tr>
+<td>
+**Rubyバージョン**
+</td>
+
+<td>
+サポートされているバージョンについては、[Rubyエージェントの要件とサポート対象のフレームワーク](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks)を参照してください。
+</td>
+</tr>
+</tbody>
+</table>
+
+<Steps>
+<Step>
+## New Relicアドオンのインストール [#install]
+
+<Tabs>
+<TabsBar>
+<TabsBarItem id="heroku-website">Herokuウェブサイト</TabsBarItem> <TabsBarItem id="heroku-toolbelt">Heroku Toolbelt</TabsBarItem>
+</TabsBar>
+
+<TabsPages>
+<TabsPageItem id="heroku-website">
+1. [New RelicのHerokuアドオンページ](https://elements.heroku.com/addons/newrelic#pricing)に移動し、サブスクリプションプランを選択してください。
+2. **Select an app**で、アプリを選択してください。
+3. **Submit Order Form（注文フォームを送信）**をクリックします。
+</TabsPageItem>
+
+<TabsPageItem id="heroku-toolbelt">
+次のコマンドを実行します。`$planlevel`を[適切なサブスクリプションプラン](https://elements.heroku.com/addons/newrelic#pricing)に置き換えてください：
+
+```bash
+heroku addons:create newrelic:$planlevel
+```
+</TabsPageItem>
+</TabsPages>
+</Tabs>
+
+アドオンをインストールすると、New Relicアカウントが自動的に作成され、Herokuホストへのアクセスが構成されます。
+</Step>
+
+<Step>
+## エージェントを構成します [#configure]
+
+`newrelic_rpm` gemを`Gemfile`に追加します。
+
+```ruby
+gem 'newrelic_rpm'
+```
+
+Heroku toolbeltを使用してアプリ名を設定してください：
+
+```bash
+heroku config:set NEW_RELIC_APP_NAME='Your Application Name'
+```
+
+ライセンスキーはアドオンによって自動的に設定されます。その他のすべての設定オプションについては、[Rubyエージェント設定](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration)を参照してください。
+</Step>
+
+<Step>
+## データが流れていることを確認します [#verify]
+
+dynoを再起動し、アプリでトラフィックを発生させてください：
+
+```bash
+heroku restart
+```
+
+2～3分待ってから、[one.newrelic.com &gt; APM](https://one.newrelic.com/apm)を開き、名前でアプリを検索してください。
+
+<Callout variant="tip">
+アプリケーションが表示されませんか？[データが表示されない（Ruby）](/docs/apm/agents/ruby-agent/troubleshooting/no-data-appears-ruby)をご覧ください。
+</Callout>
+</Step>
+</Steps>
+
+## 関連記事 [#related-docs]
+
+* [Rubyエージェントの要件とサポート対象のフレームワーク](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks) — サポート対象のRubyバージョン。
+* [Rubyエージェント設定](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration) — 利用可能なすべての設定。
+* [New RelicのHerokuアドオン](https://elements.heroku.com/addons/newrelic) — サブスクリプションのプランと価格。

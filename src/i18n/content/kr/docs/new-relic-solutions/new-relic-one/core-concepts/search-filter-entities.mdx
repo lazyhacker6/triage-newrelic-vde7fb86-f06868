@@ -1,0 +1,82 @@
+---
+title: 엔터티 필터 표시줄로 엔터티 필터링
+tags:
+  - New Relic
+  - Use New Relic
+  - Core concepts
+metaDescription: How to use the New Relic entity filter bar to filter your entities and save useful filtered views.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+부분 필터 표시줄은 뉴렐릭의 인터페이스 전체에서 검사하려는 모니터 [부분](/docs/new-relic-solutions/new-relic-one/core-concepts/what-entity-new-relic) 을 찾고 필터링하는 데 도움이 됩니다.
+
+<img title="Entity filter bar in Catalogs" alt="Current entity filter bar interface showing search and filter options" src="/images/Catalogs.webp" />
+
+## 필터 막대 찾기 [#find]
+
+기타 필터 막대는 다음을 포함한 주요 뉴렐릭 페이지 상단에 표시됩니다.
+
+* <DNT>**[Catalogs](/docs/service-architecture-intelligence/catalogs/catalogs/)**</DNT> <DNT>**Applications**</DNT>, <DNT>**Repositories**</DNT>, <DNT>**Infrastructure**</DNT> 에 대한 페이지입니다.
+* <DNT>**All Entities**</DNT> 페이지.
+* APM 서비스 페이지.
+* <InlinePopover type="browser" />페이지.
+* 인프라 모니터링 페이지 등이 많이 있습니다.
+
+## 기본 검색 및 필터링 [#basic-filtering]
+
+다음 기본 필터링 방법을 사용하여 다음을 찾으세요.
+
+### 파티션 이름으로 검색
+
+<DNT>**Search by entity name**</DNT> 필드를 사용하여 다음을 찾으세요.
+
+1. 검색 필드를 클릭하세요.
+2. 시스템 이름의 일부를 입력합니다(예: &quot;production&quot; 또는 &quot;web-app&quot;).
+3. 아래 목록에 즉시 나타나는 일치하는 결과를 확인하세요.
+
+<Callout variant="tip">
+  검색은 학술 이름의 모든 부분과 일치하므로 &quot;prod&quot;를 입력하면 &quot;prod-web-server&quot; 및 &quot;my-production-app&quot;과 같은 이름을 가진 학술이 검색됩니다.
+</Callout>
+
+### 부분 유형별로 필터링
+
+특정 부작용 유형을 선택하여 결과를 좁히세요.
+
+* <DNT>**Entity Type**</DNT>: 애플리케이션, 서비스, 호스트, 컨테이너 및 기타 모니터링되는 리소스 유형 중에서 선택합니다.
+* **결과:** 선택한 유형과 일치하는 의사만 표시되므로 특정 의사 구성 요소에 집중하기가 더 쉽습니다.
+
+### 팀 소유권별로 필터링
+
+팀에서 관리하는 것에 집중하세요:
+
+* <DNT>**Team**</DNT>: 현재 보기에서 소유권이 있는 팀을 선택하세요.
+* **요구 사항:** [서비스 아키텍처 인텔리전스를](/docs/service-architecture-intelligence/getting-started/) 활성화해야 합니다.
+* **결과:** 보기 전용 선택한 팀에 할당되었거나 소유됨.
+
+## 고급 필터링 [#advanced-filtering]
+
+더 복잡한 필터링 시나리오의 경우 사용자 지정 필터를 만듭니다.
+
+### 사용자 정의 속성 필터 만들기
+
+교체 속성을 기반으로 특정 필터를 추가합니다.
+
+1. 기존 필터 옆에 있는 **+**를 클릭합니다.
+
+2. <DNT>**Filter**</DNT> 드롭다운 메뉴에서 속성(예: 환경, 지역, 사용자 정의 태그)을 선택하세요.
+
+3. 운영자를 선택하세요:
+
+   * **=** (같음): 정확히 일치
+   * **!=** (같지 않음): 정확한 일치 항목 제외
+   * **LIKE**: 지정된 텍스트를 포함합니다
+   * **NOT LIKE**: 지정된 텍스트를 제외합니다.
+
+4. 필터를 완성하려면 값을 입력하거나 선택하세요.
+
+5. <DNT>**Add**</DNT> 클릭하여 필터를 적용합니다.
+
+**예:** 모든 프로덕션 웹 애플리케이션을 찾으려면 `environment = production` 과 `entity_type = APPLICATION` 을 필터링할 수 있습니다.
+
+더욱 고급 쿼리 및 분석을 위해서는 [NRQL 쿼리 빌더를](https://one.newrelic.com/data-exploration/query-builder) 사용하는 것을 고려해보세요. NRQL 쿼리에 대한 자세한 내용은 [NRQL 사용 방법을](/docs/query-your-data/nrql-new-relic-query-language/get-started/introduction-nrql-how-nrql-works) 참조하세요.

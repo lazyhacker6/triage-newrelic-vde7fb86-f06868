@@ -1,0 +1,375 @@
+---
+title: HTTP Put
+tags:
+  - workflow automation
+  - workflow
+  - workflow automation actions
+  - HTTP actions
+  - HTTP PUT
+metaDescription: A list of available http put in the actions catalog for workflow definitions
+freshnessValidatedDate: '2026-02-24T00:00:00.000Z'
+translationType: machine
+---
+
+Esta página fornece uma referência completa para o comando http put disponível no catálogo de ações de automação de fluxo de trabalho. Essas ações permitem que você execute operações de requisição HTTP PUT.
+
+## Pré-requisitos
+
+Para pré-requisitos, consulte [ações HTTP](/docs/workflow-automation/setup-and-configure/actions-catalog/http/http#prerequisites).
+
+## Cabeçalhos de solicitação automáticos [#automatic-headers]
+
+Todas requests HTTP realizadas pelo fluxo de trabalho Automation incluem automaticamente os seguintes cabeçalhos:
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>
+        Cabeçalho
+      </th>
+
+      <th>
+        Formatar
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        `X-Abuse-Info`
+      </td>
+
+      <td>
+        `Request sent by a New Relic WorkflowAutomation. {runId}`<br />onde
+
+        `{runId}`
+
+         é o ID da execução do fluxo de trabalho
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `User-Agent`
+      </td>
+
+      <td>
+        `NewRelic/WorkflowAutomation (region={region}; https://newrelic.com ; support@newrelic.com)`<br />onde
+
+        `{region}`
+
+         é a região de New Relic
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Fazer o PUT de um recurso em uma URL [#http-put]
+
+Executa uma solicitação HTTP PUT para atualizar dados em um endpointda API.
+
+<Callout variant="important">
+  Se você precisar passar dados sensíveis para uma entrada, por exemplo um cabeçalho `Api-Key`, você pode usar valores armazenados por meio da mutação [secretsManagementCreateSecret](https://onenr.io/0KQXX6BmdQa) do NerdGraph.
+
+  Exemplo:
+
+  ```json
+  {
+    "inputs": [
+      {
+        "key": "headers",
+        "value": "{\"Api-Key\": \"${{ :secrets:NR_API_KEY }}\"}"
+      }
+    ]
+  }
+  ```
+</Callout>
+
+<Tabs>
+  <TabsBar>
+    <TabsBarItem id="httpputinputs">
+      Entradas
+    </TabsBarItem>
+
+    <TabsBarItem id="httpputoutputs">
+      Saídas
+    </TabsBarItem>
+
+    <TabsBarItem id="httpputexample">
+      Exemplo
+    </TabsBarItem>
+  </TabsBar>
+
+  <TabsPages>
+    <TabsPageItem id="httpputinputs">
+      <table>
+        <thead>
+          <tr>
+            <th>
+              Entrada
+            </th>
+
+            <th>
+              Tipo
+            </th>
+
+            <th>
+              Descrição
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td>
+              **url**
+            </td>
+
+            <td>
+              Corda
+            </td>
+
+            <td>
+              **Obrigatório.**
+
+               O URL de destino para a solicitação. O esquema deve ser incluído: 
+
+              `https://example.com`
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              **parâmetros da URL**
+            </td>
+
+            <td>
+              Mapa
+            </td>
+
+            <td>
+              **Opcional.**
+
+               Os parâmetros de consulta a serem anexados ao URL. Recebe um objeto JSON convertido em string.
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              **cabeçalhos**
+            </td>
+
+            <td>
+              Mapa
+            </td>
+
+            <td>
+              **Opcional.**
+
+               Os cabeçalhos para adicionar à solicitação. Recebe um objeto JSON convertido em string.
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              **body**
+            </td>
+
+            <td>
+              Corda
+            </td>
+
+            <td>
+              **Opcional.**
+
+               O corpo da requisição.
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              **selectors**
+            </td>
+
+            <td>
+              Lista
+            </td>
+
+            <td>
+              **Opcional.**
+
+               Os seletores para obter apenas o parâmetro especificado como saída.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </TabsPageItem>
+
+    <TabsPageItem id="httpputoutputs">
+      <table>
+        <thead>
+          <tr>
+            <th>
+              Saída
+            </th>
+
+            <th>
+              Tipo
+            </th>
+
+            <th>
+              Descrição
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td>
+              **respostaCorpo**
+            </td>
+
+            <td>
+              Corda
+            </td>
+
+            <td>
+              O corpo da resposta.
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              **código de status**
+            </td>
+
+            <td>
+              Interno
+            </td>
+
+            <td>
+              O código de status HTTP da resposta.
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              **success**
+            </td>
+
+            <td>
+              Boleano
+            </td>
+
+            <td>
+              Status da solicitação.
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              **errorMessage**
+            </td>
+
+            <td>
+              Corda
+            </td>
+
+            <td>
+              Motivo da falha como mensagem.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </TabsPageItem>
+
+    <TabsPageItem id="httpputexample">
+      <table>
+        <thead>
+          <tr>
+            <th>
+              Definição de fluxo de trabalho
+            </th>
+
+            <th>
+              Entradas
+            </th>
+
+            <th>
+              Saídas
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td>
+              ```yaml
+              name: httpPutTest
+
+              steps:
+                - name: query
+                  type: action
+                  action: http.put
+                  version: 1
+                  inputs:
+                    url: ${{ .workflowInputs.url }}
+                    urlParams: ${{ .workflowInputs.urlParams }}
+                    headers: ${{ .workflowInputs.headers }}
+                    body: ${{ .workflowInputs.body }}
+                    selectors: ${{ .workflowInputs.selectors }}
+              ```
+            </td>
+
+            <td>
+              ```yaml
+              {
+                "inputs": [
+                  {
+                    "key": "url",
+                    "value": "https://example.com"
+                  },
+                  {
+                    "key": "headers",
+                    "value": "{\"Content-Type\":\"application/json\"}"
+                  },
+                  {
+                    "key": "urlParams",
+                    "value": "{\"foo\": \"bar\"}"
+                  },
+                  {
+                    "key": "body",
+                    "value": "{\"foo\": \"bar\"}"
+                  },
+                  {
+                    "key": "selectors",
+                    "value": "[{\"name\": \"responseBody\", \"expression\": \".responseBody\"}, {\"name\": \"statusCode\", \"expression\": \".statusCode\"}]"
+                  }
+                ]
+              }
+              ```
+            </td>
+
+            <td>
+              ```yaml
+              Success case: 
+                {
+                  "responseBody": "",
+                  "statusCode": 200
+                  "success": true
+                }
+
+              Failure case:
+                {
+                  "errorMessage": "An unexpected error failed to call http post endpoint.",
+                  "success": false
+                }
+              ```
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </TabsPageItem>
+  </TabsPages>
+</Tabs>

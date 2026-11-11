@@ -1,0 +1,46 @@
+---
+title: Integração Databricks
+tags:
+  - Databricks
+  - databricks integration
+  - New Relic integration
+metaDescription: Use the Databricks integration to collect telemetry from the Databricks Data Intelligence Platform
+freshnessValidatedDate: '2026-01-26T00:00:00.000Z'
+translationType: machine
+---
+
+A Integração do Databricks é um projeto de comunidade de código aberto que fornece um conjunto abrangente de recursos de coleta de telemetria em toda a sua estrutura do Databricks. Esses recursos garantem que você tenha todos os dados contextuais de que precisa para análise e otimização aprofundadas.
+
+A integração coleta os seguintes tipos de telemetria:
+
+* Métricas de aplicativos Apache Spark, como métricas de memória e CPU do executor Spark, durações de trabalhos Spark, durações e métricas de E/S de estágios e tarefas Spark, e métricas de memória e disco Spark RDD
+* Métricas de execução de trabalhos Databricks Lakeflow, como durações, horários de início e término, e códigos e tipos de término para execuções de trabalhos e tarefas.
+* Métricas de atualização do Databricks Lakeflow Declarative Pipeline, como durações, horários de início e término e status de conclusão para atualizações e fluxos.
+* Logs de eventos do Pipeline Declarativo Databricks Lakeflow
+* Métricas de consulta do Databricks, incluindo tempos de execução e métricas de E/S de consulta.
+* Métricas e logs de integridade do cluster Databricks, como métricas de memória e CPU do driver e do worker e logs do driver e do executor.
+* Dados de consumo e custo do Databricks que podem ser usados para mostrar o consumo de DBU e os custos estimados do Databricks.
+
+## Instale a integração [#setup]
+
+A integração do Databricks deve ser implantada no nó do driver de um [cluster](https://docs.databricks.com/en/getting-started/concepts.html#cluster) Databricks de uso geral, de trabalho ou de pipeline. Para implantar a integração dessa forma, siga as etapas para [implantar a integração em um cluster Databricks](https://github.com/newrelic/newrelic-databricks-integration/blob/main/docs/installation.md#deploy-the-integration-to-a-databricks-cluster).
+
+A Integração Databricks também pode ser implantada remotamente em um ambiente de host compatível. Para implantar a integração dessa forma, siga as etapas para [implantar a integração remotamente](https://github.com/newrelic/newrelic-databricks-integration/docs/installation.md#deploy-the-integration-remotely).
+
+## Verifique a instalação [#verify-installation]
+
+Depois que a integração do Databricks for executada por alguns minutos, use o [construtor de consultas](https://one.newrelic.com/data-exploration/query-builder) no New Relic para executar a seguinte consulta, substituindo `[YOUR_CLUSTER_NAME]` pelo *nome* do cluster Databricks *onde a integração foi instalada* (observe que, se o nome do seu cluster incluir `'`, você deve escapar com `\`):
+
+`SELECT uniqueCount(executorId) AS Executors FROM SparkExecutorSample WHERE databricksClusterName = '[YOUR_CLUSTER_NAME]'`
+
+O resultado da consulta deve ser **um número maior que zero**.
+
+## Importar os painéis de exemplo (opcional) [#add-dashboard]
+
+Para ajudar você a começar a usar a telemetria coletada, instale nossos painéis pré-construídos usando a [instalação guiada](https://one.newrelic.com/marketplace?state=34e67b15-4fe1-28ef-ff41-99658fb36820).
+
+Alternativamente, você pode instalar os painéis pré-construídos seguindo as instruções encontradas em [Importar os painéis de exemplo](https://github.com/newrelic/newrelic-databricks-integration/docs/example-dashboards.md).
+
+## Saber mais
+
+Para saber mais sobre a integração do Databricks, visite o [repositório](https://github.com/newrelic/newrelic-databricks-integration) oficial da integração do New Relic Databricks.

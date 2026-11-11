@@ -1,0 +1,101 @@
+---
+title: 표준 워크로드 만들기
+tags:
+  - New Relic
+  - Use New Relic
+  - Workloads
+  - Standard workloads
+metaDescription: 'In New Relic, create a Standard workload, which helps you group together monitored entities based on tags, queries, or manual selection.'
+freshnessValidatedDate: '2023-06-23T00:00:00.000Z'
+translationType: machine
+---
+
+표준 워크로드를 사용하면 쿼리, 태그 또는 명시적 선택을 사용하여 관련 엔티티를 수동으로 그룹화할 수 있습니다. 이 문서는 표준 워크로드를 생성하고 구성하는 방법을 설명합니다. 분산 트레이스를 기반으로 한 자동 엔티티 검색이 필요한 경우, 대신 [인텔리전트 워크로드](/docs/new-relic-solutions/new-relic-one/workloads/workloads-overview#intelligent-workloads) 를 참조하십시오.
+
+<Callout variant="tip">
+  어떤 유형을 사용해야 할지 모르시겠습니까? 표준형과 지능형형을 비교하려면 [개요를](/docs/new-relic-solutions/new-relic-one/workloads/workloads-overview) 검토하세요.
+</Callout>
+
+표준 워크로드에 추가하는 엔티티는 목표와 조직 구조에 따라 달라집니다. 팀을 정렬하는 방법에 대한 자세한 내용은 저희의 [&apos;팀 정렬 튜토리얼&apos;](/docs/tutorial-peak-demand/organize-data-workloads) 에서 확인하실 수 있습니다.
+
+## 계정 및 권한 [#accounts]
+
+금액에 기여하는 계정에는 <DNT>**workload account**</DNT> 과 <DNT>**scope accounts**</DNT> 의 두 가지 종류가 있습니다. 귀하의 [뉴렐릭 조직에](/docs/accounts/accounts-billing/account-structure/new-relic-account-structure) 두 개 이상의 계정이 있는 경우 워크로드와 범위 계정을 구별하면 워크로드를 더 쉽게 관리할 수 있습니다.
+
+* <DNT>**workload account**</DNT> 은 워크로드와 해당 데이터가 저장되는 영역입니다. 워크로드를 생성하는 데 사용된 계정을 워크로드 계정이라고 합니다. 이 계정은 사용자에게 할당된 계정 권한을 기반으로 어떤 사용자가 워크로드를 보고 관리할 수 있는지 결정합니다.
+* <DNT>**scope accounts**</DNT> 은 워크로드가 텔레메트리 데이터를 가져오는 계정입니다. 워크로드의 범위에 속하는 모든 계정에 접근 권한이 없는 사용자는 워크로드의 모든 데이터를 볼 수 없을 수도 있습니다. 워크로드를 사용하는 팀 구성원의 경우, 워크로드가 데이터를 가져오는 팀의 관련 계정을 추가해야 합니다.
+
+생성된 워크로드 계정은 변경할 수 없습니다. 그러나 범위 계정은 워크로드 계정에 대한 워크로드 관리 기능이 있는 모든 사용자가 언제든지 업데이트할 수 있습니다. 기본적으로 워크로드 생성자가 워크로드 생성 시점에 액세스할 수 있는 모든 계정은 범위 계정으로 설정됩니다.
+
+## 표준 워크로드 생성 [#create]
+
+표준 워크로드는 포함할 엔티티에 대한 완전한 제어 권한을 제공합니다. 엔티티 쿼리, 태그를 사용하거나 특정 엔티티를 선택하여 멤버십을 정의합니다. 트레이스에서 엔티티를 자동으로 검색하는 [인텔리전트 워크로드](/docs/new-relic-solutions/new-relic-one/workloads/create-intelligent-workload) 와 달리, 표준 워크로드는 쿼리가 새 엔티티와 일치하거나 수동으로 수정할 때만 업데이트됩니다.
+
+표준 워크로드를 생성하는 방법은 여러 가지가 있지만, 어떤 방법을 선택할지는 전적으로 사용자에게 달려 있습니다. 팀 간 협업에 가장 편리한 방법을 선택하시기를 권장합니다.
+
+<CollapserGroup>
+  <Collapser id="UI" title="UI에서 표준 워크로드를 생성합니다.">
+    <img title="new-relic-create-workload.png" alt="New Relic - Standard workload creation UI" src="/images/workloads_screenshot-full_create-workload.webp" />
+
+    <figcaption>
+      <DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Workloads &gt; Create a workload:**</DNT> [표준 워크로드를 생성할](#create) 때 쿼리 또는 수동 선택을 통해 연결된 계정과 모니터링 대상 엔티티를 선택합니다.
+    </figcaption>
+
+    워크로드 UI 에서 표준 워크로드를 생성하는 방법은 다음과 같습니다.
+
+    1. <DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Workloads**</DNT> 으로 이동한 다음 <DNT>**+ Create a workload**</DNT> 클릭합니다.
+
+    2. 워크로드에 귀하와 귀하의 팀에 의미 있는 이름을 지정하십시오.
+
+    3. <DNT>**Select an account**</DNT> 드롭다운 메뉴에서 사용할 [워크로드 계정을](#accounts) 선택하세요.
+
+    4. [범위 계정 선택을](#scope-accounts) 클릭하여 이 워크로드에서 데이터를 사용할 모든 계정을 확인합니다.
+
+    5. 워크로드를 구성하는 엔터티를 찾아 선택합니다. 원하는 결과가 나오면 특정 엔터티를 추가하거나 쿼리를 추가하여 워크로드의 엔터티를 동적으로 업데이트할 수 있습니다.
+
+       * 엔터티 유형, [태그](#tags)또는 [속성](/docs/new-relic-solutions/get-started/glossary#attribute) (예: 엔터티 이름, 계정 ID 및 AWS 지역)별로 검색할 수 있습니다.
+       * 워크로드에 대해 동적으로 업데이트되는 엔티티 목록을 만들려면 <DNT>**+ Add this query**</DNT> 클릭하십시오. 시스템 변경에 따라 워크로드의 엔티티가 업데이트되도록 하려면 이 방법을 권장합니다.
+       * 엔티티 옆에 있는 <DNT>**+ Add**</DNT> 클릭하여 워크로드에 추가하세요. 시스템이 변경되더라도 해당 엔티티가 계속 유용하게 사용될 것이라는 확신이 있다면 이 방법이 좋은 선택입니다.
+
+    6. [쿼리 논리](#query-logic)에 따라 함께 작동하는 쿼리와 특정 엔터티를 모두 워크로드에 추가할 수 있습니다.
+
+    7. 저장하려면 <DNT>**Create a workload**</DNT> 클릭하세요.
+
+    워크로드에 하나 이상의 대시보드가 포함된 경우 [해당 대시보드 링크에 필터를 설정할](#filter-dashboards) 수 있습니다.
+  </Collapser>
+
+  <Collapser id="errors-inbox" title="오류 수신함에서 만들기">
+    에러스 인박스(errors inbox)에서 워크로드를 생성하려면 [에러스 인박스(errors inbox)](/docs/triage-inbox/getting-started/#global-workload)를 참조하십시오.
+  </Collapser>
+
+  <Collapser id="api" title="API를 통해 생성">
+    [NerdGraph API를 사용하여 워크로드를 쿼리, 생성 및 업데이트](/docs/nerdgraph-workloads-tutorials) 할 수 있습니다.
+  </Collapser>
+</CollapserGroup>
+
+## 워크로드 정의 [#define]
+
+다음은 워크로드 정의의 일부 측면에 대한 몇 가지 세부 정보 및 팁입니다.
+
+<CollapserGroup>
+  <Collapser id="tags" title="태그를 사용하여 워크로드 콘텐츠 정의">
+    [태그](/docs/new-relic-one/use-new-relic-one/core-concepts/tagging-use-tags-organize-group-what-you-monitor) 와 [속성을](/docs/new-relic-solutions/get-started/glossary#attribute)모두 사용하여 워크로드 엔터티를 쿼리하고 선택할 수 있습니다. 따라서 워크로드 사용을 최적화하려면 좋은 엔터티 태깅 전략을 갖는 것이 좋습니다. [태그 지정 문서를](/docs/new-relic-one/use-new-relic-one/core-concepts/tagging-use-tags-organize-group-what-you-monitor) 읽고 [태그를 사용하여 워크로드를 정의하는 방법에 대한 이 비디오를](https://www.youtube.com/watch?v=nXCH_3XjGkQ)시청하는 것이 좋습니다.
+
+    <Video id="nXCH_3XjGkQ" type="youtube" />
+  </Collapser>
+
+  <Collapser id="query-logic" title="동적 쿼리 논리 작동 방식">
+    여러 개별 엔터티와 쿼리를 추가하여 워크로드를 정의할 수 있습니다.
+
+    * 쿼리에는 여러 검색어가 포함될 수 있습니다. 이들은 AND 연산자와 결합됩니다.
+    * 워크로드 내의 개별 쿼리는 OR 연산자와 결합됩니다.
+    * 쿼리 내의 정확한 하위 문자열과 일치하도록 백분율 기호( `%` ) 사이에 문자열을 래핑할 수 있습니다. 항목 이름에 하위 문자열을 사용하여 해당 항목을 분류하는 경우(예: `<team>-<env>-<appName>` ) 필터링 및 그룹화에 더 강력한 [태그](/docs/new-relic-one/use-new-relic-one/core-concepts/tagging-use-tags-organize-group-what-you-monitor) 를 보완적으로 사용하는 것이 좋습니다(예: `team:awesome` , `env:production` ).
+    * 500개 이상의 항목을 반환할 수 있는 동적 쿼리에서 퍼센트 기호( `%` )를 사용하지 않는 것이 좋습니다. 이렇게 하면 사용자 인터페이스에서 보다 일관된 경험을 얻을 수 있습니다.
+  </Collapser>
+
+  <Collapser id="add-dashboards" title="워크로드에 대시보드 추가">
+    사용자 [정의 대시보드가](/docs/dashboards/new-relic-one-dashboards/get-started/introduction-new-relic-one-dashboards) 있고 팀의 워크로드를 관찰하고 운영하는 데 어떤 데이터가 관련되어 있는지 이미 알고 있는 경우 워크로드에서 해당 <InlinePopover type="dashboards" />을(를) 연결할 수 있습니다.
+
+    워크로드에 대시보드를 추가하려면 워크로드를 생성한 후 워크로드의 <DNT>**Activity**</DNT> 페이지로 이동하여 <DNT>**Add dashboard**</DNT> 클릭합니다.
+  </Collapser>
+</CollapserGroup>

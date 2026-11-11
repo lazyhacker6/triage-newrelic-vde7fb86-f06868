@@ -1,0 +1,827 @@
+---
+title: ログデータの解析
+tags:
+  - Logs
+  - Log management
+  - UI and data
+metaDescription: How New Relic uses parsing and how to send customized log data.
+freshnessValidatedDate: never
+translationType: human
+---
+
+ログ<DNT>parsing</DNT>は、非構造化ログデータを検索可能な属性に変換し、ログからより深い洞察を得るために使用できます。これらの属性を使用すると、データの正確なフィルタリング、ファセット、アラートが可能です。
+
+## 解析戦略を選択する [#choose]
+
+データの取り込み時に解析するか、クエリの実行時に解析するかを決定します。
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>
+        解析タイプ
+      </th>
+
+      <th>
+        説明
+      </th>
+
+      <th>
+        最適な用途
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        **クエリ時解析**
+      </td>
+
+      <td>
+        クエリ実行中にのみ存在するNRQLを使用して一時属性を作成します。新しいログが流入するのを待たずに既存のデータを即座に分析するのに最適です。[クエリ時解析](/docs/logs/ui-data/query-time-parsing)の詳細をご覧ください。
+      </td>
+
+      <td>
+        * 個々の目的に応じたトラブルシューティングと調査
+        * 小規模データセットの探索的分析
+        * 1回限りの調査
+        * NRDBにすでに保存されているログから属性を抽出する
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        **取り込み時の解析**
+      </td>
+
+      <td>
+        NRDBに保存される永続的な属性を作成します。取り込み時間解析ルールを作成する 2 つの方法：
+
+        * **組み込みの解析ルール：**一般的なログソース（Apache、NGINX、CloudFront、MongoDB など）の事前構成されたパターン。ログを転送するときに`logtype`属性を追加するだけです。[組み込みルールの完全なリスト](/docs/logs/ui-data/built-log-parsing-rules)を参照してください。
+
+        * **カスタム解析ルール：**ログがアプリケーションに固有の場合、カスタム解析ルールを使用して、ビジネスにおいて重要なフィールドを正確に定義できます。
+
+          * <DNT>**No Code Log Parsing:**</DNT> サンプルログ内のパターンを検出します。ポイントアンドクリックでフィールドを抽出したいユーザーに最適です。
+          * **カスタム<DNT>Grok/Regex:</DNT>** 非常に複雑なログ形式用の手動コード入力。
+      </td>
+
+      <td>
+        * 大量のログ
+        * アラート、ダッシュボード、継続的な監視に必要な解析対象の属性
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+また、GraphQL APIであるNerdGraphを使用して、ログ解析ルールを作成、クエリ、管理することもできます。このために役立つツールは、[Nerdgraph APIエクスプローラー](https://api.newrelic.com/graphiql)です。詳細については、[解析に関するNerdGraphチュートリアル](/docs/apis/nerdgraph/examples/nerdgraph-log-parsing-rules-tutorial/)を参照してください。<DNT>/* Here&apos;s a 5-minute video about log parsing: &lt;Video id=&quot;xPWM46yw3bQ&quot; type=&quot;youtube&quot; /&gt; */</DNT>
+
+## カスタム取り込み時解析の仕組み [#how-it-works]
+
+カスタム解析を使用すると、New Relicが受信ログをどのように構造化するかを正確に定義できます。ルールを作成する前に、取り込みパイプラインの技術的な制約を理解することが重要です。
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "100px" }}>
+        ログ解析
+      </th>
+
+      <th>
+        使用方法
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        対象
+      </td>
+
+      <td>
+        解析ルールは高度にターゲットを絞っています。ルールを作成するときは、以下を定義します。
+
+        * **目標フィールド：**解析は一度に 1 つの特定のフィールドに適用されます。
+        * **一致ロジック：** NRQLの`WHERE`句を使用して、このルールで評価する必要があるログを正確にフィルタリングします。
+        * **抽出方法：**自動およびガイド付きのパターン検出エクスペリエンスには<DNT>**No Code Log Parsing**</DNT>を使用するか、高度にカスタマイズされた複雑なログ構造には手動で<DNT>**Grok/Regex**</DNT>を記述することができます。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        タイミング
+      </td>
+
+      <td>
+        New Relicはログを順番に処理します。これは、どの条件が一致できるかに影響します。
+
+        * 解析はデータが取り込まれるときに行われます。ログがNRDBに書き込まれると、行われた変更は永続的になります。
+        * ルールを保存して有効にすると、ルールは受信ログの処理を直ちに開始します。
+        * 解析は、データの拡充（エンティティ合成など）、削除、またはパーティション化の**前に**行われます。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        検証
+      </td>
+
+      <td>
+        取り込まれたデータに影響を与えずに、ルールが機能することを確認するには、「ログ」パーティションに最近保存された 10 個のログサンプルに対して出力をプレビューできます。これらのサンプルは、リアルタイムのライブストリームではなく、過去30分以内に受信したデータです。
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## カスタムルールを作成する [#custom-parsing]
+
+ログを調査しながら、コンテキスト内で解析ルールを作成できます。これによりコンテキストの切り替えが不要になり、平均検出時間（MTTD）を短縮できます。また、新しいアプリケーションやサービスの導入する際に、ルールを最初から作成することもできます。
+
+### <DNT>No Code Log Parsing</DNT> [#no-code]
+
+サンプルログからフィールドを検出して抽出するには、 <DNT>No Code Log Parsing</DNT>を使用します。New Relicはサンプルログを分析し、構成できるパターンを提案します。
+
+<Steps>
+  <Step>
+    コンテキスト内でルールを作成するには、 <DNT>**[one.newrelic.com](https://one.newrelic.com) &gt; Logs**</DNT>に移動してフィルターを適用します（または、 APM 、 Browser 、 Mobile などのログがあるエンティティを選択し、 <DNT>**Logs in Context**</DNT>に移動します）。
+
+    コンテキストなしでルールを作成するには、フィルターを設定せずに<DNT>**[one.newrelic.com](https://one.newrelic.com) &gt; Logs**</DNT>に移動するか、または<DNT>**Logs &gt; Parsing**</DNT>に移動して<DNT>**Create a parsing rule**</DNT>をクリックします。
+  </Step>
+
+  <Step>
+    コンテキスト内ルール作成プロセスでは、次のようになります。
+
+    1. ログをクリックして開きます <DNT>**Log details**</DNT>
+    2. 解析するログ属性を選択します（例： `message` ）
+    3. <DNT>**Create ingest time parsing rule**</DNT>をクリックしてルールの名前を入力します
+
+    ルールを作成する前にログUIでフィルターを適用した場合、そのフィルターに基づいて一致する条件が自動入力されます。
+
+    <img title="Log parsing rules" alt="Screenshot of log filtering in UI" src="/images/logs_filtering.webp" />
+
+    コンテキストなしのフローで、ルールの名前を指定してNRQLフィルター条件を設定するか、サンプルログを貼り付けます。
+
+    * ログフィルターを設定する場合は、 <DNT>**Run your query**</DNT>をクリックし、解析するフィールドを選択して、 <DNT>**Next**</DNT>をクリックします。
+    * サンプルログを貼り付ける場合は、ログに一致するNRQLの`WHERE`句を定義し、解析するフィールドを選択して、 <DNT>**Next**</DNT>をクリックする必要があります。
+
+    <img title="Log parsing rules" alt="Screenshot of creating a parsing rule in UI" src="/images/Create_a_parsing_rule_.webp" />
+  </Step>
+
+  <Step>
+    選択したサンプルログ内の<DNT>**Patterns we detected**</DNT>と、作成されたルールを確認します。ハイライト表示されたパターンをクリックすると、その設定を確認・編集できます。
+
+    <img title="Screenshot of matching pattern in UI" alt="Screenshot of matching pattern in UI" src="/images/matching_pattern.webp" />
+
+    <Callout variant="Preview" title="注意">
+      * 属性に名前を付けるときは、小文字とアンダースコアを使用します。アンダースコア以外の特殊文字は使用しないでください。また、属性名を数字で始めないでください。
+
+      * 解析を避けたい、動的な値を含む部分文字列の場合は、この設定を<DNT>**Yes**</DNT>に変更し、動的な部分文字列として設定してください。
+    </Callout>
+  </Step>
+
+  <Step>
+    抽出するフィールドをより細かく制御するには、サンプルログをクリックしてドラッグし、ハイライト表示します。
+
+    <img title="Log parsing rules" alt="Screenshot of creating a parsing rule in UI" src="/images/create_a_parsing_rule.webp" />
+
+    パターンは、次の方法で操作できます。
+
+    * <DNT>**Auto detect patterns**</DNT>：サンプルログのまだハイライト表示されていない部分でパターンを検出するには、その部分文字列をクリックしてドラッグし、ハイライト表示して<DNT>**Auto detect patterns**</DNT>をクリックします。New Relicは選択部分のパターンを見つけてハイライト表示します。サポートされているGrokパターン名のリストについては、「[サポートされているGrokパターン名](#grok-patterns)」を参照してください。
+    * <DNT>**Select text to parse**</DNT>：ガイド付きルールを作成する場合はこのモードを選択します。このモードはパターンごとの設定を提供します。パターン構成が設定されたら、 <DNT>**Add pattern to rule**</DNT>をクリックして更新されたルールとプレビュー出力を確認します。
+
+    検出されたパターンが関連していない場合、または不要なデータを抽出する場合は、次の方法で作成したルールから削除できます。
+
+    * サンプルログウィンドウで不要なパターンをハイライト表示して<DNT>**Remove selected patterns**</DNT>をクリックするか、または
+    * パターンをクリックして<DNT>**Remove**</DNT>を選択します。
+  </Step>
+
+  <Step>
+    <DNT>**Preview output**</DNT>パネルを確認してください。サンプルログに緑色のチェックマークが表示されていることを確認します。これは、サンプルログがルールに一致し、取り込み時にフィールドが抽出されることを示します。
+
+    * サンプルを変更するには、 <DNT>**Preview output**</DNT>パネルで任意のログを展開し、 <DNT>**Use as sample**</DNT>をクリックします。
+
+      * 一致しないログを選択した場合：選択したサンプルがサンプルログウィンドウに表示され、新しいパターンが検出され、新しいルールが作成されます。
+      * 一致するログを選択した場合：選択したサンプルがサンプルログウィンドウに表示されます。
+  </Step>
+
+  <Step>
+    すぐにアクティブ化する場合は<DNT>**Save rule**</DNT>をクリックし、後でアクティブ化する場合は<DNT>**Save as draft**</DNT>をクリックします。
+  </Step>
+</Steps>
+
+### 独自のカスタムを作成する <DNT>Grok/Regex</DNT> [#grok]
+
+独自の形式を作成するには、上級ユーザーは<DNT>**Create a parsing rule**</DNT>ページの<DNT>**Write your own rule**</DNT>をクリックしてコードエディタに切り替え、ルールエディタで直接パターンを変更できます。
+
+<img title="Screenshot depicting where to click to write your own custom Grok/Regex" alt="Screenshot depicting where to click to write your own custom Grok/Regex" src="/images/create_a_parsing_rule.webp" />
+
+ルールの編集が完了したら、 <DNT>**Preview**</DNT>をクリックして更新されたプレビュー出力を確認し、 <DNT>**Save rule**</DNT>をクリックしてアクティブ化します。
+
+<Callout variant="preview" title="注意">
+  従来エディタに切り替えるには、 <DNT>**Create a parsing rule**</DNT>ページの右上にある<DNT>**Switch to original editor**</DNT>クリックします。
+</Callout>
+
+#### サポートされているデータパターン [#supported-patterns]
+
+New Relic は、Grokパターンを使用したさまざまなデータ型とデータ形式の解析をサポートしています。解析パターンは、ログメッセージ解析の業界標準であるGrokを使用して指定します。Grokは正規表現のスーパーセットであり、文字での複雑な正規表現の代わりに使用できる組み込みの名前付きパターンが追加されています。
+
+解析ルールには、一致する文字列に正規表現とGrokパターン名の組み合わせを含めることができます。サポートされている[Grokパターン](https://github.com/thekrakken/java-grok/tree/master/src/main/resources/patterns)のリストについてはこのリンクをクリックしてください。サポートされている[Grokタイプ](#grok-types)のリストについてはここをクリックしてください。
+
+<CollapserGroup>
+  <Collapser id="grok-syntax" title="Grokパターン構文">
+    Grokパターンは事前定義された構文に従います。
+
+    ```
+    %{PATTERN_NAME[:OPTIONAL_EXTRACTED_ATTRIBUTE_NAME[:OPTIONAL_TYPE[:OPTIONAL_PARAMETER]]]}
+    ```
+
+    対象箇所：
+
+    * `PATTERN_NAME` は、サポートされているGrokパターンの1 つです。パターン名は、正規表現を表すユーザーフレンドリな名前です。これらは対応する正規表現とまったく同じです。
+    * `OPTIONAL_EXTRACTED_ATTRIBUTE_NAME`を指定した場合、パターン名と一致する値とともにログメッセージに追加される属性の名前です。これは、正規表現を使用して名前付きキャプチャグループを使用するのと同じです。これが指定されていない場合、解析ルールは文字列の領域のみを照合し、属性とその値を抽出しません。
+    * `OPTIONAL_TYPE` は、抽出する属性値のタイプを指定します。省略すると、値は文字列として抽出されます。インスタンスの場合、値`123` `"File Size: 123"`から数値として属性`file_size`に抽出するには、 `value: %{INT:file_size:int}`を使用します。
+    * `OPTIONAL_PARAMETER` は、特定のタイプに対してオプションのパラメーターを指定します。現在、パラメーターを受け取るのは`datetime`型のみです。詳細については、以下を参照してください。
+  </Collapser>
+
+  <Collapser id="grok-types" title="サポートされているGrokタイプ">
+    `OPTIONAL_TYPE`フィールドは、抽出する属性値のタイプを指定します。省略すると、値は文字列として抽出されます。
+
+    サポートされているタイプは次のとおりです：
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            Grokで指定されたタイプ
+          </th>
+
+          <th>
+            New Relicデータベースに保存されているタイプ
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `boolean`
+          </td>
+
+          <td>
+            `boolean`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `byte` `short` `int` `integer`
+          </td>
+
+          <td>
+            `integer`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `long`
+          </td>
+
+          <td>
+            `long`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `float`
+          </td>
+
+          <td>
+            `float`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `double`
+          </td>
+
+          <td>
+            `double`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `string` （デフォルト） `text`
+          </td>
+
+          <td>
+            `string`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `date` `datetime`
+          </td>
+
+          <td>
+            Time as a `long`
+
+            デフォルトでは、ISO 8601として解釈されます。`OPTIONAL_PARAMETER`が存在する場合、 `datetime`を解釈するために使用する[日付と時刻のパターン文字列](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/text/SimpleDateFormat.html)を指定します。
+
+            これは解析中にのみ使用できることに注意してください。取り込みパイプラインの後半で、すべてのログに対して実行される、追加の[個別タイムスタンプ解釈ステップ](/docs/logs/ui-data/timestamp-support)があります。
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `json`
+          </td>
+
+          <td>
+            JSON構造化データ。詳細については、[プレーンテキストと混在するJSONの解析](#parsing-json)を参照してください。
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `csv`
+          </td>
+
+          <td>
+            CSVデータ。詳細については、[CSVの解析](#parsing-csv)を参照してください。
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `geo`
+          </td>
+
+          <td>
+            IPアドレスからの地理的位置。詳細については、[IPアドレスの位置情報の特定（GeoIP）](#geo)を参照してください。
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `key value pairs`
+          </td>
+
+          <td>
+            キーの値のペア。詳細については、[キーの値ペアの解析](#parsing-key-value-pairs)を参照してください。
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </Collapser>
+
+  <Collapser id="grok-multiline" title="Grokの複数行の解析">
+    複数行のログがある場合は、`GREEDYDATA` Grokパターンが改行と一致しないことに注意してください（`.*`に相当します）。
+
+    したがって、`%{GREEDYDATA:some_attribute}`を直接使用するのではなく、その前に複数行フラグを追加する必要があります。 `(?s)%{GREEDYDATA:some_attribute}`
+  </Collapser>
+
+  <Collapser id="parsing-json" title="プレーンテキストと混在するJSONの解析">
+    New Relic Logs パイプラインはデフォルトでログの JSON メッセージを解析しますが、プレーン テキストと混在する JSON ログメッセージが含まれる場合があります。 このような状況では、それらを解析し、JSON 属性を使用してフィルタリングできるようにすることが必要な場合があります。その場合は、 `json` [Grokタイプを](#grok-syntax)使用できます。これは、GrokパターンによってキャプチャされたJSONを解析します。この形式は、Grok構文、解析されたJSON属性に割り当てるプレフィックス、および`json` [Grok型の](#grok-syntax)3 つの主要部分に依存します。`json` [Grokタイプ](#grok-syntax)を使用すると、適切にフォーマットされていないログからJSONを抽出して解析できます。たとえば、ログの先頭に日付/時刻文字列が付いている場合などです。
+
+    ```json
+    2015-05-13T23:39:43.945958Z {"event": "TestRequest", "status": 200, "response": {"headers": {"X-Custom": "foo"}}, "request": {"headers": {"X-Custom": "bar"}}}
+    ```
+
+    このログ形式からJSONデータを抽出して解析するには、次のGrok式を作成します。
+
+    ```
+    %{TIMESTAMP_ISO8601:containerTimestamp} %{GREEDYDATA:my_attribute_prefix:json}
+    ```
+
+    結果のログは次のようになります。
+
+    ```
+    containerTimestamp: "2015-05-13T23:39:43.945958Z"
+    my_attribute_prefix.event: "TestRequest"
+    my_attribute_prefix.status: 200
+    my_attribute_prefix.response.headers.X-Custom: "foo"
+    my_attribute_prefix.request.headers.X-Custom: "bar"
+    ```
+
+    オプション`keepAttributes`または`dropAttributes`を使用して、抽出または削除する属性のリストを定義できます。たとえば、次のGrok式の場合：
+
+    ```
+    %{TIMESTAMP_ISO8601:containerTimestamp} %{GREEDYDATA:my_attribute_prefix:json({"keepAttributes": ["my_attribute_prefix.event", "my_attribute_prefix.response.headers.X-Custom"]})}
+    ```
+
+    結果のログは次のようになります。
+
+    ```
+    containerTimestamp: "2015-05-13T23:39:43.945958Z"
+    my_attribute_prefix.event: "TestRequest"
+    my_attribute_prefix.request.headers.X-Custom: "bar"
+    ```
+
+    `my_attribute_prefix`プレフィックスを省略したい場合は、設定に`"noPrefix": true`を含めることができます。
+
+    ```
+    %{TIMESTAMP_ISO8601:containerTimestamp} %{GREEDYDATA:my_attribute_prefix:json({"noPrefix": true})}
+    ```
+
+    `my_attribute_prefix`プレフィックスを省略し、 `status`属性のみを保持する場合は、設定に`"noPrefix": true`と`"keepAttributes: ["status"]`を含めることができます。
+
+    ```
+    %{TIMESTAMP_ISO8601:containerTimestamp} %{GREEDYDATA:my_attribute_prefix:json({"noPrefix": true, "keepAttributes": ["status"]})}
+    ```
+
+    JSONがエスケープされている場合は、`isEscaped`オプションを使用して解析できます。JSONがエスケープされてから引用符で囲まれている場合は、以下に示すように引用符も一致させる必要があります。たとえば、次のGrok式の場合：
+
+    ```
+    %{TIMESTAMP_ISO8601:containerTimestamp} "%{GREEDYDATA:my_attribute_prefix:json({"isEscaped": true})}"
+    ```
+
+    エスケープされたメッセージを解析することができます。
+
+    ```
+    2015-05-13T23:39:43.945958Z "{\"event\": \"TestRequest\", \"status\": 200, \"response\": {\"headers\": {\"X-Custom\": \"foo\"}}, \"request\": {\"headers\": {\"X-Custom\": \"bar\"}}}"
+    ```
+
+    結果のログは次のようになります。
+
+    ```
+    containerTimestamp: "2015-05-13T23:39:43.945958Z"
+    my_attribute_prefix.event: "TestRequest"
+    my_attribute_prefix.status: 200
+    my_attribute_prefix.response.headers.X-Custom: "foo"
+    my_attribute_prefix.request.headers.X-Custom: "bar"
+    ```
+
+    `json` [Grokタイプ](#grok-syntax)を設定するには、 `:json(_CONFIG_)`を使用します。
+
+    * `json({"dropOriginal": true})`：解析に使用されたJSONスニペットを削除します。`true`（デフォルト値）に設定すると、解析ルールによって元のJSONスニペットが削除されます。JSON属性はメッセージフィールドに残ることに注意してください。
+    * `json({"dropOriginal": false})`：抽出されたJSONペイロードが表示されます。`false`に設定すると、完全なJSONのみのペイロードが上記の`my_attribute_prefix`で指定された属性の下に表示されます。ここでもJSON属性がメッセージフィールドに残り、ユーザーにJSONデータの3つの異なるビューが提供されることに注意してください。3つのバージョンすべてを保存する必要がある場合は、ここではデフォルトの`true`を使用することをお勧めします。
+    * `json({"depth": 62})`：JSON値を解析する深さのレベル（デフォルトは62）。
+    * `json({"keepAttributes": ["attr1", "attr2", ..., "attrN"]})`：JSONから抽出される属性を指定します。指定されたリストは空にできません。この設定オプションが設定されていない場合は、すべての属性が抽出されます。
+    * `json({"dropAttributes": ["attr1", "attr2", ..., "attrN"]})`：JSONから削除する属性を指定します。この設定オプションが設定されていない場合、属性は削除されません。
+    * `json({"noPrefix": true})`：JSONから抽出された属性からプレフィックスを削除するには、このオプションを`true`に設定します。
+    * `json({"isEscaped": true})`：エスケープされたJSONを解析するには、このオプションを`true`に設定します（これは通常、JSONが文字列化されたときに表示されます。たとえば、`{\"key\": \"value\"}`）
+  </Collapser>
+
+  <Collapser id="parsing-csv" title="CSVの解析">
+    システムがコンマ区切り値（CSV）ログを送信し、それをNew Relicで解析する必要がある場合は、GrokパターンによってキャプチャされたCSVを解析する`csv` [Grokタイプ](#grok-syntax)を使用できます。この形式は、Grok構文、解析されたCSV属性に割り当てるプレフィックス、および`csv` [Grokタイプ](#grok-syntax)という3つの主要な部分に依存します。`csv` [Grokタイプ](#grok-syntax)を使用すると、ログからCSVを抽出して解析できます。
+
+    例として次のCSVログ行を示します。
+
+    ```
+    "2015-05-13T23:39:43.945958Z,202,POST,/shopcart/checkout,142,10"
+    ```
+
+    そして、次の形の解析ルール：
+
+    ```
+    %{GREEDYDATA:log:csv({"columns": ["timestamp", "status", "method", "url", "time", "bytes"]})}
+    ```
+
+    ログは次のように解析されます：
+
+    ```
+    log.timestamp: "2015-05-13T23:39:43.945958Z"
+    log.status: "202"
+    log.method: "POST"
+    log.url: "/shopcart/checkout"
+    log.time: "142"
+    log.bytes: "10"
+    ```
+
+    「ログ」プレフィックスを省略する必要がある場合は、設定に`"noPrefix": true`を含めることができます。
+
+    ```
+    %{GREEDYDATA:log:csv({"columns": ["timestamp", "status", "method", "url", "time", "bytes"], "noPrefix": true})}
+    ```
+
+    #### 列の設定：
+
+    * CSV Grokタイプ設定（有効なJSONである必要があります）で列を示すことが必須です。
+    * 列名として「\_」（アンダースコア）を設定することで、結果のオブジェクトからその列を削除し、任意の列を無視できます。
+
+    #### オプション設定のオプション：
+
+    「列」の設定は必須ですが、次の設定でCSVの解析を変更することができます。
+
+    * <DNT>**dropOriginal**</DNT>：（デフォルトは`true`）解析に使用されるCSVスニペットを削除します。`true`（デフォルト値）に設定すると、解析ルールによって元のフィールドが削除されます。
+    * <DNT>**noPrefix**</DNT>：（デフォルトは`false`）結果のオブジェクトのプレフィックスとしてGrokフィールド名を含めません。
+    * <DNT>**separator**</DNT>：（デフォルトは`,`）各列を分割する文字/文字列を定義します。
+      * もう1つの一般的なシナリオはタブ区切り値（TSV）です。この場合、区切り文字として`\t`を指定する必要があります（例： `%{GREEDYDATA:log:csv({"columns": ["timestamp", "status", "method", "url", "time", "bytes"], "separator": "\t"})`
+    * <DNT>**quoteChar**</DNT>：（デフォルトは`"`）列の内容をオプションで囲む文字を定義します。
+  </Collapser>
+
+  <Collapser id="geo" title="IPアドレスの位置情報（GeoIP）">
+    システムがIPv4アドレスを含むログを送信する場合、 New Relicはそれらを地理的に特定し、指定された属性でログイベントを強化することができます。`geo` [Grokタイプ](#grok-syntax)を使用すると、GrokパターンによってキャプチャされたIPアドレスの位置が検索されます。この形式は、IPの都市、国、緯度/経度など、住所に関連する1つ以上のフィールドを返すように設定できます。
+
+    次のログ行を例に挙げます。
+
+    ```
+    2015-05-13T23:39:43.945958Z 146.190.212.184
+    ```
+
+    そして、次の形の解析ルール：
+
+    ```
+    %{TIMESTAMP_ISO8601:containerTimestamp} %{GREEDYDATA:ip:geo({"lookup":["city","region","countryCode", "latitude","longitude"]})}
+    ```
+
+    ログは次のように解析されます。
+
+    ```
+    ip: 146.190.212.184
+    ip.city: North Bergen
+    ip.countryCode: US
+    ip.countryName: United States
+    ip.latitude: 40.793
+    ip.longitude: -74.0247
+    ip.postalCode: 07047
+    ip.region: NJ
+    ip.regionName: New Jersey
+    containerTimestamp:2015-05-13T23:39:43.945958Z
+    ISO8601_TIMEZONE:Z
+    ```
+
+    #### Lookup設定：
+
+    `geo`アクションによって返される必要な`lookup`フィールドを指定することが必須です。以下のオプションから少なくとも1つの項目が必要です。
+
+    * <DNT>**city**</DNT>：都市名
+    * <DNT>**countryCode**</DNT>：国の略称
+    * <DNT>**countryName**</DNT>：国名
+    * <DNT>**latitude**</DNT>：緯度
+    * <DNT>**longitude**</DNT>：経度
+    * <DNT>**postalCode**</DNT>：郵便番号、ZIPコード、または類似の番号
+    * <DNT>**region**</DNT>：州、県、または地域の略語
+    * <DNT>**regionName**</DNT>：州、県、または地域の名前
+  </Collapser>
+
+  <Collapser id="parsing-key-value-pairs" title="キーの値のペアを解析する">
+    New Relic Logsパイプラインはデフォルトでログメッセージを解析しますが、キーの値のペアとしてフォーマットされたログメッセージが存在する場合があります。この状況では、それらを解析して、キーと値の属性を使用してフィルタリングできるようにする必要がある場合があります。
+
+    その場合は、grokパターンによってキャプチャされたキーと値のペアを解析する`keyvalue` [grokタイプ](#grok-syntax)を使用できます。この形式は、grok構文、解析されたキーと値の属性に割り当てるプレフィックス、および`keyvalue` [grokタイプ](#grok-syntax)という3つの主要な部分に依存します。`keyvalue` [grokタイプ](#grok-syntax)を使用すると、適切にフォーマットされていないログからキーの値のペアを抽出して解析できます。たとえば、ログの先頭に日付/時刻文字列が付いている場合などです。
+
+    ```json
+      2015-05-13T23:39:43.945958Z key1=value1,key2=value2,key3=value3
+    ```
+
+    このログ形式からキーの値データを抽出して解析するには、次のGrok式を作成します。
+
+    ```
+    %{TIMESTAMP_ISO8601:containerTimestamp} %{GREEDYDATA:my_attribute_prefix:keyvalue()}
+    ```
+
+    結果のログは次のようになります。
+
+    ```
+      containerTimestamp: "2015-05-13T23:39:43.945958Z"
+      my_attribute_prefix.key1: "value1"
+      my_attribute_prefix.key2: "value2"
+      my_attribute_prefix.key3: "value3"
+    ```
+
+    カスタム区切り文字と区切り文字を定義して、必要なキーの値のペアを抽出することもできます。
+
+    ```json
+    2015-05-13T23:39:43.945958Z event:TestRequest request:bar
+    ```
+
+    たとえば、次のGrok式の場合：
+
+    ```
+      %{TIMESTAMP_ISO8601:containerTimestamp} %{GREEDYDATA:my_attribute_prefix:keyvalue({"delimiter": " ", "keyValueSeparator": ":"})}
+    ```
+
+    結果のログは次のようになります。
+
+    ```
+    containerTimestamp: "2015-05-13T23:39:43.945958Z"
+    my_attribute_prefix.event: "TestRequest"
+    my_attribute_prefix.request: "bar"
+    ```
+
+    `my_attribute_prefix`プレフィックスを省略したい場合は、設定に`"noPrefix": true`を含めることができます。
+
+    ```
+    %{TIMESTAMP_ISO8601:containerTimestamp} %{GREEDYDATA:my_attribute_prefix:keyValue({"noPrefix": true})}
+    ```
+
+    結果のログは次のようになります。
+
+    ```
+    containerTimestamp: "2015-05-13T23:39:43.945958Z"
+    event: "TestRequest"
+    request: "bar"
+    ```
+
+    カスタム引用符文字プレフィックスを設定する場合は、設定に「quoteChar」を含めることができます。
+
+    ```json
+    2015-05-13T23:39:43.945958Z nbn_demo='INFO',message='This message contains information with spaces ,sessionId='abc123'
+    ```
+
+    ```
+    %{TIMESTAMP_ISO8601:containerTimestamp} %{GREEDYDATA:my_attribute_prefix:keyValue({"quoteChar": "'"})}
+    ```
+
+    結果のログは次のようになります。
+
+    ```
+    "my_attribute_prefix.message": "'This message contains information with spaces",
+    "my_attribute_prefix.nbn_demo": "INFO",
+    "my_attribute_prefix.sessionId": "abc123"
+    ```
+
+    #### Grokパターンの問題
+
+    ログ形式に合わせて、次のオプションを使用して解析動作をカスタマイズできます。
+
+    * **区切り文字**
+
+      * **説明：**各キーの値のペアを区切る文字列。
+      * **デフォルト値：** `,`（カンマ）
+      * **オーバーライド：**この動作を変更するには、フィールド`delimiter`を設定します。
+
+    * **keyValueSeparator**
+
+      * **説明：**キーに値を割り当てるために使用される文字列。
+      * **デフォルト値：** `=`
+      * **オーバーライド：**カスタム区切り文字を使用するためにフィールド`keyValueSeparator`を設定します。
+
+    * **quoteChar**
+
+      * **説明：**スペースまたは特殊文字を含む値を囲むために使用される文字。
+      * **デフォルト値：** `"`（二重引用符）
+      * **オーバーライド：**`quoteChar`を使用してカスタム文字を定義します。
+
+    * **dropOriginal**
+
+      * **説明：**解析後に元のログメッセージを削除します。ログの保存容量を削減するのに役立ちます。
+      * **デフォルト値：** `true`
+      * **オーバーライド：**元のログメッセージを保持するには、 `dropOriginal`を`false`に設定します。
+
+    * **noPrefix**
+
+      * **説明：**`true`の場合、結果のオブジェクトのプレフィックスとしてGrokフィールド名を除外します。
+      * **デフォルト値：** `false`
+      * **オーバーライド：**`noPrefix`を`true`に設定して有効にします。
+
+    * **escapeChar**
+
+      * **説明：**特殊なログ文字を処理するためのカスタムエスケープ文字を定義します。
+      * **デフォルト値：** &quot;&quot;（バックスラッシュ）
+      * **オーバーライド：**`escapeChar`でカスタマイズします。
+
+    * **rimValues**
+
+      * **説明：**空白を含む値をトリミングできます。
+      * **デフォルト値：** `false`
+      * **オーバーライド：**トリミングを有効にするには、 `trimValues`を`true`に設定します。
+
+    * **trimKeys**
+
+      * **説明：**空白を含むキーをトリミングできます。
+      * **デフォルト値：** `true`
+      * **オーバーライド：**トリミングを有効にするには、 `trimKeys`を`true`に設定します。
+  </Collapser>
+
+  <Collapser id="grok-patterns" title="サポートされているGrokパターン">
+    New Relic は次のGrokパターンをサポートしています。
+
+    * IP
+    * TIMESTAMP\_ISO8601
+    * HTTPDATE
+    * 時間
+    * UUID
+    * MONTH
+    * SPACE
+    * DATESTAMP
+    * 日付
+    * COMBINEDAPACHELOG
+    * ISO8601\_TIMEZONE
+    * MAC
+    * DATE\_EU
+    * TZ
+    * DATE\_US
+    * DAY
+    * ログレベル
+    * 数
+    * INT
+    * QUOTEDSTRING
+    * SYSLOGTIMESTAMP
+    * PATH
+    * SYSLOGBASE
+    * COMMONAPACHELOG
+    * IPV6
+    * COMMONMAC
+    * DATESTAMP\_OTHER
+    * ISO8601\_SECOND
+    * DATESTAMP\_EVENTLOG
+    * SYSLOGBASE2
+    * HAPROXYHTTP
+    * RUBY\_LOGGER
+    * WINDOWSMAC
+    * WORD
+    * データ
+    * GREEDYDATA
+    * NOTSPACE
+    * BASE16FLOAT
+    * QS
+    * BASE10NUM
+    * ユーザー
+    * IPORHOST
+    * ユーザー名
+    * IPV4
+    * MONTHDAY
+    * YEAR
+    * HOSTNAME
+    * POSINT
+    * URIPATHPARAM
+    * URI
+    * URIPATH
+    * MONTHNUM
+    * NONNEGINT
+    * MINUTE
+    * SECOND
+    * HOUR
+    * URIHOST
+    * URIPROTO
+    * URIPARAM
+    * SYSLOGHOST
+    * BASE16NUM
+    * SYSLOGPROG
+    * ホスト
+    * HOSTPORT
+    * JAVACLASS
+    * PROG
+    * UNIXPATH
+    * WINPATH
+    * MONTHNUM2
+    * RUBY\_LOGLEVEL
+    * SYSLOGFACILITY
+    * CRON\_ACTION
+    * HAPROXYCAPTUREDREQUESTHEADERS
+    * HAPROXYCAPTUREDRESPONSEHEADERS
+    * HAPROXYDATE
+    * CISOMAC
+  </Collapser>
+</CollapserGroup>
+
+## 解析ルールを管理する [#manage-rules]
+
+解析ルールを作成したら、 <DNT>**Logs &gt; Parsing**</DNT>から管理できます。ドラフトルールは保存されていますが、まだアクティブ化されていません。受信ログに適用する準備ができたら、これらをアクティブ化できます。
+
+解析ルールの編集方法：
+
+1. 解析ルールリストで、ルール名をクリックするか、 <DNT>**... &gt; Edit**</DNT>をクリックして必要な変更を加えます。コードエディタに切り替えるには、 <DNT>**Write your own rule**</DNT>をクリックして、 <DNT>Grok/Regex</DNT>パターンを直接記述または変更します。
+2. <DNT>**Save rule**</DNT>をクリックします（無効にしたい場合は<DNT>**Save as draft**</DNT>をクリックします）。
+
+変更は、更新後に取り込まれたログに適用されます。解析ルールを有効化、無効化、削除する方法：
+
+1. 解析ルールリストでルールを見つけて、 <DNT>**...**</DNT>メニューをクリックします。
+
+2. アクションを選択します：
+
+   * <DNT>**Enable:**</DNT> ドラフトルールをアクティブ化します（新しく取り込まれたログにすぐに適用されます）
+   * <DNT>**Disable:**</DNT> アクティブなルールを一時停止します
+   * <DNT>**Delete:**</DNT> ルールを完全に削除します
+
+## 制限
+
+解析には大量の計算が必要です。プラットフォームの安定性を確保するために、New Relicは次の措置を講じています。
+
+* **メッセージごとの制限**：ルールではメッセージごとの解析時間を100ミリ秒としています。これを超えると、そのメッセージの解析は停止します。
+* **アカウントごとの制限**：合計処理時間は1分ごとに制限されます。この制限に達すると、ログは解析されずに残ります（元の形式で保存されます）。
+* **Pipelineタイミング**：エンリッチメントの前に解析が行われます。まだ追加されていない属性（パイプラインの後半で追加されたタグなど）に対して解析ルールを一致させることはできません。
+* **最初の一致ルール**：解析ルールは順序付けられていません。1つのログに複数のルールが一致する場合、New Relicはランダムに1つを適用します。重複した一致を避けるために、NRQLの`WHERE`句が十分に具体的であることを確認してください。
+
+<Callout variant="tip">
+  レート制限に達したかどうかを簡単に確認するには、New Relic UIの[システム<DNT>**Limits**</DNT>ページ](/docs/telemetry-data-platform/ingest-manage-data/manage-data/view-system-limits#limits-ui)に移動します。
+</Callout>
+
+## トラブルシューティング [#troubleshooting]
+
+解析が意図したとおりに機能しない場合は、次の原因が考えられます。
+
+* <DNT>**Logic:**</DNT> 解析ルールの一致ロジックが、必要なログと一致しません。
+* <DNT>**Timing:**</DNT> 解析一致ルールがまだ存在しない値である場合、失敗します。これは、エンリッチメントプロセスの一部として値がパイプラインの後半で追加された場合に発生する可能性があります。
+* <DNT>**Limits:**</DNT> 解析、パターン、ドロップフィルターなどを使用してログを処理するために、1分ごとに一定の時間が利用できます。最大時間が経過した場合、追加のログイベントレコードの解析はスキップされます。
+
+これらの問題を解決するには、[カスタム解析ルール](#custom-parsing)を作成または調整します。
+
+## 関連ドキュメント [#related-docs]
+
+<DocTiles>
+  <DocTile title="組み込みのログ解析ルール" path="/docs/logs/ui-data/built-log-parsing-rules">
+    New Relicの事前構築されたパターンの確認。
+  </DocTile>
+
+  <DocTile title="ログデータのクエリ" path="/docs/logs/log-management/ui-data/query-logs">
+    NRQLクエリで解析された属性の使用。
+  </DocTile>
+</DocTiles>

@@ -1,0 +1,1332 @@
+---
+title: 'NerdGraph 튜토리얼: 대시보드 만들기 및 관리'
+tags:
+  - Dashboards
+  - Dashboards API
+freshnessValidatedDate: never
+translationType: machine
+---
+
+[NerdGraph API를](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph) 사용하여 <InlinePopover type="dashboards" />생성하고 관리할 수 있습니다.
+
+## 개요 [#starting-out]
+
+사용자 지정 대시보드 기능에 대한 소개 [는 대시보드 문서](/docs/query-your-data/explore-query-data/dashboards/introduction-dashboards) 를 참조하십시오.
+
+NerdGraph를 사용하여 대시보드를 구성할 때 대시보드는 모니터링되는 앱, 호스트 및 서비스와 같이 엔터티로 간주되는 다른 항목과 유사하게 고유한 엔터티 ID가 있는 [엔터티](/docs/new-relic-one/use-new-relic-one/core-concepts/what-entity-new-relic) 로 간주된다는 점을 이해하는 데 도움이 됩니다.
+
+대시보드에서 위젯 및 차트를 추가하고 구성하는 방법은 [차트 및 기타 위젯 구성](/docs/apis/nerdgraph/examples/create-widgets-dashboards-api) 을 참조하십시오.
+
+## 대시보드 CRUD 작업 [#crud-operations]
+
+이 문서에서는 NerdGraph API를 사용하여 대시보드(CRUD)를 만들고, 읽고, 업데이트하고, 삭제하는 방법을 설명합니다. 이러한 작업은 대시보드 전체를 수정합니다.
+
+### 대시보드 만들기 [#create-dashboard]
+
+대시보드에는 최소한 한 페이지가 필요합니다. 하나 이상의 페이지로 구성된 대시보드를 만들 수 있으며, 각 페이지에는 하나 이상의 위젯이 있을 수 있습니다.
+
+1. api.newrelic.com/graphiql에서 [NerdGraph](https://api.newrelic.com/graphiql) GraphiQL 탐색기로 이동합니다.
+2. NerdGraph의 대시보드 API 사용하여 새로운 대시보드와 해당 설정을 만드세요.
+3. `name`, `permissions` 등 필수 필드와 최소한 한 페이지를 모두 포함해야 합니다.
+
+<CollapserGroup>
+  <Collapser id="mutation-create-dashboard" title="1페이지, 1개 위젯, 1개 변수가 있는 대시보드">
+    ```graphql
+    mutation {
+    dashboardCreate(
+      accountId: 1
+      dashboard: {
+        name: "My New Dashboard"
+        description: "This is my new dashboard created via NerdGraph"
+        permissions: PUBLIC_READ_WRITE
+        pages: [
+          {
+            name: "Page 1"
+            description: "This is the first page"
+            widgets: [
+              {
+                visualization: { id: "viz.billboard" }
+                layout: { column: 1, row: 1, height: 3, width: 4 }
+                title: "Total Transaction Count"
+                rawConfiguration: {
+                  nrqlQueries: [
+                    {
+                      accountIds: [1],
+                      query: "SELECT count(*) FROM Transaction"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+        variables: [
+          {
+            name: "nrql_variable"
+            title: "countries"
+            type: NRQL
+            nrqlQuery: {
+              accountIds: [1],
+              query: "SELECT uniqueCount(countryCode) FROM PageView"
+            }
+            replacementStrategy: STRING
+          }
+        ]
+      }
+    ) {
+    entityResult {
+      guid
+      name
+      description
+      createdAt
+      updatedAt
+      owner {
+        email
+        userId
+      }
+      permissions
+      pages {
+        guid
+        name
+        description
+        createdAt
+        updatedAt
+        widgets {
+          id
+          visualization { id }
+          layout { column row height width }
+          title
+          linkedEntities { guid }
+          rawConfiguration
+        }
+      }
+      variables {
+        name
+        items {
+          title
+          value
+        }
+        defaultValues {
+          value {
+            string
+           }
+        }
+        nrqlQuery {
+          accountIds
+          query
+        }
+        options {
+          excluded
+          ignoreTimeRange
+          showApplyAction
+          hiddenOnVariablesBar
+        }
+        title
+        type
+        isMultiSelection
+        replacementStrategy
+      }
+    }
+    errors {
+      type
+      description
+    }
+    }
+    }
+    ```
+  </Collapser>
+
+  <Collapser id="mutation-create-using-graphq-variablesdashboard" title="GraphQL 변수를 사용하여 대시보드 만들기">
+    쿼리를 더 쉽게 업데이트하려면 변수를 사용하는 것이 좋습니다. 위와 동일한 변형이지만 변수를 사용합니다.
+
+    ```graphql
+    mutation CreateDashboard($accountId: Int!, $dashboard: DashboardInput!) {
+      dashboardCreate(accountId: $accountId, dashboard: $dashboard) {
+        entityResult {
+          guid
+          name
+          description
+          createdAt
+          updatedAt
+          owner {
+            email userId
+          }
+          permissions
+          pages {
+            guid
+            name
+            description
+            createdAt
+            updatedAt
+            widgets {
+              id
+              visualization { id }
+              layout { column row height width }
+              title
+              linkedEntities { guid }
+              rawConfiguration
+            }
+          }
+          variables {
+            name
+            items {
+              title
+              value
+            }
+            defaultValues {
+              value {
+                string
+              }
+            }
+            nrqlQuery {
+              accountIds
+              query
+            }
+            options {
+              excluded
+              ignoreTimeRange
+              showApplyAction
+              hiddenOnVariablesBar
+            }
+            title
+            type
+            isMultiSelection
+            replacementStrategy
+          }
+        }
+        errors {
+          type
+          description
+        }
+      }
+    }
+    ```
+
+    이 돌연변이에 사용할 변수는 다음과 같습니다.
+
+    ```json
+    {
+      "accountId": 1,
+      "dashboard": {
+        "name": "My New Dashboard",
+        "description": "This is my new dashboard created via NerdGraph",
+        "permissions": "PUBLIC_READ_WRITE",
+        "pages": [
+          {
+            "name": "Page 1",
+            "description": "This is the first page",
+            "widgets": [
+              {
+                "visualization": { "id": "viz.billboard" },
+                "layout": { "column": 1, "row": 1, "height": 3, "width": 4 },
+                "title": "Total Transaction Count",
+                "rawConfiguration": {
+                  "nrqlQueries": [
+                    {
+                      "accountIds": [1],
+                      "query": "SELECT count(*) FROM Transaction"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "variables": [
+          {
+            "name": "nrql_variable",
+            "title": "countries",
+            "type": "NRQL",
+            "nrqlQuery": {
+              "accountIds": [1],
+              "query": "SELECT uniqueCount(countryCode) FROM PageView"
+            },
+            "replacementStrategy": "STRING"
+          }
+        ]
+      }
+    }
+    ```
+  </Collapser>
+</CollapserGroup>
+
+### 대시보드 읽기 [#read-dashboard]
+
+1. api.newrelic.com/graphiql에서 [NerdGraph](https://api.newrelic.com/graphiql) GraphiQL 탐색기로 이동합니다.
+2. `actor > entity()` 사용하여 콘솔 GUID로 대시보드를 찾으세요.
+3. NerdGraph의 대시보드 API 사용하여 기존 대시보드와 해당 설정을 읽을 수 있습니다.
+
+이 예에서 `DASHBOARD_GUID` 읽으려는 대시보드의 실제 GUID로 바꾸세요.
+
+```graphql
+query GetDashboardEntityQuery {
+	actor{
+		entity(guid:"DASHBOARD_GUID"){
+			...on DashboardEntity {
+				guid
+				name
+				description
+				createdAt
+				updatedAt
+				owner {
+					email
+					userId
+				}
+				permissions
+				pages {
+					guid
+					name
+					description
+					createdAt
+					updatedAt
+					widgets {
+						id
+						visualization {
+							id
+						}
+						layout {
+							column
+							row
+							height
+							width
+						}
+						title
+						linkedEntities {
+							guid
+						}
+						rawConfiguration
+					}
+				}
+				variables {
+					name
+					items {
+						title
+						value
+					}
+					defaultValues {
+						value {
+							string
+						}
+					}
+					nrqlQuery {
+						accountIds
+						query
+					}
+					options {
+						excluded
+						ignoreTimeRange
+						showApplyAction
+						hiddenOnVariablesBar
+					}
+					title
+					type
+					isMultiSelection
+					replacementStrategy
+				}
+			}
+		}
+	}
+}
+```
+
+검색하려는 정보에 따라 쿼리의 필드를 수정할 수 있습니다.
+
+### 대시보드 업데이트 [#update-dashboard]
+
+대시보드를 업데이트하려면, 하나의 요소만 업데이트하는 경우에도 모든 페이지와 개념을 포함하여 대시보드의 완전한 설정을 제공해야 합니다. 업데이트 작업은 대시보드의 내용을 완전히 교체하는 것입니다.
+
+<Callout variant="important">
+  대시보드를 업데이트할 때 페이지 GUID 또는 위젯 ID가 제공되지 않으면 기존 페이지 또는 위젯이 대시보드에서 제거되고 뮤테이션에 지정된 새 페이지 또는 위젯으로 교체됩니다.
+</Callout>
+
+1. api.newrelic.com/graphiql에서 [NerdGraph](https://api.newrelic.com/graphiql) GraphiQL 탐색기로 이동합니다.
+2. NerdGraph의 대시보드 API 사용하여 대시 [보드 읽기](#read-dashboard) 섹션에 표시된 대로 해당 GUID로 대시보드를 읽어 기존 대시보드 설정을 가져옵니다.
+3. 대시보드 설정에서 업데이트하려는 필드를 수정하세요.
+4. NerdGraph의 대시보드 API 사용하여 수정된 설정으로 기존 대시보드를 업데이트하세요.
+
+<Callout variant="important">
+  위젯에서 `Facet Linking` 사용하는 경우 대시보드를 읽을 때 필드는 `linkedEntities { guid }` 이지만 대시보드를 업데이트할 때는 `linkedEntityGuids: [ "GUID" ]` 사용해야 합니다.
+</Callout>
+
+<CollapserGroup>
+  <Collapser id="mutation-update-dashboard" title="GraphQL 변수를 사용하여 대시보드 업데이트">
+    ```graphql
+    mutation UpdateDashboard($guid: EntityGuid!, $dashboard: DashboardUpdateInput!) {
+      dashboardUpdate(guid: $guid, dashboard: $dashboard) {
+        entityResult {
+          guid
+          name
+          description
+          createdAt
+          updatedAt
+          owner {
+            email userId
+          }
+          permissions
+          pages {
+            guid
+            name
+            description
+            createdAt
+            updatedAt
+            widgets {
+              id
+              visualization { id }
+              layout { column row height width }
+              title
+              linkedEntities { guid }
+              rawConfiguration
+            }
+          }
+          variables {
+            name
+            items {
+              title
+              value
+            }
+            defaultValues {
+              value {
+                string
+              }
+            }
+            nrqlQuery {
+              accountIds
+              query
+            }
+            options {
+              excluded
+              ignoreTimeRange
+              showApplyAction
+              hiddenOnVariablesBar
+            }
+            title
+            type
+            isMultiSelection
+            replacementStrategy
+          }
+        }
+        errors {
+          type
+          description
+        }
+      }
+    }
+    ```
+
+    이 돌연변이에 사용할 변수는 다음과 같습니다.
+
+    ```json lineHighlight=9,14
+    {
+      "guid": "DASHBOARD_GUID",
+      "dashboard": {
+        "name": "My Updated Dashboard",
+        "description": "This is my updated dashboard created via NerdGraph",
+        "permissions": "PUBLIC_READ_WRITE",
+        "pages": [
+          {
+            "guid": "PAGE_GUID",
+            "name": "Updated Page 1",
+            "description": "This is the updated first page",
+            "widgets": [
+              {
+                "id": "WIDGET_ID",
+                "visualization": { "id": "viz.billboard" },
+                "layout": { "column": 1, "row": 1, "height": 3, "width": 4 },
+                "title": "Updated Total Transaction Count",
+                "linkedEntityGuids": [],
+                "rawConfiguration": {
+                  "nrqlQueries": [
+                    {
+                      "accountIds": [1],
+                      "query": "SELECT count(*) FROM Transaction"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "variables": [
+          {
+            "name": "nrql_variable",
+            "title": "countries",
+            "type": "NRQL",
+            "nrqlQuery": {
+              "accountIds": [1],
+              "query": "SELECT uniqueCount(countryCode) FROM PageView"
+            },
+            "replacementStrategy": "STRING"
+          }
+        ]
+      }
+    }
+    ```
+  </Collapser>
+</CollapserGroup>
+
+### 대시보드 삭제 [#delete-dashboard]
+
+대시보드를 삭제하려면 삭제하려는 대시보드의 GUID를 제공해야 합니다. 이 작업은 대시보드를 복구할 수 있는 논리적 삭제를 실행합니다.
+
+1. api.newrelic.com/graphiql에서 [NerdGraph](https://api.newrelic.com/graphiql) GraphiQL 탐색기로 이동합니다.
+2. NerdGraph의 대시보드 API 사용하여 해당 GUID로 대시보드를 삭제하세요.
+3. `status` 및 `errors` 체크하여 삭제를 확인하세요.
+
+<CollapserGroup>
+  <Collapser id="mutation-delete-dashboard" title="대시보드 삭제">
+    ```graphql
+    mutation {
+      dashboardDelete(guid: "DASHBOARD_GUID") {
+        status
+        errors {
+          type
+          description
+        }
+      }
+    }
+    ```
+  </Collapser>
+</CollapserGroup>
+
+#### 대시보드 삭제 취소 [#undelete-dashboard]
+
+대시보드 GUID가 주어지면 이전에 삭제된 대시보드를 복구할 수 있습니다. 사용자 정의 태그는 복구할 수 없습니다.
+
+1. api.newrelic.com/graphiql에서 [NerdGraph](https://api.newrelic.com/graphiql) GraphiQL 탐색기로 이동합니다.
+2. NerdGraph의 대시보드 API 사용하여 편집 GUID로 대시보드 삭제를 취소하세요.
+3. `errors` 이 있으면 체크하여 삭제 취소를 확인하세요.
+
+<CollapserGroup>
+  <Collapser id="mutation-undelete-dashboard" title="대시보드 삭제 취소">
+    ```graphql
+    mutation {
+      dashboardUndelete(guid: "DASHBOARD_GUID") {
+        errors {
+          type
+          description
+        }
+      }
+    }
+    ```
+  </Collapser>
+</CollapserGroup>
+
+## 대시보드 페이지 작업 [#page-operations]
+
+이 작업은 대시보드의 특정 페이지를 수정합니다.
+
+### 대시보드 페이지 업데이트 [#update-dashboard-page]
+
+대시보드 페이지 구성 GUID가 주어지면 기존 대시보드의 한 페이지를 업데이트할 수 있습니다. 메타데이터에서 설명 설정까지 완전한 업데이트된 대시보드 페이지 요소를 지정해야 합니다.
+
+1. api.newrelic.com/graphiql에서 [NerdGraph](https://api.newrelic.com/graphiql) GraphiQL 탐색기로 이동합니다.
+2. NerdGraph의 대시보드 API 사용하여 대시 [보드 읽기](#read-dashboard) 섹션에 표시된 대로 해당 GUID로 대시보드를 읽어 기존 대시보드 설정을 가져옵니다.
+3. 대시보드에서 업데이트할 페이지를 식별하여 추출합니다.
+4. 페이지에서 업데이트하려는 필드를 수정합니다.
+5. `dashboardUpdatePage()` 사용하여 페이지를 수정하세요.
+6. `errors` 이 있으면 체크하세요.
+
+<Callout variant="important">
+  페이지를 업데이트할 때 위젯 ID가 제공되지 않으면 기존 위젯이 대시보드에서 제거되고 뮤테이션에 지정된 새 위젯으로 교체됩니다.
+</Callout>
+
+<Callout variant="tip">
+  * `id` 필드 없이 `widgets` 시스템에 위젯을 포함시켜 페이지에 새 위젯을 추가할 수 있습니다.
+  * `widgets` 구조에서 위젯을 생략하여 페이지에서 위젯을 제거할 수 있습니다.
+</Callout>
+
+<CollapserGroup>
+  <Collapser id="mutation-update-dashboard-page" title="페이지 업데이트">
+    ```graphql
+    mutation UpdateDashboardPage($pageGuid: EntityGuid!, $page: DashboardUpdatePageInput!) {
+      dashboardUpdatePage(guid: $pageGuid, page: $page) {
+        errors {
+          type
+          description
+        }
+      }
+    }
+    ```
+
+    이 돌연변이에 사용할 변수는 다음과 같습니다.
+
+    ```json lineHighlight=2,8
+    {
+      "guid": "PAGE_GUID",
+      "page": {
+        "name": "Updated Page 1",
+        "description": "This is the updated first page",
+        "widgets": [
+          {
+            "id": "WIDGET_ID",
+            "visualization": { "id": "viz.billboard" },
+            "layout": { "column": 1, "row": 1, "height": 3, "width": 4 },
+            "title": "Updated Total Transaction Count",
+            "linkedEntityGuids": [],
+            "rawConfiguration": {
+              "nrqlQueries": [
+                {
+                  "accountIds": [1],
+                  "query": "SELECT count(*) FROM Transaction"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+    ```
+  </Collapser>
+
+  <Collapser id="mutation-update-dashboard-page-add-new-widgets" title="새 위젯을 추가하여 페이지 업데이트">
+    ```graphql
+    mutation UpdateDashboardPage($pageGuid: EntityGuid!, $page: DashboardUpdatePageInput!) {
+      dashboardUpdatePage(guid: $pageGuid, page: $page) {
+        errors {
+          type
+          description
+        }
+      }
+    }
+    ```
+
+    이 돌연변이에 사용할 변수는 다음과 같습니다.
+
+    ```json lineHighlight=22-34
+    {
+      "guid": "PAGE_GUID",
+      "page": {
+        "name": "Updated Page 1",
+        "description": "This is the updated first page",
+        "widgets": [
+          {
+            "id": "WIDGET_ID",
+            "visualization": { "id": "viz.billboard" },
+            "layout": { "column": 1, "row": 1, "height": 3, "width": 4 },
+            "title": "Updated Total Transaction Count",
+            "linkedEntityGuids": [],
+            "rawConfiguration": {
+              "nrqlQueries": [
+                {
+                  "accountIds": [1],
+                  "query": "SELECT count(*) FROM Transaction"
+                }
+              ]
+            }
+          },
+          {
+            "visualization": { "id": "viz.line" },
+            "layout": { "column": 5, "row": 1, "height": 3, "width": 4 },
+            "title": "New Line Chart",
+            "rawConfiguration": {
+              "nrqlQueries": [
+                {
+                  "accountIds": [1],
+                  "query": "SELECT count(*) FROM PageView TIMESERIES"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+    ```
+  </Collapser>
+</CollapserGroup>
+
+### 페이지의 위젯을 업데이트합니다. [#update-widgets-in-page]
+
+대시보드 페이지 GUID가 주어지면 대시보드 페이지의 기존 세트를 업데이트할 수 있습니다. 업데이트할 위젯 세트와 그에 대한 전체 설정을 지정해야 합니다.
+
+<Callout variant="important">
+  이 작업으로는 페이지에 위젯을 추가하거나 제거할 수 없습니다. 위젯을 추가하거나 제거하려면 [대시보드 페이지 업데이트](#update-dashboard-page) 작업을 사용하세요.
+</Callout>
+
+1. api.newrelic.com/graphiql에서 [NerdGraph](https://api.newrelic.com/graphiql) GraphiQL 탐색기로 이동합니다.
+2. NerdGraph의 대시보드 API 사용하여 대시 [보드 읽기](#read-dashboard) 섹션에 표시된 대로 해당 GUID로 대시보드를 읽어 기존 대시보드 설정을 가져옵니다.
+3. 대시보드에서 업데이트하려는 페이지의 위젯을 식별하고 추출합니다.
+4. 위젯에서 업데이트하려는 필드를 수정합니다.
+5. `dashboardUpdateWidgetsInPage()` 사용하여 위젯을 수정하세요.
+6. `errors` 이 있으면 체크하세요.
+
+```graphql
+mutation UpdateWidgetsInPage($pageGuid: EntityGuid!, $widgets: [DashboardUpdateWidgetInput!]!) {
+  dashboardUpdateWidgetsInPage(guid: $pageGuid, widgets: $widgets) {
+    errors {
+      type
+      description
+    }
+  }
+}
+```
+
+이 돌연변이에 사용할 변수는 다음과 같습니다.
+
+```json lineHighlight=2,8
+{
+  "guid": "PAGE_GUID",
+  "widgets": [
+    {
+      "id": "WIDGET_ID",
+      "visualization": { "id": "viz.billboard" },
+      "layout": { "column": 1, "row": 1, "height": 3, "width": 4 },
+      "title": "Updated Total Transaction Count",
+      "linkedEntityGuids": [],
+      "rawConfiguration": {
+        "nrqlQueries": [
+          {
+            "accountIds": [1],
+            "query": "SELECT count(*) FROM Transaction"
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+#### 위젯 링크 및 설명 [#widget-links-descriptions]
+
+위젯에 링크와 설명을 추가하려면 `dashboardUpdateWidgetsInPage` 사용할 수도 있습니다. 답변 링크는 답변 제목에 클릭 가능한 링크로 표시되며, 사용자가 답변을 가리킬 때 답변 설명은 툴팁으로 표시됩니다.
+
+<Callout variant="important">
+  위젯 링크 URL은 `http://` 또는 `https://` 프로토콜을 사용해야 하며 2,048자를 초과할 수 없습니다.
+</Callout>
+
+<CollapserGroup>
+  <Collapser id="update-widget-link-description" title="위젯 링크 및 설명을 업데이트하세요.">
+    ```graphql
+    mutation UpdateWidgetsInPage($pageGuid: EntityGuid!, $widgets: [DashboardUpdateWidgetInput!]!) {
+      dashboardUpdateWidgetsInPage(guid: $pageGuid, widgets: $widgets) {
+        errors {
+          type
+          description
+        }
+      }
+    }
+    ```
+
+    이 돌연변이에 사용할 변수는 다음과 같습니다.
+
+    ```json
+    {
+      "guid": "PAGE_GUID",
+      "widgets": [
+        {
+          "id": "WIDGET_ID",
+          "visualization": { "id": "viz.billboard" },
+          "layout": { "column": 1, "row": 1, "height": 3, "width": 4 },
+          "title": "Updated Total Transaction Count",
+          "description": "Total number of transactions",
+          "link": { "url": "https://your-company.com/performance-guide" },
+          "linkedEntityGuids": [],
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [1],
+                "query": "SELECT count(*) FROM Transaction"
+              }
+            ]
+          }
+        }
+      ]
+    }
+    ```
+  </Collapser>
+
+  <Collapser id="remove-widget-link-description" title="위젯 링크와 설명을 삭제하세요.">
+    링크 또는 설명을 제거하려면 해당 필드를 `null` 으로 설정하세요.
+
+    ```graphql
+    mutation UpdateWidgetsInPage($pageGuid: EntityGuid!, $widgets: [DashboardUpdateWidgetInput!]!) {
+      dashboardUpdateWidgetsInPage(guid: $pageGuid, widgets: $widgets) {
+        errors {
+          type
+          description
+        }
+      }
+    }
+    ```
+
+    이 돌연변이에 사용할 변수는 다음과 같습니다.
+
+    ```json
+    {
+      "guid": "PAGE_GUID",
+      "widgets": [
+        {
+          "id": "WIDGET_ID",
+          "visualization": { "id": "viz.billboard" },
+          "layout": { "column": 1, "row": 1, "height": 3, "width": 4 },
+          "title": "Updated Total Transaction Count",
+          "description": null,
+          "link": null,
+          "linkedEntityGuids": [],
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [1],
+                "query": "SELECT count(*) FROM Transaction"
+              }
+            ]
+          }
+        }
+      ]
+    }
+    ```
+  </Collapser>
+</CollapserGroup>
+
+답변 링크가 예상대로 작동하지 않는 문제가 발생하는 경우, 문제 해결, 해결 도움말에 대한 [답변 링크 문제를](/docs/query-your-data/explore-query-data/dashboards/troubleshooting-chart-errors/#widget-link-issues) 참조하세요.
+
+### 템플릿 변수 가시성 [#variable-visibility]
+
+템플릿 변수는 보기 모드에서 변수 표시줄에 표시되지 않지만 정상적으로 작동합니다. 변수의 `options` 객체에서 `hiddenOnVariablesBar` 필드를 사용하세요.
+
+* **필드 이름:** `hiddenOnVariablesBar`
+* **유형:** 부울
+* **기본값:** `false` (변수가 표시됨)
+
+<CollapserGroup>
+  <Collapser id="create-hidden-variable" title="숨겨진 변수가 포함된 대시보드를 만드세요">
+    ```graphql
+    mutation {
+      dashboardCreate(
+        accountId: YOUR_ACCOUNT_ID
+        dashboard: {
+          name: "Dashboard with Hidden Variable"
+          permissions: PUBLIC_READ_WRITE
+          pages: [{
+            name: "Page 1"
+            widgets: []
+          }]
+          variables: [{
+            name: "region"
+            title: "Region"
+            type: NRQL
+            nrqlQuery: {
+              accountIds: [YOUR_ACCOUNT_ID]
+              query: "SELECT uniques(region) FROM Transaction"
+            }
+            defaultValues: [{
+              value: { string: "us-east-1" }
+            }]
+            options: {
+              hiddenOnVariablesBar: true
+            }
+            replacementStrategy: STRING
+          }]
+        }
+      ) {
+        entityResult {
+          guid
+        }
+        errors {
+          type
+          description
+        }
+      }
+    }
+    ```
+  </Collapser>
+
+  <Collapser id="update-variable-visibility" title="변수를 업데이트하여 숨기거나 표시하세요.">
+    변수의 가시성을 업데이트하려면 업데이트된 `hiddenOnVariablesBar` 값을 포함하는 complete가시성 설정을 포함하세요.
+
+    ```graphql
+    mutation {
+      dashboardUpdate(
+        guid: "YOUR_DASHBOARD_GUID"
+        dashboard: {
+          name: "My Dashboard"
+          permissions: PUBLIC_READ_WRITE
+          pages: [{
+            guid: "PAGE_GUID"
+            name: "Page 1"
+            widgets: []
+          }]
+          variables: [{
+            name: "region"
+            title: "Region"
+            type: NRQL
+            nrqlQuery: {
+              accountIds: [YOUR_ACCOUNT_ID]
+              query: "SELECT uniques(region) FROM Transaction"
+            }
+            options: {
+              hiddenOnVariablesBar: false
+            }
+            replacementStrategy: STRING
+          }]
+        }
+      ) {
+        entityResult {
+          guid
+        }
+        errors {
+          type
+          description
+        }
+      }
+    }
+    ```
+  </Collapser>
+</CollapserGroup>
+
+템플릿 변수 표시 여부에 대한 자세한 내용은 [변수 표시 및 숨기기를](/docs/query-your-data/explore-query-data/dashboards/dashboard-template-variables/#variable-visibility) 참조하세요.
+
+### 기타 작업 [#other-operations]
+
+<table>
+  <thead>
+    <tr>
+      <th width={325}>
+        작업
+      </th>
+
+      <th>
+        GraphQL 작업 유형
+      </th>
+
+      <th>
+        Notes
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        `dashboardCreateSnapshotUrl()`
+      </td>
+
+      <td>
+        돌연변이
+      </td>
+
+      <td>
+        대시보드 페이지 스냅샷 작업을 생성합니다. 특정 대시보드 페이지 GUID에 대한 공개 URL을 생성할 수 있습니다. 그러면 대시보드 페이지에 결과 공개 URL의 정적 스냅샷 형태로 액세스할 수 있습니다. 생성된 URL은 생성 후 3개월 후에 더 이상 사용되지 않습니다. 자세한 내용은 [API를 통해 대시보드 스냅샷 관리를](/docs/apis/nerdgraph/examples/export-dashboards-pdfpng-using-api) 참조하세요.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `actor > dashboard > liveUrls()`
+      </td>
+
+      <td>
+        질문
+      </td>
+
+      <td>
+        모든 라이브 URL 작업을 나열합니다. 귀하가 접근할 수 있는 라이브 URL의 전체 목록을 얻을 수 있습니다. 라이브 URL은 최신 또는 라이브 데이터를 사용하여 대시보드 페이지와 위젯을 공개적으로 공유할 수 있는 메커니즘입니다. 자세한 내용은 [API를 통해 라이브 차트 URL 관리를](/docs/apis/nerdgraph/examples/manage-live-chart-urls-via-api#list-livechart-urls) 참조하세요.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `dashboardWidgetRevokeLiveUrl()`
+      </td>
+
+      <td>
+        돌연변이
+      </td>
+
+      <td>
+        위젯 라이브 URL 작업을 취소합니다. 이전에 생성된 위젯의 라이브 URL을 취소할 수 있습니다. 결과적으로 라이브 URL은 대중에게 공개되지 않게 됩니다. 자세한 내용은 [API를 통해 라이브 차트 URL 관리를](/docs/apis/nerdgraph/examples/manage-live-chart-urls-via-api#revoke-a-live-chart-url) 참조하세요.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `dashboardCreateLiveUrl()`
+      </td>
+
+      <td>
+        돌연변이
+      </td>
+
+      <td>
+        공개적으로 접근 가능한 라이브 대시보드 URL을 만듭니다. 자세한 내용은 [공개 공유 대시보드 URL 만들기, 업데이트 및 취소를](/docs/apis/nerdgraph/examples/manage-live-dashboard-urls-via-api/) 참조하세요.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `dashboardUpdateLiveUrl()`
+      </td>
+
+      <td>
+        돌연변이
+      </td>
+
+      <td>
+        공개적으로 접근 가능한 라이브 대시보드 URL의 만료 날짜를 업데이트합니다. 자세한 내용은 [공개 공유 대시보드 URL 만들기, 업데이트 및 취소를](/docs/apis/nerdgraph/examples/manage-live-dashboard-urls-via-api/) 참조하세요.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `dashboardRevokeLiveUrl()`
+      </td>
+
+      <td>
+        돌연변이
+      </td>
+
+      <td>
+        공개적으로 접근 가능한 라이브 대시보드 URL을 취소합니다. 자세한 내용은 [공개 공유 대시보드 URL 만들기, 업데이트 및 취소를](/docs/apis/nerdgraph/examples/manage-live-dashboard-urls-via-api/) 참조하세요.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `dashboardUpdateLiveUrlCreationPolicies()`
+      </td>
+
+      <td>
+        돌연변이
+      </td>
+
+      <td>
+        인증 도메인 관리자만 이 변형을 사용하여 계정에 대한 <DNT>**Live URL Creation**</DNT> 정책을 활성화하거나 비활성화할 수 있습니다. 이 정책이 활성화된 계정의 사용자는 대시보드에 대한 라이브 URL을 생성할 수 있습니다.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## 교차 계정 대시보드 [#cross-account]
+
+NerdGraph를 사용하면 [최대 30개의 뉴렐릭 계정에서 데이터 쿼리를 생성](/docs/apis/nerdgraph/examples/nerdgraph-nrql-tutorial#cross-account-query)할 수 있습니다. 또한 `accountIds` 어레이에 계정 ID를 추가하여 해당 계정 전체의 데이터를 사용하는 대시보드를 생성할 수 있습니다.
+
+다음은 교차 계정 대시보드를 만드는 예입니다.
+
+<CollapserGroup>
+  <Collapser id="cross-account-dashboard" title="교차 계정 쿼리가 있는 대시보드">
+    ```graphql lineHighlight=21,37,53
+    mutation {
+      dashboardCreate(
+        accountId: 1
+        dashboard: {
+          name: "Cross account queries - NerdGraph API - Cross Account Test1"
+          description: null
+          permissions: PUBLIC_READ_WRITE
+          pages: [
+            {
+              name: "Page 1"
+              description: null
+              widgets: [
+                {
+                  visualization: { id: "viz.billboard" }
+                  layout: { column: 1, row: 1, height: 3, width: 4 }
+                  title: "Cross Account Total Transaction Count"
+                  rawConfiguration: {
+                    legend: { enabled: true }
+                    nrqlQueries: [
+                      {
+                        accountIds: [1, 1606862, 2212585]
+                        query: "SELECT count(*) FROM Transaction"
+                      }
+                    ]
+                    yAxisLeft: { zero: true }
+                  }
+                  linkedEntityGuids: null
+                }
+                {
+                  visualization: { id: "viz.pie" }
+                  layout: { column: 5, row: 1, height: 3, width: 4 }
+                  title: "Cross Account Pie"
+                  rawConfiguration: {
+                    legend: { enabled: true }
+                    nrqlQueries: [
+                      {
+                        accountIds: [1, 1606862, 2212585]
+                        query: "SELECT count(*) FROM Transaction FACET accountId()"
+                      }
+                    ]
+                    yAxisLeft: { zero: true }
+                  }
+                  linkedEntityGuids: null
+                }
+                {
+                  visualization: { id: "viz.line" }
+                  layout: { column: 9, row: 1, height: 3, width: 4 }
+                  title: "Cross Account Line"
+                  rawConfiguration: {
+                    legend: { enabled: true }
+                    nrqlQueries: [
+                      {
+                        accountIds: [1, 1606862, 2212585]
+                        query: "SELECT count(*) FROM Transaction FACET accountId() TIMESERIES"
+                      }
+                    ]
+                    yAxisLeft: { zero: true }
+                  }
+                  linkedEntityGuids: null
+                }
+              ]
+            }
+          ]
+        }
+      ) {
+        errors {
+          description
+          type
+        }
+      }
+    }
+    ```
+  </Collapser>
+</CollapserGroup>
+
+## 제한 [#limits]
+
+일부 대시보드 속성에 설정할 수 있는 값을 제한했습니다. 이를 통해 대시보드를 좋은 상태로 유지하면서 유용성을 높일 수 있습니다.
+
+### 대시보드 제한 [#dashboard-limits]
+
+<table>
+  <thead>
+    <tr>
+      <th>
+        한계
+      </th>
+
+      <th>
+        값
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        대시보드의 최대 페이지 수
+      </td>
+
+      <td>
+        25
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        대시보드 이름의 최대 길이
+      </td>
+
+      <td>
+        255
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        대시보드 설명의 최대 길이
+      </td>
+
+      <td>
+        1024
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        교차 계정 쿼리의 최대 계정 수
+      </td>
+
+      <td>
+        30
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### 대시보드 페이지 제한 [#page-limits]
+
+<table>
+  <thead>
+    <tr>
+      <th>
+        한계
+      </th>
+
+      <th>
+        값
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        대시보드 페이지의 최대 위젯 수
+      </td>
+
+      <td>
+        150
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        대시보드 페이지 이름의 최대 길이
+      </td>
+
+      <td>
+        255
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        대시보드 페이지 설명의 최대 길이
+      </td>
+
+      <td>
+        1024
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### 위젯 제한 [#widget-limits]
+
+<table>
+  <thead>
+    <tr>
+      <th>
+        한계
+      </th>
+
+      <th>
+        값
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        위젯 제목의 최대 길이
+      </td>
+
+      <td>
+        255
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        위젯에 연결된 최대 엔티티 수
+      </td>
+
+      <td>
+        1
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        위젯의 최대 쿼리 수
+      </td>
+
+      <td>
+        도면 1
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        위젯의 최대 레이아웃 열
+      </td>
+
+      <td>
+        12
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        위젯의 최소 레이아웃 열
+      </td>
+
+      <td>
+        1
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        위젯의 최소 레이아웃 행
+      </td>
+
+      <td>
+        1
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        위젯의 최대 레이아웃 너비
+      </td>
+
+      <td>
+        12
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        위젯의 최소 레이아웃 너비
+      </td>
+
+      <td>
+        1
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        위젯의 최대 레이아웃 높이
+      </td>
+
+      <td>
+        32
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        위젯의 최소 레이아웃 높이
+      </td>
+
+      <td>
+        1
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## 일등 시민으로서의 오류 [#errors-first-class]
+
+모든 대시보드 변형은 실행 시 오류를 요청하는 방법을 제공합니다. 즉, 예상되는 잠재적 문제를 감지하기 위해 대시보드 변형을 수행하고 응답을 확인할 수 있습니다. 모든 오류에는 문제의 원인을 식별하는 데 도움이 되는 유형과 설명이 있습니다.
+
+<CollapserGroup>
+  <Collapser id="errors-first-class" title="모든 돌연변이 응답의 일부인 오류">
+    ```graphql lineHighlight=2
+    mutation {
+      dashboardMutation(guid: "MY_EXISTING_DASHBOARD_GUID") {
+        mutationResult {
+          result
+        }
+        errors {
+          description
+          type
+        }
+      }
+    }
+    ```
+  </Collapser>
+</CollapserGroup>
+
+이러한 오류는 우리가 미리 알고 있는 예상 오류임을 명심하십시오. 또한 표준 [GraphQL 오류 필드](https://graphql.org/learn/serving-over-http/#response) 에 반환될 예기치 않은 오류가 있는지 확인해야 합니다.

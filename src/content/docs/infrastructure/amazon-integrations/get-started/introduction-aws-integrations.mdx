@@ -1,0 +1,219 @@
+---
+title: Introduction to AWS integrations
+tags:
+    - Integrations
+    - Amazon integrations
+    - Get started
+translate:
+    - jp
+metaDescription: Amazon integrations let you monitor your AWS data in several New Relic features.
+redirects:
+    - /docs/integrations/amazon-integrations/get-started/introduction-aws-integrations
+    - /docs/infrastructure/amazon-integrations/getting-started/introduction-aws-integrations
+    - /docs/integrations/amazon-integrations/getting-started/introduction-aws-integrations
+    - /docs/accounts/install-new-relic/partner-based-installation/new-relic-aws-amazon-web-services
+    - /docs/partnerships/amazon-web-services-users
+    - /docs/accounts-partnerships/partnerships/partner-based-installation/amazon-web-services-aws-users
+    - /docs/accounts/install-new-relic/partner-based-installation/amazon-web-services-aws-users
+    - /docs/infrastructure/amazon-integrations/aws-integrations-list/aws-cloudformation-integration
+    - /docs/integrations/amazon-integrations/aws-integrations-list/aws-cloudformation-integration
+    - /docs/aws-cloudformation-integration
+    - /docs/infrastructure/amazon-integrations
+    - /docs/integrations/amazon-integrations
+    - /docs/infrastructure/amazon-integrations/aws-integrations-list
+freshnessValidatedDate: never
+---
+
+Imagine you have multiple AWS services and want to monitor these services using New Relic. To do this, you need to establish a connection between your services and the New Relic platform. New Relic facilitates this connection through infrastructure agents combined with a variety of on-host integrations, as well as cloud integrations.
+
+In cloud environments, where resources are highly dynamic, and serverless architectures are prevalent, New Relic's cloud integrations play a crucial role. These integrations offer agentless monitoring by directly interfacing with AWS APIs, making it simple to collect metrics and logs from services where traditional agents cannot be installed, such as AWS Lambda, DynamoDB, or Amazon S3. There's no installation process. You can simply connect your New Relic account to your AWS account with required configurations using guided instructions, and collect AWS data.
+
+To understand the possible integration methods and types New Relic has, refer to the following diagram.
+
+<img
+     title="AWS Integration Architecture"
+     alt="AWS Integration Architecture"
+     src="/images/aws-integration-arch.webp"
+/>
+<figcaption>
+  This diagram illustrates in how many ways you can integrate your AWS services with New Relics to get logs and/or metrics.
+</figcaption>
+
+<Callout variant="tip">
+Most AWS services offer regional endpoints to reduce data latency between cloud resources and applications. New Relic can obtain monitoring data from services and endpoints that are located from all [AWS regions](http://docs.aws.amazon.com/general/latest/gr/rande.html) except China.
+</Callout>
+
+## AWS metrics ingestion [#aws-metrics-ingestion]
+
+To connect your AWS account with New Relic for metric ingestion, following are the three different methods available:
+
+* **Automate with CloudFormation**: 
+ CloudFormation is an AWS service that allows you to model and automate your integration setup using declarative templates. To reduce manual configuration errors, use this method to connect your AWS account to New Relic. You can completely design the integration on the New Relic UI and deploy it on the AWS console. 
+ 
+ This method provisions the resources that forward your metrics to New Relic, including an <DNT>IAM</DNT> role, an <DNT>Amazon CloudWatch</DNT> metric stream, and an <DNT>Amazon Kinesis Data Firehose</DNT> delivery stream. Metric streams operate per region, so you need a metric stream and a <DNT>Kinesis Data Firehose</DNT> delivery stream in each AWS region you monitor. Refer to the following diagram for how these components connect.
+
+ <img
+     width="70%;"
+     title="AWS CloudWatch Metric Streams architecture"
+     alt="Diagram of an AWS account showing AWS services, an IAM role, a CloudWatch metric stream, and a Kinesis Data Firehose delivery stream forwarding metrics from one AWS region to New Relic."
+     src="/images/aws-metric-streams-architecture.webp"
+/>
+<figcaption>
+  How a CloudWatch Metric Streams integration forwards metrics to New Relic. You need a metric stream and a Kinesis Data Firehose delivery stream in each AWS region you monitor.
+</figcaption>
+
+
+* **Automate with Terraform**:
+ Terraform is an Infrastructure as Code (IaC) tool that allows you to manage infrastructure using configuration files instead of a graphical user interface. If you already use Terraform to manage your AWS accounts and services, New Relic provides an AWS Cloud Integrations module that simplifies setting up the AWS integration.
+* **Manual integration from the AWS console**:
+ This method is suitable for customers who cannot use CloudFormation templates and do not prefer to use Terraform. You can follow the instructions from the New Relic UI and do the configuration in the AWS console.
+
+For any of the connection methods you choose, you have the following two integration types to receive metrics from your AWS services:
+* **Amazon CloudWatch Metric Streams integration**:
+ [Amazon CloudWatch Metric Streams](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Metric-Streams.html) is an AWS service that allows you to stream metrics from AWS services to partner solutions such as New Relic. It supports all namespaces and can stream near-real-time data from your entire AWS stack.
+* **API Polling**:
+ API polling is a technique used to retrieve data from AWS services by making regular, scheduled API calls to gather metrics and metadata in intervals. It is a legacy solution and makes separate calls to each service.
+
+While you can choose any of these two integration types, New Relic recommends choosing **Amazon CloudWatch Metric Streams integration**. Refer the following comparison between the integration types.
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>
+      **Feature**
+      </th>
+      <th>
+      **CloudWatch Metric Streams integration**
+      </th>
+      <th>
+      **API Polling**
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td>
+        Data delivery
+        </td>
+        <td>
+        Near real-time data streaming
+        </td>
+        <td>
+        Periodic data retrieval
+        </td>        
+      </tr>
+      <tr>
+        <td>
+        Data coverage
+        </td>
+        <td>
+        Continuous and comprehensive
+        </td>
+        <td>
+        Specifies individual metrics, potentially missing data
+        </td>        
+      </tr>
+      <tr>
+        <td>
+        Detection of short-lived events
+        </td>
+        <td>
+        Immediate detection
+        </td>
+        <td>
+        Potential delays in capturing short-lived events
+        </td>
+      </tr>
+      <tr>        
+        <td>
+        Latency
+        </td>
+        <td>
+        Low latency
+        </td>
+        <td>
+        Higher latency due to interval-based retrieval
+        </td>        
+      </tr>
+      <tr>        
+        <td>
+        API call overhead
+        </td>
+        <td>
+        Minimal overhead (push model)
+        </td>
+        <td>
+        High overhead with frequent API calls
+        </td>        
+      </tr>   
+      <tr>        
+        <td>
+        Scalability
+        </td>
+        <td>
+        Easily scales with increasing data volume
+        </td>
+        <td>
+        More complex scaling with larger environments
+        </td>        
+      </tr>          
+      <tr>        
+        <td>
+        Management Complexity
+        </td>
+        <td>
+       Simplified setup and management
+        </td>
+        <td>
+        Requires managing polling schedules and endpoints
+        </td>        
+      </tr>       
+      <tr>        
+        <td>
+        Cost Efficiency
+        </td>
+        <td>
+       Cost-effective due to reduced API interactions
+        </td>
+        <td>
+        Higher costs from frequent API requests
+        </td>        
+      </tr>            
+  </tbody>
+</table>
+
+The following AWS services are not supported by CloudWatch Metric Streams. For these services, leverage API polling:
+
+* AWS CloudTrail
+* AWS Health
+* AWS Trusted Advisor
+* AWS X-Ray
+
+If you utilize other AWS services alongside any of these, you can still choose Amazon CloudWatch Metric Streams integration. During the setup, New Relic provides the option to configure API polling specifically for these unsupported services.
+
+Following are the ways to integrate your AWS services with New Relic:
+  * [Via CloudFormation and CloudWatch metric stream](/docs/infrastructure/amazon-integrations/aws-integration-for-metrics/via-cloudformation-cwms).
+  * [Via CloudFormation and API Polling](/docs/infrastructure/amazon-integrations/aws-integration-for-metrics/via-cloudformation-and-api-polling).
+  * [Via Terraform](/docs/infrastructure/amazon-integrations/aws-integration-for-metrics/terraform).
+  * [Manually from AWS console](/docs/infrastructure/amazon-integrations/aws-integration-for-metrics/manual).
+
+If you have already integrated your AWS account with New Relic using API Polling, refer to the [migration procedure](/docs/infrastructure/amazon-integrations/aws-integration-for-metrics/migrate-from-api-polling-to-cwms) to migrate to CloudWatch Metric Streams.
+
+### AWS costs for integration [#aws-costs]
+
+The integration to Ingest your AWS metrics to New Relic has some impact on your AWS billing. For more details, refer to the following AWS documentations:
+* Refer to the  [AWS CloudWatch pricing page](https://aws.amazon.com/cloudwatch/pricing/) that defines the pricing based on the number of metric updates.
+* Refer to the [AWS Firehose pricing page](https://aws.amazon.com/firehose/pricing/), as we sometimes use AWS Kinesis Data Firehose as the data delivery method from AWS to New Relic.
+* Refer to the [AWS Config pricing page](https://aws.amazon.com/config/pricing/), if you are planning to enable AWS Config to enrich CloudWatch metrics with resource metadata.
+* Refer to the [Amazon RDS pricing page](https://aws.amazon.com/rds/pricing/), if some AWS services use RDS enhanced monitoring that supplies more metrics at a higher frequency.
+
+If you are using the API polling integration for some of your AWS services, some situations may increase the number of calls to the CloudWatch API to exceed the 1 million free limits granted by AWS and increase your [CloudWatch bill](https://aws.amazon.com/cloudwatch/pricing/). This may happen when you:
+* Enable additional integrations through API Polling
+* Add AWS resources to the integrations
+* Scale integrations across more regions.
+
+
+## AWS logs ingestion [#aws-logs-ingestion]
+To connect your AWS account with New Relic for logs ingestion, refer to [Forward AWS service logs to New Relic](/install/aws-logs/).
+
+

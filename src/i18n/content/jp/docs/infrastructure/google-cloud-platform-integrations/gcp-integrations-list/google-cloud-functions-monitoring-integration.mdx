@@ -1,0 +1,227 @@
+---
+title: Google Cloud Functionsのモニタリング統合
+tags:
+  - Integrations
+  - Google Cloud Platform integrations
+  - GCP integrations list
+metaDescription: 'Read about our Google Cloud Functions integration: how to activate it and what data it reports.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+[Google Cloud Platform（GCP）](https://cloud.google.com/) との[ New](/docs/infrastructure/introduction-infra-monitoring) Relicインテグレーション には、[ Google Cloud Functions](https://cloud.google.com/functions/) のデータをNew Relicに報告するものが含まれます。このドキュメントでは、GCP Cloud Functionsインテグレーションを有効にする方法と、報告されるデータについて説明します。
+
+## 特徴
+
+Cloud Functionsは、イベント駆動型関数のためのGoogle Cloudのサーバーレス計算サービスです。New Relic Cloud Functionsインテグレーションは、各関数の実行回数、実行時間、メモリ使用量、およびエラー率メトリクスを収集します。
+
+## 統合をアクティブ化する [#activate]
+
+このインテグレーションを有効にするには、標準手順に従い、[GCPサービスをNew Relicに接続します](/docs/connect-google-cloud-platform-services-infrastructure)：
+
+* [ワークロード Identity 連携で接続（推奨）](/docs/connect-google-cloud-platform-services-infrastructure)
+* [サービスアカウントまたはユーザーアカウントで接続します。](/docs/connect-google-cloud-platform-services-infrastructure)
+
+## ポーリング頻度 [#polling]
+
+New Relicインテグレーションは、ポーリング間隔に従って、GCPサービスをクエリします。ポーリング間隔はインテグレーションによって異なります。Google Cloud Functionsのポーリング頻度は5分です。解像度は1分あたり1データポイントです。
+
+## ワークロード Identity Federation [#wif]
+
+### データを見つけて使用する [#find-data-wif]
+
+インテグレーションを有効にすると、Cloud FunctionsのリソースがNew Relicエンティティエクスプローラーにエンティティとして表示されます。ダッシュボードを表示してサービスを管理するには、<DNT>[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Infrastructure &gt; GCP</DNT>に移動します。
+
+GCPクラウドモニタリングで利用可能なすべてのCloud Functionsメトリクスは、`Metric`イベントタイプのディメンショナルメトリクスとして収集されます。この表以外の追加のメトリクスは自動的に収集されます。完全なリストについては、[GoogleのCloud Functionsメトリクスドキュメント](https://cloud.google.com/monitoring/api/metrics_gcp#gcp-cloudfunctions)を参照してください。
+
+#### エンティティ
+
+<CollapserGroup>
+<Collapser id="entities-table" title="Cloud Functionsエンティティ">
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+エンティティ
+</th>
+
+<th style={{ width: "260px" }}>
+エンティティタイプ
+</th>
+
+<th>
+リソースタイプ
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+働き
+</td>
+
+<td>
+`GCPCLOUDFUNCTION`
+</td>
+
+<td>
+`cloud_function`
+</td>
+</tr>
+</tbody>
+</table>
+</Collapser>
+</CollapserGroup>
+
+### メトリックデータ [#metrics-wif]
+
+#### 主要メトリクス — Function
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "440px" }}>
+メトリクス名
+</th>
+
+<th style={{ width: "100px" }}>
+ユニット
+</th>
+
+<th>
+説明
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`gcp.cloudfunctions.function.execution_count`
+</td>
+
+<td>
+Count
+</td>
+
+<td>
+`status`でファセットされた関数実行回数。
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.cloudfunctions.function.execution_times`
+</td>
+
+<td>
+ナノ秒
+</td>
+
+<td>
+関数の実行時間の分布。
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.cloudfunctions.function.user_memory_bytes`
+</td>
+
+<td>
+バイト
+</td>
+
+<td>
+関数の呼び出しによって使用されるメモリ。
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.cloudfunctions.function.active_instances`
+</td>
+
+<td>
+Count
+</td>
+
+<td>
+現在アクティブな関数インスタンス数。
+</td>
+</tr>
+
+<tr>
+<td>
+`gcp.cloudfunctions.function.network_egress`
+</td>
+
+<td>
+バイト
+</td>
+
+<td>
+関数からの送信ネットワークバイト数。
+</td>
+</tr>
+</tbody>
+</table>
+
+Cloud Functionsのメトリクスの完全なリストについては、[GoogleのCloud Functionsメトリクスドキュメント](https://cloud.google.com/monitoring/api/metrics_gcp#gcp-cloudfunctions)を参照してください。
+
+## サービスアカウントまたはユーザーアカウント [#service-account]
+
+### データを見つけて使用する [#find-data]
+
+インテグレーションをアクティブ化して数分待つと（[ポーリング頻度](#polling)に基づきます）、 UIにデータが表示されます。 <InlinePopover type="dashboards" />へのリンクや集計設定を含む[データを表示および使用する](/docs/infrastructure/integrations/find-use-infrastructure-integration-data)には、 <DNT>[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Infrastructure &gt; GCP</DNT>に移動してインテグレーションを選択します。
+
+## メトリックデータ [#metrics]
+
+GCP Cloud Functions 統合から当社が受け取る[メトリクス データ](/docs/infrastructure/introduction-infra-monitoring#data-types)には次のものが含まれます。
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "300px" }}>
+属性
+</th>
+
+<th>
+説明
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`function.Executions`
+</td>
+
+<td>
+実行された機能の数をステータス別に表示しています。
+</td>
+</tr>
+
+<tr>
+<td>
+`function.ExecutionTimeNanos`
+</td>
+
+<td>
+各関数が実行されるまでの時間（単位：ナノ秒）。
+</td>
+</tr>
+
+<tr>
+<td>
+`function.UserMemoryBytes`
+</td>
+
+<td>
+各機能に使用されるメモリ（単位：バイト）。
+</td>
+</tr>
+</tbody>
+</table>

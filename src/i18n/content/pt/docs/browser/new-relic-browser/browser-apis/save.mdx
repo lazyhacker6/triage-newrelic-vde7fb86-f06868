@@ -1,0 +1,62 @@
+---
+title: save (SPA API)
+type: apiDoc
+shortDescription: Garante que uma interação do browser SPA será salva quando terminar.
+tags:
+  - Browser
+  - Browser monitoring
+  - Browser agent and SPA API
+metaDescription: SPA API call with browser monitoring to ensures an interaction will be saved when it ends.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+## Sintaxe
+
+```js
+newrelic.interaction().save()
+```
+
+Garante que uma interação do browser SPA será salva quando terminar.
+
+## Requisitos
+
+* Agente browser Pro+SPA (v963 ou superior)
+
+* Se você estiver instalando o agente do browser via npm e criando um agente personalizado com recursos selecionados, você deve habilitar o recurso `spa` ao criar a instância `Agent`. No array `features`, adicione o seguinte:
+
+  ```js
+  import { Spa } from '@newrelic/browser-agent/features/spa';
+
+  const options = {
+    info: { ... },
+    loader_config: { ... },
+    init: { ... },
+    features: [
+      Spa
+    ]
+  }
+  ```
+
+  Para obter mais informações, consulte a [documentação de instalação do browser npm](https://www.npmjs.com/package/@newrelic/browser-agent#new-relic-browser-agent).
+
+## Descrição
+
+Este método SPA garante que uma interação do navegador será salva quando terminar. Normalmente, uma interação só é salva e enviada ao New Relic se for o carregamento inicial da página ou se for uma alteração de rota sujeita à [heurística padrão](/docs/browser/single-page-app-monitoring/use-spa-data/spa-data-collection#browser-interaction). Você deve chamar esse método para substituir esse comportamento e garantir que a interação será gravada.
+
+## Valores de retorno
+
+Este método retorna o mesmo objeto de API criado por `interaction()`, que está associado a um [evento`BrowserInteraction` ](/docs/insights/explore-data/attributes/browser-default-attributes-insights#browserinteraction-attributes).
+
+## Exemplos
+
+```js
+window.addEventListener('scroll', () => {
+  if (atBottomOfPage()) {
+    newrelic.interaction() // Start monitoring this interaction.
+      .setName('loadNextPage') // Set name of interaction.
+      .save(); // Ensure that this interaction will be saved as a BrowserInteraction event when it ends, even if URL change and DOM modification did not occur.
+    loadNextPage(); // Start loading the next page.
+  }
+});
+```

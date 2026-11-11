@@ -1,0 +1,406 @@
+title: OpenTelemetry
+path: /docs/opentelemetry
+pages:
+  - title: Overview
+    path: /docs/opentelemetry/opentelemetry-introduction
+  - title: NRDOT
+    pages:
+      - title: Overview
+        path: /docs/opentelemetry/nrdot/nrdot-intro
+      - title: Collector distributions
+        path: /docs/opentelemetry/nrdot/nrdot-collector
+  - title: Get started
+    pages:
+      - title: Overview
+        path: /docs/opentelemetry/get-started/opentelemetry-get-started-intro
+      - title: OpenTelemetry APM monitoring
+        pages:
+          - title: Overview
+            path: /docs/opentelemetry/get-started/apm-monitoring/opentelemetry-apm-intro
+          - title: OpenTelemetry APM UI
+            path: /docs/opentelemetry/get-started/apm-monitoring/opentelemetry-apm-ui
+      - title: Collector observability
+        pages:
+          - title: Overview
+            path: /docs/opentelemetry/collector-observability/collector-observability
+          - title: Get started
+            path: /docs/opentelemetry/collector-observability/collector-observability-setup
+          - title: KPI reference
+            path: /docs/opentelemetry/collector-observability/collector-observability-kpis
+      - title: Collector for infrastructure monitoring
+        path: /docs/opentelemetry/get-started/collector-infra-monitoring/opentelemetry-collector-infra-intro
+      - title: Collector for data processing
+        path: /docs/opentelemetry/get-started/collector-processing/opentelemetry-collector-processing-intro
+      - title: ATP
+        pages:
+          - title: Overview
+            path: /docs/opentelemetry/nrdot/atp/overview
+          - title: Configuration
+            pages:
+            - title: Host configuration
+              path: /docs/opentelemetry/nrdot/atp/host
+            - title: Kubernetes configuration
+              path: /docs/opentelemetry/nrdot/atp/k8s
+            - title: Advanced configuration
+              path: /docs/opentelemetry/nrdot/atp/advanced-features
+            - title: Troubleshooting
+              path: /docs/opentelemetry/nrdot/atp/troubleshooting
+          # - title: View & query your data
+          #   pages:
+          - title: Query ATP data
+            path: /docs/opentelemetry/nrdot/atp/query
+
+  - title: OpenTelemetry data in New Relic
+    pages:
+      - title: Overview
+        path: /docs/opentelemetry/best-practices/opentelemetry-data-overview
+      - title: OTLP
+        pages:
+          - title: New Relic OTLP endpoint
+            path: /docs/opentelemetry/best-practices/opentelemetry-otlp
+          - title: OTLP troubleshooting
+            path: /docs/opentelemetry/best-practices/opentelemetry-otlp-troubleshooting
+      - title: Traces
+        path: /docs/opentelemetry/best-practices/opentelemetry-best-practices-traces
+      - title: Metrics
+        path: /docs/opentelemetry/best-practices/opentelemetry-best-practices-metrics
+      - title: Logs
+        path: /docs/opentelemetry/best-practices/opentelemetry-best-practices-logs
+      - title: Resources
+        path: /docs/opentelemetry/best-practices/opentelemetry-best-practices-resources
+      - title: Manage data ingest volume
+        path: /docs/opentelemetry/best-practices/opentelemetry-manage-data-ingest-volume
+  - title: OpenTelemetry integrations
+    pages:
+      - title: Docker integration
+        pages:
+          - title: Docker overview
+            path: /docs/opentelemetry/integrations/docker-monitoring/overview
+          - title: Installation
+            path: /docs/opentelemetry/integrations/docker-monitoring/self-hosted
+          - title: Metrics reference
+            path: /docs/opentelemetry/integrations/docker-monitoring/metrics-reference
+          - title: Troubleshooting
+            path: /docs/opentelemetry/integrations/docker-monitoring/troubleshooting
+      - title: ECS integration
+        pages:
+          - title: Overview
+            path: /docs/opentelemetry/integrations/ecs-monitoring/overview
+          - title: ECS on EC2
+            path: /docs/opentelemetry/integrations/ecs-monitoring/ecs-ec2
+          - title: ECS Fargate
+            path: /docs/opentelemetry/integrations/ecs-monitoring/ecs-fargate
+          - title: Find and query your data
+            path: /docs/opentelemetry/integrations/ecs-monitoring/find-and-query-your-data
+      - title: Elasticsearch integration
+        pages:
+          - title: Overview
+            path: /docs/opentelemetry/integrations/elasticsearch/elasticsearch-otel-integration-overview
+          - title: Self-hosted
+            path: /docs/opentelemetry/integrations/elasticsearch/elasticsearch-otel-integration-install
+          - title: Kubernetes installation
+            path: /docs/opentelemetry/integrations/elasticsearch/elasticsearch-otel-integration-k8-install
+          - title: Distributed tracing
+            path: /docs/opentelemetry/integrations/elasticsearch/distributed-tracing
+          - title: Find and query your data
+            path: /docs/opentelemetry/integrations/elasticsearch/find-and-query-data
+          - title: Metrics reference
+            path: /docs/opentelemetry/integrations/elasticsearch/metrics-reference
+          - title: Troubleshooting 
+            path: /docs/opentelemetry/integrations/elasticsearch/troubleshooting  
+      - title: IBM MQ integration
+        pages:
+          - title: Overview
+            path: /docs/opentelemetry/integrations/ibm-mq/overview
+          - title: Self-hosted
+            path: /docs/opentelemetry/integrations/ibm-mq/host
+          - title: Kubernetes
+            path: /docs/opentelemetry/integrations/ibm-mq/kubernetes
+          - title: Find and query your data
+            path: /docs/opentelemetry/integrations/ibm-mq/view-data
+          - title: Metrics and attributes reference
+            path: /docs/opentelemetry/integrations/ibm-mq/metrics
+          - title: Troubleshooting
+            path: /docs/opentelemetry/integrations/ibm-mq/troubleshooting
+      - title: HAProxy integration
+        pages:
+          - title: Overview
+            path: /docs/opentelemetry/integrations/haproxy/overview
+          - title: Self-hosted
+            path: /docs/opentelemetry/integrations/haproxy/self-hosted
+          - title: Kubernetes
+            path: /docs/opentelemetry/integrations/haproxy/kubernetes
+          - title: Distributed tracing
+            path: /docs/opentelemetry/integrations/haproxy/distributed-tracing
+          - title: Find and query your data
+            path: /docs/opentelemetry/integrations/haproxy/find-and-query-data
+          - title: Metrics reference
+            path: /docs/opentelemetry/integrations/haproxy/metrics-reference
+      - title: Kafka integration
+        pages:
+          - title: Overview
+            path: /docs/opentelemetry/integrations/kafka/overview
+          - title: Self-hosted Kafka
+            path: /docs/opentelemetry/integrations/kafka/self-hosted
+          - title: Kubernetes self-managed
+            path: /docs/opentelemetry/integrations/kafka/kubernetes-self-managed
+          - title: Kubernetes Strimzi
+            path: /docs/opentelemetry/integrations/kafka/kubernetes-strimzi
+          - title: Find and query your data
+            path: /docs/opentelemetry/integrations/kafka/find-and-query-data
+          - title: Metrics reference
+            path: /docs/opentelemetry/integrations/kafka/metrics-reference
+      - title: Linkerd integration
+        pages:
+          - title: Introduction
+            path: /docs/opentelemetry/integrations/linkerd/introduction
+          - title: Install & configure
+            pages:
+            - title: NRDOT with Helm
+              path: /docs/opentelemetry/integrations/linkerd/nrdot-helm
+            - title: NRDOT with manifest
+              path: /docs/opentelemetry/integrations/linkerd/nrdot-manifest
+            - title: OTel Collector Contrib with Helm
+              path: /docs/opentelemetry/integrations/linkerd/otel-helm
+            - title: OTel Collector Contrib with manifest
+              path: /docs/opentelemetry/integrations/linkerd/otel-manifest
+          - title: Advanced configuration
+            pages:
+            - title: Distributed tracing
+              path: /docs/opentelemetry/integrations/linkerd/distributed-tracing
+            - title: Collect Linkerd proxy logs
+              path: /docs/opentelemetry/integrations/linkerd/proxy-logs
+          - title: Find and query your data
+            path: /docs/opentelemetry/integrations/linkerd/find-data
+          - title: Metrics reference
+            path: /docs/opentelemetry/integrations/linkerd/metrics-reference
+          - title: Troubleshooting
+            path: /docs/opentelemetry/integrations/linkerd/troubleshooting
+      - title: NGINX integration
+        pages:
+          - title: Overview
+            path: /docs/opentelemetry/integrations/nginx/nginx-otel-overview
+          - title: Self-hosted
+            path: /docs/opentelemetry/integrations/nginx/nginx-otel-host
+          - title: Kubernetes
+            path: /docs/opentelemetry/integrations/nginx/nginx-otel-kubernetes
+          - title: Distributed tracing
+            path: /docs/opentelemetry/integrations/nginx/nginx-otel-distributed-tracing
+          - title: Find and query your data
+            path: /docs/opentelemetry/integrations/nginx/find-and-query-your-data
+          - title: Metrics and attributes reference
+            path: /docs/opentelemetry/integrations/nginx/nginx-otel-metrics-reference
+      - title: NGINX Plus integration
+        pages:
+          - title: Self-hosted
+            path: /docs/opentelemetry/integrations/nginx-plus/nginx-plus-otel
+      - title: RabbitMQ integration
+        pages:
+          - title: Overview
+            path: /docs/opentelemetry/integrations/rabbitmq/overview
+          - title: Self-hosted
+            path: /docs/opentelemetry/integrations/rabbitmq/self-hosted
+          - title: Kubernetes
+            path: /docs/opentelemetry/integrations/rabbitmq/kubernetes
+          - title: Find and query your data
+            path: /docs/opentelemetry/integrations/rabbitmq/find-and-query-data
+          - title: Metrics reference
+            path: /docs/opentelemetry/integrations/rabbitmq/metrics-reference
+      - title: Redis integration
+        pages:
+          - title: Overview
+            path: /docs/opentelemetry/integrations/redis/overview
+          - title: Self-hosted
+            path: /docs/opentelemetry/integrations/redis/host
+          - title: Docker
+            path: /docs/opentelemetry/integrations/redis/docker
+          - title: Kubernetes
+            path: /docs/opentelemetry/integrations/redis/kubernetes
+          - title: Find and query your data
+            path: /docs/opentelemetry/integrations/redis/view-data
+          - title: Metrics reference
+            path: /docs/opentelemetry/integrations/redis/metrics
+          - title: Troubleshooting
+            path: /docs/opentelemetry/integrations/redis/troubleshooting
+  - title: Database 360
+    pages:
+      - title: Introduction
+        path: /docs/opentelemetry/db360/introduction
+      - title: Capabilities
+        pages:
+          - title: DB-APM correlation 
+            path: /docs/opentelemetry/db360/capabilities/db-apm
+          - title: SQL query receiver
+            path: /docs/opentelemetry/db360/capabilities/sql-query-receiver
+      - title: Microsoft SQL Server
+        pages:
+          - title: Introduction
+            path: /docs/opentelemetry/db360/mssql/introduction
+          - title: Install & configure
+            pages:
+            - title: Linux self-hosted
+              path: /docs/opentelemetry/db360/mssql/linux-hosted
+            - title: Windows self-hosted
+              pages:
+              - title: SQL Server authentication
+                path: /docs/opentelemetry/db360/mssql/windows-hosted-sql
+              - title: Windows Domain authentication
+                path: /docs/opentelemetry/db360/mssql/windows-hosted-domain
+              - title: gMSA authentication
+                path: /docs/opentelemetry/db360/mssql/windows-hosted-gmsa
+            - title: Linux RDS
+              path: /docs/opentelemetry/db360/mssql/linux-rds
+            - title: Windows RDS
+              pages:
+              - title: SQL Server authentication
+                path: /docs/opentelemetry/db360/mssql/windows-rds-sql
+              - title: Windows Domain authentication
+                path: /docs/opentelemetry/db360/mssql/windows-rds-domain
+              - title: gMSA authentication
+                path: /docs/opentelemetry/db360/mssql/windows-rds-gmsa
+            - title: Azure SQL Database
+              pages:
+              - title: Linux
+                path: /docs/opentelemetry/db360/mssql/azure-sql-linux
+              - title: Windows
+                path: /docs/opentelemetry/db360/mssql/azure-sql-windows
+            - title: Azure SQL Managed Instance
+              pages:
+              - title: Linux
+                path: /docs/opentelemetry/db360/mssql/azure-mi-linux
+              - title: Windows
+                path: /docs/opentelemetry/db360/mssql/azure-mi-windows
+            - title: OpenTelemetry Collector
+              path: /docs/opentelemetry/db360/mssql/cncf
+            - title: CLI
+              path: /docs/opentelemetry/db360/mssql/cli
+            - title: Ansible
+              path: /docs/opentelemetry/db360/mssql/ansible
+            - title: Chef
+              path: /docs/opentelemetry/db360/mssql/chef
+            - title: Docker
+              path: /docs/opentelemetry/db360/mssql/docker
+            - title: Helm chart
+              path: /docs/opentelemetry/db360/mssql/helm
+          - title: Advanced configuration
+            pages:
+            - title: Multi-receiver configuration
+              path: /docs/opentelemetry/db360/mssql/multi-receiver
+          - title: References
+            pages:
+            - title: Configuration references
+              path: /docs/opentelemetry/db360/mssql/config-reference
+            - title: Metrics references
+              path: /docs/opentelemetry/db360/mssql/metrics-reference
+          - title: Troubleshooting
+            path: /docs/opentelemetry/db360/mssql/troubleshooting
+      - title: Oracle
+        pages:
+          - title: Introduction
+            path: /docs/opentelemetry/db360/oracle/introduction
+          - title: Install & configure
+            pages:
+            - title: On-host CDB
+              path: /docs/opentelemetry/db360/oracle/host-cdb
+            - title: On-host PDB
+              path: /docs/opentelemetry/db360/oracle/host-pdb
+            - title: RDS
+              path: /docs/opentelemetry/db360/oracle/rds
+            - title: ADB
+              path: /docs/opentelemetry/db360/oracle/adb
+            - title: OpenTelemetry Collector
+              path: /docs/opentelemetry/db360/oracle/cncf
+            - title: CLI
+              path: /docs/opentelemetry/db360/oracle/cli
+            - title: Ansible
+              path: /docs/opentelemetry/db360/oracle/ansible
+            - title: Chef
+              path: /docs/opentelemetry/db360/oracle/chef
+            - title: Docker
+              path: /docs/opentelemetry/db360/oracle/docker
+            - title: Helm chart
+              path: /docs/opentelemetry/db360/oracle/helm
+          - title: Advanced configuration
+            pages:
+            - title: Multi-receiver configuration
+              path: /docs/opentelemetry/db360/oracle/multi-receiver
+          - title: References
+            pages:
+            - title: Configuration references
+              path: /docs/opentelemetry/db360/oracle/config-reference
+            - title: Metrics references
+              path: /docs/opentelemetry/db360/oracle/metrics-reference
+          - title: Troubleshooting
+            path: /docs/opentelemetry/db360/oracle/troubleshooting
+      - title: MySQL
+        pages:
+          - title: Introduction
+            path: /docs/opentelemetry/db360/mysql/introduction
+          - title: Install & configure
+            pages:
+            - title: Compatibility
+              path: /docs/opentelemetry/db360/mysql/compatibility
+            - title: Self-hosted
+              path: /docs/opentelemetry/db360/mysql/hosted
+            - title: RDS / Aurora
+              path: /docs/opentelemetry/db360/mysql/rds
+            - title: CLI
+              path: /docs/opentelemetry/db360/mysql/cli
+            - title: Ansible
+              path: /docs/opentelemetry/db360/mysql/ansible
+            - title: Chef
+              path: /docs/opentelemetry/db360/mysql/chef
+            - title: Docker
+              path: /docs/opentelemetry/db360/mysql/docker
+            - title: Helm chart
+              path: /docs/opentelemetry/db360/mysql/helm
+          - title: Advanced configuration
+            pages:
+            - title: Multi-receiver configuration
+              path: /docs/opentelemetry/db360/mysql/multi-receiver
+            - title: Enable detailed insights
+              path: /docs/opentelemetry/db360/mysql/optional
+          - title: References
+            pages:
+            - title: Configuration references
+              path: /docs/opentelemetry/db360/mysql/config-reference
+            - title: Metrics references
+              path: /docs/opentelemetry/db360/mysql/metrics-reference
+          - title: Troubleshooting
+            path: /docs/opentelemetry/db360/mysql/troubleshooting
+      - title: PostgreSQL
+        pages:
+          - title: Introduction
+            path: /docs/opentelemetry/db360/postgresql/introduction
+          - title: Install & configure
+            pages:
+            - title: Compatibility
+              path: /docs/opentelemetry/db360/postgresql/compatibility
+            - title: Self-hosted
+              path: /docs/opentelemetry/db360/postgresql/hosted
+            - title: RDS / Aurora
+              path: /docs/opentelemetry/db360/postgresql/rds
+            - title: CLI
+              path: /docs/opentelemetry/db360/postgresql/cli
+            - title: Ansible
+              path: /docs/opentelemetry/db360/postgresql/ansible
+            - title: Chef
+              path: /docs/opentelemetry/db360/postgresql/chef
+            - title: Docker
+              path: /docs/opentelemetry/db360/postgresql/docker
+            - title: Helm chart
+              path: /docs/opentelemetry/db360/postgresql/helm
+          - title: Advanced configuration
+            pages:
+            - title: Multi-receiver configuration
+              path: /docs/opentelemetry/db360/postgresql/multi-receiver
+            - title: Enable detailed insights
+              path: /docs/opentelemetry/db360/postgresql/optional
+          - title: References
+            pages:
+            - title: Configuration references
+              path: /docs/opentelemetry/db360/postgresql/config-reference
+            - title: Metrics references
+              path: /docs/opentelemetry/db360/postgresql/metrics-reference
+          - title: Troubleshooting
+            path: /docs/opentelemetry/db360/postgresql/troubleshooting

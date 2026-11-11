@@ -1,0 +1,48 @@
+---
+title: Configurar la recopilación de datos del agente del navegador
+metaDescription: 'For New Relic browser monitoring: use the app settings page to configure the agent type and deployment method.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Si necesita personalizar cómo el agente del navegador recopila datos, tiene dos métodos: configurar la UI o utilizar API para personalizar la instrumentación del agente.
+
+## Configuración UI [#UI]
+
+En la página <DNT>**Application settings**</DNT> , puede realizar estas configuraciones en su configuración <InlinePopover type="browser" />:
+
+* [Código de agente proxy y datos analíticos](/docs/browser/new-relic-browser/configuration/proxy-agent-requests/)
+* [Configurar alerta](/docs/browser/new-relic-browser/configuration/view-browser-apps-alert-information/)
+* [Configurar APDEX y ajustes geográficos](/docs/browser/new-relic-browser/configuration/browser-settings-ui-options-apdex-geography/#apdex-settings)
+* [Filtrar dominio y subdominio](/docs/browser/new-relic-browser/configuration/monitor-or-block-specific-domains-subdomains/)
+* [Configurar requests AJAX](/docs/browser/new-relic-browser/configuration/configure-ajax-request-events/)
+* [Agrupar datos por patrones de URL](/docs/browser/new-relic-browser/configuration/group-browser-metrics-urls/)
+* [Ofuscar datos](/docs/browser/new-relic-browser/configuration/obfuscate-browser-agent-data/)
+* [Cambiar el nombre de las aplicaciones browser](/docs/browser/new-relic-browser/configuration/rename-browser-apps/)
+* [Deshabilitar el monitoreo del navegador](/docs/browser/new-relic-browser/installation/disable-browser-monitoring/)
+* [Eliminar una aplicación browser](/docs/apm/new-relic-apm/maintenance/remove-applications-new-relic/#remove)
+
+### Almacenamiento de sesiones Browser [#browser-session-storage]
+
+Consolidamos el control para recopilar datos de rastreo de sesión y reproducción de sesión dentro del agente del navegador. Ahora puedes gestionar todos los datos a nivel de sesión directamente desde el interruptor <DNT>**Access browser local storage**</DNT> en esta página de configuración.
+
+{/* * **Access browser local storage toggle**: This unified control determines how session-level data (including session IDs and other session-level attributes) is collected.
+    * **When turned ON (default)**: The New Relic browser agent uses the browser's persistent storage mechanisms to collect session trace and session replay data.
+    * **When turned OFF**: The New Relic browser agent immediately halts its use of the browser's persistent storage. This action prevents the collection of all session trace and session replay data, giving you direct control over the browser's handling of session-related information and enhancing your ability to meet data privacy and compliance requirements. */}
+
+<Callout variant="important">
+  A partir de la versión 1.303.0 del agente de Browser, se eliminará el interruptor de **Access local storage** de la UI para simplificar nuestra función de privacidad y consentimiento.
+
+  * La forma recomendada de gestionar la recopilación de datos del agente del navegador y el consentimiento del usuario es con la configuración del modo de consentimiento. Para obtener más información, consulte [los documentos de consentimiento](/docs/browser/new-relic-browser/configuration/consent-mode/).
+
+  * Si actualmente tiene el interruptor de **Access local storage** configurado en `OFF`, encontrará que los interruptores de modo de consentimiento, reproducción de sesión y rastreo de sesión también están inactivos. Para habilitar estas características, debe establecer el atributo `cookie_enabled` en `true` a través de [APIde NerdGraph](/docs/apis/nerdgraph/examples/browser-monitoring-config-nerdgraph/#configure-browser-application). Esta acción reactivará los interruptores en la UI, lo que le permitirá configurar correctamente el modo de consentimiento, la reproducción de sesión y el rastreo de sesión.
+</Callout>
+
+{/* To get to the <DNT>**Application settings**</DNT> page:
+
+1. Go to <DNT>**[one.newrelic.com > All capabilities](https://one.newrelic.com/all-capabilities) > Browser**</DNT> and select an app.
+2. On the left navigation, scroll down to <DNT>**Settings**</DNT> and click <DNT>**Application settings**</DNT>. */}
+
+## API browser [#apis]
+
+También puede personalizar la instrumentación del agente de su browser para capturar trazas y eventos personalizados, informar errores específicos adaptados a sus necesidades y ajustar el tiempo de recolección de datos para un rendimiento óptimo. Consulte [Uso de las API del navegador](/docs/browser/new-relic-browser/browser-apis/using-browser-apis/) para comenzar.

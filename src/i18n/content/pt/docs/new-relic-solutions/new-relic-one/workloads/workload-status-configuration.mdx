@@ -1,0 +1,178 @@
+---
+title: Configuração de status de saúde de workload
+tags:
+  - New Relic
+  - Use New Relic
+  - Workloads
+  - Standard workloads
+  - Intelligent workloads
+metaDescription: 'How to configure your workload health status, and how to obtain the workload health status for both Standard and Intelligent workloads.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+<Callout variant="tip">
+Esta página se aplica tanto a [workloads padrão](/docs/new-relic-solutions/new-relic-one/workloads/create-workloads) quanto a [workloads inteligentes](/docs/new-relic-solutions/new-relic-one/workloads/workloads-overview#intelligent-workloads). A configuração de status funciona da mesma forma para ambos os tipos.
+</Callout>
+
+Você pode configurar o status da sua carga de trabalho usando três métodos:
+
+* <DNT>**Static**</DNT>: Defina manualmente um status fixo para janelas de manutenção ou outros cenários onde você deseja comunicar um estado específico da carga de trabalho
+* <DNT>**Automatic**</DNT>: O status é calculado a partir de regras que você configura para determinar o status de cada grupo de entidades e a carga de trabalho geral
+* <DNT>**Alert policy and conditions**</DNT>: Configure políticas e condições personalizadas para determinar o status de integridade da workload com base nos estados de alerta
+
+Para gerenciar as configurações de status da carga de trabalho:
+
+1. Navegue até sua carga de trabalho
+2. Na barra lateral esquerda, em <DNT>**SETTINGS**</DNT>, clique em <DNT>**Configure health status**</DNT>
+3. A página <DNT>**Workload status setup**</DNT> será aberta, exibindo as três opções de método de configuração
+
+<img title="new-relic-workload-status-main.png" alt="new-relic-workload-status-main.png" src="/images/solutions_screenshot-crop_workload-status-main.webp" />
+
+## Configurar o status automático workload [#configure-automatic]
+
+O cálculo automático de status usa o status de cada entidade em sua carga de trabalho para determinar um único valor geral de status da carga de trabalho com base em regras que você define.
+
+Nem todas as entidades numa workload são igualmente importantes do ponto de vista do desempenho, dos erros ou da disponibilidade:
+
+* Você pode querer que sua carga de trabalho seja exibida como interrompida se um monitor sintético ou serviço essencial estiver com um incidente crítico em andamento.
+* No entanto, se a sua infraestrutura de host tiver certa redundância e resiliência a interrupções, talvez você não precise alterar o status workload de <DNT>**Operational**</DNT> apenas porque um único host está com um incidente de alerta em andamento.
+
+### Como funciona o status automático
+
+A configuração automática de status utiliza um sistema baseado em regras onde:
+
+* Cada regra avalia um grupo de entidades (com base no tipo de entidade, tags, GUIDs ou combinações)
+* Cada regra produz um status com base nos status das entidades nesse grupo
+* O resultado do status da carga de trabalho é igual ao pior status de todos os resultados das regras
+
+Por padrão, ao criar uma carga de trabalho, as seguintes regras para calcular seu status são adicionadas:
+
+1. Para tipos de entidade próximos à experiência digital (ou seja, monitor Sintético, aplicativo de browser, aplicativo móvel e serviços), o pior status disponível é propagado.
+2. Para qualquer outro tipo de entidade, que são basicamente entidades de infraestrutura, é propagado o melhor status disponível.
+
+Para configurar o status automático:
+
+1. Na página <DNT>**Workload status setup**</DNT>, selecione a opção <DNT>**Automatic**</DNT>
+
+2. A seção <DNT>**Automatic Status Configuration**</DNT> será expandida, exibindo:
+
+   * Um botão de alternância para ativar ou desativar o cálculo automático de status
+   * As regras que determinam o status do grupo de entidades e o status geral da carga de trabalho
+   * Uma prévia exibindo o status atual da carga de trabalho com base na sua configuração
+
+3. Ative a chave de alternância se ela ainda não estiver ativada
+
+4. Revise as regras existentes ou adicione novas conforme necessário
+
+### Crie regras personalizadas [#create-custom-tules]
+
+Para personalizar o status automático workload , você pode definir suas próprias regras. Uma regra consiste em um grupo de entidades e um modo roll up:
+
+<img title="new-relic-workloads-status-rule.png" alt="new-relic-workloads-status-rule.png" src="/images/new-relic-workloads-status-rule.webp" />
+
+1. Defina o grupo de entidade com base nos tipos de entidade, valores tag , GUIDs ou uma combinação de todos eles.
+2. Decida como propagar o status dessas entidades para o status do grupo:
+
+* <DNT>**Roll up the best status**</DNT>: o estatuto do grupo corresponde ao estatuto menos crítico de todas as entidades pertencentes. Utilize esta opção quando desejar que o status do grupo esteja operacional desde que pelo menos uma entidade do grupo ainda esteja operacional.
+* <DNT>**Roll up the worst status**</DNT>: o status do grupo corresponde ao status mais crítico de todas as entidades pertencentes. Use esta opção quando desejar que o status do grupo indique uma degradação ou interrupção do serviço assim que uma entidade do grupo não estiver operacional. Você também pode decidir acumular o pior status somente depois que um determinado montante de entidades não estiver operacional.
+
+3. Salve a regra e prossiga para criar outra, se necessário.
+
+O status final workload é igual ao pior status entre todos os status de grupos individuais.
+
+<Callout variant="important">
+Neste cálculo final, qualquer status calculado automaticamente será substituído se um [status estático](#configure-static) tiver sido configurado por um gerenciador workload .
+</Callout>
+
+### Uma regra para entidade restante [#remaining-entities]
+
+Para uma configuração de status mais fácil e dinâmica, você pode usar um tipo de roll-up para todas as entidades que não são avaliadas em nenhuma outra regra que você tenha definido anteriormente. Em particular, se você não adicionar nenhuma outra regra, a regra para entidade restante levará em conta toda a entidade na workload.
+
+Quando combinada com a opção de agrupamento por tipo de entidade, essa regra especial permite que você tenha uma noção geral de como está o desempenho de cada tipo de entidade em sua workload , sem precisar configurar uma regra para cada tipo de entidade. Portanto, recomendamos que você sempre defina uma regra para todas as entidades restantes agrupadas por tipo e acumule seu pior status para detectar rapidamente quando todas as entidades em uma camada da sua workload stack não estão operacionais.
+
+<Callout variant="important">
+Após seis meses de inatividade, interromperemos automaticamente o cálculo do status. Você pode reativá-lo acessando a workload e configurando-a como ativa.
+</Callout>
+
+## Configurar política de alerta e condições [#alert-policy-conditions]
+
+O terceiro método para determinar o status de integridade da carga de trabalho é configurar políticas de alerta e condições personalizadas. Este método permite definir condições específicas que acionarão alterações no status de integridade da carga de trabalho com base nos estados de alerta.
+
+Para configurar a política de alerta e as condições:
+
+1. Na página <DNT>**Workload status setup**</DNT>, selecione a opção <DNT>**Alert policy and conditions**</DNT>
+
+2. Clique em <DNT>**Configure**</DNT> para abrir a página <DNT>**Workload health status conditions**</DNT>
+
+3. Na página de condições, você pode:
+
+   * <DNT>**Search**</DNT> para condições existentes por nome, ID da condição ou nome da política
+   * <DNT>**Filter**</DNT> condições usando os filtros suspensos para Nome da Condição e Nome da Política
+   * <DNT>**Create new alert policy**</DNT>: Clique em <DNT>**+ New alert policy**</DNT> para definir uma nova política
+   * <DNT>**Create new alert condition**</DNT>: Clique em <DNT>**+ New alert condition**</DNT> para adicionar condições específicas
+
+O status dessas condições determinará a integridade da carga de trabalho. Quaisquer problemas criados por essas condições farão com que a carga de trabalho seja reportada como não íntegra.
+
+<Callout variant="tip">
+Use a política de alerta e as condições quando quiser controle granular sobre o que torna sua carga de trabalho não íntegra. Este método é particularmente útil quando você tem limites específicos ou combinações de condições que devem acionar mudanças no status da carga de trabalho.
+</Callout>
+
+## Efeitos da troca de métodos de configuração [#switching-setup-methods]
+
+### Atraso de status de saúde
+
+Ao alterar o método de configuração do workload (por exemplo, mudando de <DNT>**Automatic**</DNT> para <DNT>**Alert policy and conditions**</DNT>), o status de saúde geral do workload pode levar alguns minutos para ser atualizado. Esse atraso temporário ocorre enquanto o sistema reconcilia a avaliação de saúde entre os serviços de backend.
+
+## Definir um status workload estático [#configure-static]
+
+Se quiser comunicar o status da sua workload , independentemente de qualquer [cálculo automático](#configure-automatic) baseado em regras, você poderá definir um valor de status estático para sua workload a partir de um dos [valores de status disponíveis](/docs/workload-status#obtain-status).
+
+Isto é útil durante tarefas de manutenção para comunicar a outras equipas que o estado da sua workload foi interrompido, para fornecer mais informações ou para fornecer o tempo que espera que a workload esteja novamente operacional.
+
+<Callout variant="tip">
+Se você precisar comunicar regularmente um status temporário devido aos seus processos de implantação ou operações, poderá automatizar a configuração do status estático integrando a [API](/docs/apis/nerdgraph/tutorials/nerdgraph-workloads-api-tutorials) ao seu fluxo de trabalho.
+</Callout>
+
+Para configurar um status workload estático:
+
+1. Na página <DNT>**Workload status setup**</DNT>, selecione a opção <DNT>**Static**</DNT>
+2. Clique em <DNT>**Configure**</DNT> para abrir o painel <DNT>**Set static status**</DNT>
+3. No dropdown <DNT>**Select status**</DNT>, escolha um valor de status (como <DNT>**Operational**</DNT>, <DNT>**Degraded**</DNT>, <DNT>**Critical**</DNT> ou <DNT>**Disrupted**</DNT>)
+4. Opcionalmente, insira um breve resumo no campo <DNT>**Summary**</DNT> para ajudar a identificar o status rapidamente
+5. Opcionalmente, forneça uma descrição detalhada no campo <DNT>**Description**</DNT> explicando o que está acontecendo com a carga de trabalho
+6. Clique em <DNT>**Save**</DNT> para aplicar o status estático
+7. De volta à página principal de configuração de status, clique em <DNT>**Save**</DNT> para confirmar sua configuração
+
+Qualquer status estático configurado sempre substitui quaisquer outros valores de status [calculados automaticamente](#configure-automatic). O status estático é particularmente útil quando você deseja sobrepor regras automáticas e comunicar um determinado status durante janelas de manutenção ou outros eventos planejados.
+
+## Entenda o valor do status [#understand-value]
+
+Na página <DNT>**Workload status setup**</DNT>, você pode ver como o cálculo de status é configurado e o resultado de todas as regras e/ou status estáticos que determinam o valor do status global da carga de trabalho.
+
+### Painel de pré-visualização
+
+O painel <DNT>**Preview**</DNT> no lado direito da página exibe:
+
+* <DNT>**Unsaved changes indicator**</DNT>: Um banner é exibido quando você tem alterações de configuração pendentes
+* <DNT>**Entity status**</DNT>: O status atual das entidades na sua carga de trabalho
+* <DNT>**Workload status**</DNT>: o status geral calculado (por exemplo, &quot;<DNT>**Operational**</DNT>&quot;) com um indicador colorido
+* <DNT>**Status explanation**</DNT>: Detalhes sobre quais regras ou condições determinam o status atual
+
+Qualquer alteração que você fizer na configuração de status só entrará em vigor depois que você salvar as alterações. A pré-visualização é atualizada em tempo real conforme você modifica sua configuração, mostrando qual seria o resultado do status se você salvasse a configuração naquele momento.
+
+Para salvar sua configuração:
+
+1. Revise a pré-visualização para garantir que o cálculo do status corresponda às suas expectativas
+2. Clique em <DNT>**Save**</DNT> no canto inferior direito da página
+3. A nova configuração entrará em vigor imediatamente
+
+<img title="workloads_preview_1.png" alt="workloads_preview_1.png" src="/images/solutions_screenshot-crop_workloads-preview.webp" />
+
+### Ordem de cálculo de status
+
+Quando múltiplos métodos de configuração estiverem ativos:
+
+1. <DNT>**Static status**</DNT> sempre tem precedência e substitui quaisquer cálculos automáticos ou baseados em alertas
+2. Se nenhum status estático for definido, <DNT>**Automatic rules**</DNT> ou <DNT>**Alert policy and conditions**</DNT> determinam o status com base na sua configuração
+3. O status da carga de trabalho é igual ao pior status entre todas as regras ou condições avaliadas

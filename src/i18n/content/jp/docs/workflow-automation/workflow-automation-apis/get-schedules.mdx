@@ -1,0 +1,105 @@
+---
+title: スケジュールを取得
+tags:
+  - workflow automation
+  - workflow
+  - Get Schedules
+  - workflow automation API
+metaDescription: Returns information about schedules.
+freshnessValidatedDate: '2026-10-27T00:00:00.000Z'
+translationType: machine
+---
+
+スケジュールに関する情報を返すには、`workflowAutomation.schedules`クエリを使用します。
+
+## 入力 [#input-parameters]
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+パラメータ
+</th>
+
+<th>
+データ型
+</th>
+
+<th>
+説明
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`account.id`
+</td>
+
+<td>
+数
+</td>
+
+<td>
+（必須）アカウントID。
+</td>
+</tr>
+</tbody>
+</table>
+
+## サンプルリクエスト [#sample-request]
+
+```graphql
+{
+  actor {
+    account(id: 12345678) {
+      workflowAutomation {
+        schedules {
+          results {
+            definition {
+              name
+              scope {
+                id
+                type
+              }
+              version
+            }
+            schedule {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+## サンプル回答 [#sample-response]
+
+クエリは次を返します:
+
+* `schedules.results`: スケジュール オブジェクトの配列。各オブジェクトには次のものが含まれます。
+
+  * `definition.name`: ワークフロー定義名
+  * `definition.scope.id`: アカウントID
+  * `definition.scope.type`: スコープタイプ
+  * `definition.version`: ワークフロー定義バージョン
+  * `schedule.id`: スケジュールの一意の識別子
+
+## 関連トピック [#related-topics]
+
+<DocTiles>
+<DocTile title="スケジュールを取得" path="/docs/workflow-automation/workflow-automation-apis/get-schedule">
+特定のスケジュールに関する詳細情報を取得する
+</DocTile>
+
+<DocTile title="スケジュールを作成" path="/docs/workflow-automation/workflow-automation-apis/create-schedule">
+新しいワークフロースケジュールを追加する
+</DocTile>
+
+<DocTile title="スケジュールを削除" path="/docs/workflow-automation/workflow-automation-apis/delete-schedule">
+リストからスケジュールを削除する
+</DocTile>
+</DocTiles>

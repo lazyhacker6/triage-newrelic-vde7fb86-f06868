@@ -1,0 +1,171 @@
+---
+title: Acciones de Slack
+tags:
+  - workflow automation
+  - workflow
+  - workflow automation actions
+  - Slack actions
+  - communication actions
+  - Slack Chat actions
+metaDescription: 'Reference for all Slack chat actions in the workflow automation actions catalog: post messages and get message reactions from Slack channels.'
+freshnessValidatedDate: '2026-09-18T00:00:00.000Z'
+translationType: machine
+---
+
+Esta página proporciona una referencia de todas las acciones de chat de Slack disponibles en el catálogo de acciones de automatización del flujo de trabajo. Estas acciones permiten realizar operaciones de mensajería de Slack desde sus flujos de trabajo.
+
+## Requisitos previos
+
+Antes de usar las acciones de Slack en la automatización del flujo de trabajo, asegúrese de tener:
+
+* Un espacio de trabajo de Slack con las licencias adecuadas.
+* Un token de bot de Slack configurado como secreto en la automatización del flujo de trabajo.
+* Acceso a los canales de Slack donde deseas enviar mensajes.
+
+## Configurar la integración de Slack [#slack-configuration]
+
+Esta sección detalla las instrucciones para configurar una aplicación Slack con los permisos de alcance mínimos para permitir las acciones de Slack de automatización del flujo de trabajo.
+
+### Crear una aplicación de Slack
+
+1. Vaya a la [Slack API](https://api.slack.com/apps) &gt; **Create New App &gt; From Scratch**
+
+2. Dale un nombre a tu aplicación y selecciona un espacio de trabajo, luego haz clic en **Create App**.
+
+3. Al crear, vaya a **App Home** en la navegación izquierda y asegúrese de que su bot esté en línea.
+
+   <img width="40%;" style={{align: "left"}} title="Always show My Bot as Online" alt="The Slack App Home page with the My Bot online status highlighted." src="/images/my-bot-always-online.webp" />
+
+### Configurar permisos de OAuth
+
+1. En la navegación izquierda, seleccione **OAuth &amp; Permissions**.
+
+2. Desplácese hacia abajo hasta la sección **Bot Token Scopes** y agregue los siguientes ámbitos para permitir los usos de la acción de automatización del flujo de trabajo:
+
+   * `chat:write` - Requerido para publicar un mensaje
+   * `reactions:read` - Requerido para obtener reacción de un hilo
+   * `files:write` - Requerido para subir un archivo adjunto a un hilo
+
+   <img width="40%;" style={{align: "left"}} title="Workflow automation Slack scopes" alt="The image of the scope that needs to be added for workflow automation Slack actions." src="/images/slack-workflow-scopes.webp" />
+
+3. Desplazar hacia arriba y haga clic en el botón **Install to \[espacio de trabajo]** para iniciar la configuración de OAuth con su espacio de trabajo de Slack.
+
+4. Deberías ver un mensaje de confirmación. Haz clic en **Allow** para confirmar.
+
+5. Tras el éxito, copia el **Bot token** y guárdalo para el siguiente paso. El token debe comenzar con `xoxb-...`.
+
+### Agregar la aplicación a los canales
+
+Ahora que la aplicación Slack está creada y configurada, agrégala a los canales de Slack que quieras usar editando las **Integraciones** de ese canal y agregando la aplicación Slack.
+
+### Configuración de New Relic
+
+Una vez que haya configurado una aplicación de Slack y obtenido un token de bot, almacene esta credencial en la gestión de secretos de New Relic utilizando la mutación de GraphQL a continuación:
+
+```graphql
+mutation {
+  secretsManagementCreateSecret(
+    scope: {type: ACCOUNT id: "12345678"}
+    namespace: "slack"
+    key: "my-app-bot-token"
+    description: "A slack token to send messages with newrelic workflow automation"
+    value: "xoxb-..."
+  ) {
+    key
+  }
+}
+```
+
+Configura los siguientes valores:
+
+* `id` - Su ID de cuenta de New Relic
+* `namespace` - Opcional, use cualquier cadena alfanumérica para categorizar su secreto
+* `key` - Use una cadena alfanumérica para hacer referencia a este secreto
+* `description` - Descripción opcional para el secreto
+* `value` - El token del bot de Slack que copió del paso anterior
+
+Puede ejecutar esta mutación utilizando el [explorador NerdGraph GraphiQL](https://one.newrelic.com/nerdgraph-graphiql) con su clave de API de usuario de New Relic. Una vez enviado correctamente, debería ver un resultado similar a este:
+
+```json
+{
+  "data": {
+    "secretsManagementCreateSecret": {
+      "key": "my-app-bot-token"
+    }
+  }
+}
+```
+
+### Usar el token de Slack en los flujos de trabajo
+
+Use la función de automatización del flujo de trabajo aprovechando el secreto del token del bot de Slack almacenado con su espacio de nombres y nombres de clave.
+
+**Ejemplo:**
+
+```yaml
+name: to-slack
+
+steps:
+  - name: postCsv
+    type: action
+    action: slack.chat.postMessage
+    version: 1
+    inputs:
+      channel: test-channel-workflow
+      text: "Hello World!"
+      token: ${{ :secrets:slack:my-app-bot-token }}
+```
+
+<Callout variant="tip">
+  Si no usó un espacio de nombres, elimine la parte `:namespace` de la entrada del token, así: `${{ :secrets:my-app-bot-token }}`
+</Callout>
+
+## Acciones de Slack
+
+<table>
+  <thead>
+    <tr>
+      <th>
+        Identificador de acción
+      </th>
+
+      <th>
+        Descripción
+      </th>
+
+      <th>
+        Referencia
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        `slack.chat.postMessage`
+      </td>
+
+      <td>
+        Envía un mensaje a un canal de Slack, con un archivo adjunto opcional.
+      </td>
+
+      <td>
+        [Publicar un mensaje](/docs/workflow-automation/setup-and-configure/actions-catalog/slack/slack-chat-post-message)
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `slack.chat.getReactions`
+      </td>
+
+      <td>
+        Obtiene reacciones de emoji en un mensaje de Slack, esperando hasta un límite de tiempo configurable.
+      </td>
+
+      <td>
+        [Obtener reacciones del mensaje](/docs/workflow-automation/setup-and-configure/actions-catalog/slack/slack-chat-get-reactions)
+      </td>
+    </tr>
+  </tbody>
+</table>

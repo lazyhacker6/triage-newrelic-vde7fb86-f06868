@@ -1,0 +1,139 @@
+---
+title: シンセティックモニタリング。ロードタイムの把握
+tags:
+  - Synthetics
+  - Synthetic monitoring
+  - Pages
+metaDescription: 'Use the Resources page to understand how your website''s resources perform. Compare usage across resources, or view individual resource loads.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+<DNT>**Resources**</DNT>ページを使用して、Web サイト上の各リソースの読み込み時間への影響を把握します。[リソースの読み込み時間](#resources-load-time)、[サードパーティによる所要時間](#third-parties)、[不規則な応答コードの](#response-codes)グラフを使用して概要を把握し、[リソース リストを](#resources-list)使用して大きな CSS ファイルや画像などの影響の大きいリソースを特定します。
+
+また、 [詳細なリソースメトリクス](#detailed-metrics) を使って、特定のリソースを調査することができます。これは、1つのリソースのパフォーマンス情報を集約したものです。さらに深く掘り下げて、 [そのリソースの1つのロードを見ることができます。](#resource-results) 正確なリクエストとレスポンスのヘッダーを使用して、パフォーマンスの問題をピンポイントで特定します。
+
+## リソースのページを見る [#viewing]
+
+モニターの<DNT>**Resources**</DNT>ページにアクセスするには、 <DNT>**[one.newrelic.com](https://one.newrelic.com/synthetics-nerdlets) &gt; Synthetic monitoring &gt; (select a monitor) &gt; Resources**</DNT>に移動してください。
+
+<img title="screen-synthetics-resources.png" alt="screen-synthetics-resources.png" src="/images/synthetic_screenshot-full_resources-Page.webp" />
+
+<figcaption>
+  <DNT>**[one.newrelic.com](https://one.newrelic.com/synthetics-nerdlets) &gt; Synthetic monitoring &gt; (select a monitor) &gt; Resources**</DNT>: <DNT>**Resources**</DNT>ページを使用して、Web サイト上の各リソースのパフォーマンスを分析し、[個々のリソース負荷](#resource-results)に関する詳細なメトリクスにアクセスします。
+</figcaption>
+
+## リソースメトリクスの理解 [#understanding]
+
+<DNT>**Resources**</DNT>ページを使用して、Web サイト上の各リソースのパフォーマンスへの影響を把握します。
+
+* <DNT>**Resources list**</DNT>: モニター Web サイト上のリソースを<DNT>**average download time**</DNT>別にリストします。 このリストを使用して、ダウンロード時間を短縮し、Web サイトのパフォーマンスを最適化します。また、 <DNT>**Search all resources**</DNT>フィールドで特定のリソースを検索して、その読み込み時間を表示することもできます。リソースを選択して[、個々のリソースのメトリクスを表示します](#individual)。
+* <DNT>**Load time**</DNT>: すべてのリソースの平均読み込み時間を、リソース タイプ (`jpeg` 、 `json` 、 `javascript`など) 別に分類してグラフ化します。このグラフを使用して、Web サイトの読み込み時間が時間の経過とともにどのように変化するかを理解します。
+* <DNT>**Time spent by third parties**</DNT>: Web フォント、埋め込まれた Twitter タイムライン、外部でホストされた画像など、すべてのサードパーティ リソースの平均読み込み時間をグラフ化します。このグラフを使用して、サードパーティの Web サイトが Web サイトのパフォーマンスに影響を与えているかどうかを確認します。
+* <DNT>**Irregular response codes**</DNT>: モニターが受信した否定的な HTTP 応答コード ([HTTP ステータス コード](http://en.wikipedia.org/wiki/List_of_HTTP_status_codes)とも呼ばれる) の数をグラフ化します。このグラフには、300 (リダイレクト)、400 (クライアント エラー)、および 500 (サーバー エラー) の範囲のすべての応答が含まれます。100 または 200 の範囲の応答はカウントされません。外形監視は、多数の[カスタム応答コード](/docs/synthetics/new-relic-synthetics/using-monitors/synthetics-response-codes)も収集します。
+
+これらの指標を分析することで、問題のあるリソースを突き止め、そのパフォーマンスを改善することができます。例えば、最適化されていないロゴ画像は、サイトを訪れたすべての人にスローダウンをもたらすかもしれませんし、米国内のサーバーからのみ提供されているトラッカーは、米国外からの訪問者にスローパフォーマンスをもたらすかもしれません。
+
+## 詳細なリソースメトリクスの表示 [#detailed-metrics]
+
+サイト上の各リソースの詳細なメトリクスを表示することもできます。 詳細なメトリクスを表示するには、[特定のリソースを見つける](#locate-resource)か、 <DNT>**Resources**</DNT>ページから興味のあるリソースを選択します。 リソースを選択すると、そのリソースの概要メトリックを表示したり、[個々のリソース負荷を表示し](#resource-results)たりできます。
+
+* <DNT>**Max duration**</DNT>、 <DNT>**Min duration**</DNT> 、 <DNT>**Avg duration**</DNT> :[選択した時間枠](#time-frame)におけるこのリソースの読み込み時間メトリクス。
+* <DNT>**For 50% of requests**</DNT>: requestsの<DNT>**fastest**</DNT> 50% の最大ダウンロード時間。 これは、このリソースに対するrequestsの 50% が指定された時間内またはそれより早く完了したことを意味します。
+* <DNT>**For 95% of requests**</DNT>: requestsの<DNT>**fastest**</DNT> 95% の最大ダウンロード時間。 これは、このリソースに対するrequestsの 95% が指定された時間内に、またはより早く完了したことを意味します。
+* <DNT>**Average load time**</DNT>:[選択した期間](#time-frame)におけるこのリソースの平均読み込み時間をグラフ化します。このグラフを使用して、Web サイトの最適化 (画像サイズの縮小や CSS の縮小など) が機能しているかどうかを確認します。
+
+また、[グラフ要素を非表示/表示にしたり](#hide-unhide)、場所でフィルタリングしたり、[リソース結果](#resource-results)リストを<DNT>**Download time**</DNT>または<DNT>**DNS lookup**</DNT>で並べ替えたりすることもできます。リソース名の上にマウスを置くと、完全なパスが表示されます (動的に生成されたリソース名が非常に長い場合に便利です)。
+
+## 個々のリソースの負荷を表示 [#resource-results]
+
+特定のリソースの[詳細なメトリクス](#detailed-metrics)を表示した後、個別のリソース負荷を選択して、1 つのパフォーマンスの悪い集中イベントを深く理解できます。 その後、合計接続時間の内訳を表示して問題が発生した場所を把握し、リクエスト ヘッダーとレスポンス ヘッダーを調べることができます。
+
+<img title="screen-synthetics-individual-resource-results.png" alt="screen-synthetics-individual-resource-results.png" src="/images/synthetic_screenshot-full_find-resource-load-details.webp" />
+
+<figcaption>
+  <DNT>**[one.newrelic.com &gt; Synthetic monitoring](https://one.newrelic.com/synthetics-nerdlets)**</DNT> &gt; (モニターを選択) &gt; <DNT>**Resources**</DNT> &gt; (リソースを選択) &gt; (リソース負荷を選択): 個々のリソース負荷を選択すると、接続時間、要求ヘッダー、応答ヘッダーの詳細な内訳が表示されます。[HTTP アーカイブ 1.2 仕様](http://www.softwareishard.com/blog/har-12-spec/#timings)から取得したネットワーク タイミング構造。
+</figcaption>
+
+## ページ機能の利用 [#ui-functions]
+
+<DNT>**Resources**</DNT>ページでは、以下の機能がサポートされます。
+
+<table>
+  <thead>
+    <tr>
+      <th width={200}>
+        <DNT>
+          **If you want to...**
+        </DNT>
+      </th>
+
+      <th>
+        <DNT>
+          **Do this...**
+        </DNT>
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr id="sort-results">
+      <td>
+        結果リストのソート
+      </td>
+
+      <td>
+        <DNT>**Sort By**</DNT>ドロップダウンから並べ替えオプションを選択します。
+
+        * 最も読み込みが遅いリソースを表示するには、 <DNT>**Average download time**</DNT>で並べ替えます。
+        * 最大のリソースを表示するには、 <DNT>**Average size**</DNT>で並べ替えます。
+      </td>
+    </tr>
+
+    <tr id="hide-unhide">
+      <td>
+        チャート要素の表示・非表示
+      </td>
+
+      <td>
+        チャートの要素を選択して、非表示にしたり、解除したりすることができます。
+
+        <img title="crop-quick-monitor-switcher.png" alt="switch monitors by selecting the monitor name" src="/images/synthetic_screenshot-crop_hide-unhide-differences.webp" />
+      </td>
+    </tr>
+
+    <tr id="locate-resource">
+      <td>
+        特定のリソースを探す
+      </td>
+
+      <td>
+        <DNT>**Search all resources**</DNT>フィールドにリソース名の一部を入力します (例: <DNT>**search-icon.webp**</DNT>または<DNT>**latest.json**</DNT>)。リソースを選択すると、[そのリソースの詳細なメトリクスが表示されます](#detailed-metrics)。
+      </td>
+    </tr>
+
+    <tr id="quickly-switch">
+      <td>
+        別のモニターに素早くアクセス
+      </td>
+
+      <td>
+        1. 画面上部の現在のモニターの名前をクリックすると、ドロップダウンメニューが表示されます。
+
+        2. 最近のモニターのリストから選択するか、検索フィールドに名前を入力して特定のモニターを検索します。
+
+           <img title="Switch synthetic monitor quickly" alt="Switch synthetic monitor quickly" src="/images/synthetic_screenshot-crop_new-monitor-quick.webp" />
+      </td>
+    </tr>
+
+    <tr id="time-frame">
+      <td>
+        タイムフレームの変更
+      </td>
+
+      <td>
+        [タイム ピッカーを](/docs/query-your-data/explore-query-data/dashboards/manage-your-dashboard/#dash-time-picker) 使用して、返される結果の数を調整します。
+      </td>
+    </tr>
+  </tbody>
+</table>

@@ -1,0 +1,83 @@
+---
+title: Interface de workloads padrão
+tags:
+  - New Relic
+  - Use New Relic
+  - Workloads
+  - Standard workloads
+metaDescription: 'In New Relic, use the standard workload UI to group together entities that make up a specific business service, making it easier to isolate and troubleshoot issues.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Os workloads padrão agregam suas entidades operacionais em uma visão única e coesa para ajudar a monitorar o desempenho e entender a saúde geral do serviço.
+
+## Página de resumo [#summary]
+
+A página <DNT>**Summary**</DNT> serve como seu dashboard operacional central, combinando métricas de saúde do workload em tempo real, alterações recentes e telemetria de desempenho em um só lugar. Ele proporciona visibilidade imediata de problemas ativos e ajuda a correlacionar rapidamente as interrupções em toda a sua stack.
+
+<img title="Workload summary page" alt="Workload summary page" src="/images/workloads_screenshot-crop_workload-summary-page.webp" />
+
+## Navegando na página de resumo [#navigating-summary]
+
+Recomendamos começar pela linha do tempo What&apos;s changed quando o status de um workload muda para ver se implantações recentes, picos de grupos de erros ou atividades de alerta se correlacionam com mudanças de desempenho. Por exemplo, se você notar um pico de grupo de erros na linha do tempo, use o filtro de integridade para isolar entidades nos estados Crítico ou Aviso. Em seguida, verifique as métricas clássicas agregadas para essas entidades críticas para confirmar se suas taxas de erros tiveram picos junto com esse evento. Seguir esse caminho ajuda a delimitar o que está causando a mudança de integridade antes de selecionar uma entidade específica para se aprofundar mais.
+
+<img title="Workload health filter" alt="Screenshot of the health status filter menu on the Workload summary page, showing Critical, Warning, Operational, Not configured, and Not reporting options" src="/images/workloads_screenshot-crop_navigating-summary-filter.webp" />
+
+## Salvar visualizações de múltiplas cargas de trabalho [#save-views]
+
+Se você precisar ver frequentemente o status de um determinado grupo de cargas de trabalho, poderá salvar visualizações que contenham apenas essas cargas de trabalho.
+
+Para criar uma visualização:
+
+1. Vá para <DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Workloads**</DNT>.
+2. Clique no <Icon name="fe-edit-2" /> ícone `Edit view`.
+3. Dê um nome significativo à visualização (como o nome de uma equipe ou unidade de negócios) e selecione uma conta à qual associar a visualização.
+4. Selecione a carga de trabalho que você deseja incluir na visualização, por nome ou tag.
+
+As visualizações de status são mais úteis para equipes responsáveis por mais de uma workload, funções de suporte e gerentes de unidades de negócios.
+
+## Erros [#errors]
+
+A página <DNT>**Errors**</DNT> fornece insights sobre a taxa de erros, a contagem e os tipos de erros que ocorrem na workload. Ajuda você a identificar áreas problemáticas e priorizar soluções. Para mais informações, consulte [Errors Inbox.](/docs/triage-inbox/getting-started/)
+
+<img align="left" title="Error page" alt="Error summary page" src="/images/workload-error.webp" />
+
+## Riscos de desempenho [#performance-risks]
+
+A página <DNT>**Performance risks**</DNT> mostra os riscos de desempenho detectados nas entidades que compõem o workload, para que você não precise verificar cada entidade individualmente. Para mais informações, consulte [Caixa de entrada de riscos de desempenho](/docs/triage-inbox/performance-risks/introduction).
+
+<img title="Performance risks" alt="Screenshot showing the Performance risks page for a workload" src="/images/PRI_WorkloadsPRs.webp" />
+
+## Atividade [#activity]
+
+A página <DNT>**Activity**</DNT> mostra dados de desempenho relacionados à entidade na workload, juntamente com o evento que pode explicar quaisquer alterações nessas séries temporais.
+
+<img title="workload activity page" alt="workload activity page" src="/images/workloads_screenshot-crop_workload-activity-page.webp" />
+
+Aqui estão algumas das seções mais importantes:
+
+1. Painel vinculado. A partir daqui, você pode adicionar um painel relacionado à sua carga de trabalho, incluindo links para um painel pré-filtrado.
+2. Métricas clássicas. São gráficos com as métricas mais relevantes para cada tipo de entidade. Explore os gráficos para detectar correlações entre diferentes entidades (por exemplo, dois aplicativos) e diferentes camadas stack (por exemplo, aplicativos e hosts). A métrica que você vê pode ser personalizada no nível da conta ou da workload [por meio de nossa API NerdGraph](/docs/apis/nerdgraph/examples/golden-metrics-entities-nerdgraph-api-tutorial/#customize-golden-metrics).
+3. Fluxo de atividades. Inclui o horário de início e término do incidente e da anomalia referente à entidade workload . Também mostra outros tipos de eventos que podem explicar uma alteração no status ou no desempenho da workload, como implantação e alterações de configuração.
+
+## Ver mapas de carga de trabalho [#maps]
+
+Você pode visualizar um mapa que mostra como as entidades em sua workload se relacionam e afetam umas às outras.
+
+<img title="Workloads map" alt="A screenshot of a workloads map" src="/images/workloads_screenshot-crop_workload-map.webp" />
+
+Para saber mais sobre este mapa, consulte [Mapas em contexto](/docs/new-relic-solutions/new-relic-one/ui-data/maps-in-context).
+
+## Estado de saúde [#health-status]
+
+Para obter detalhes sobre esta página, consulte [Configuração de status](/docs/new-relic-solutions/new-relic-one/workloads/workload-status-configuration).
+
+## Configurações Gerais [#general-settings]
+
+A página <DNT>**General settings**</DNT> fornece informações sobre a equipe responsável pela workload. Contém:
+
+* A equipe responsável pela workload. Você pode incluir mais de uma equipe.
+* A descrição da workload . Compartilhe a finalidade da workload e a lógica de negócios que ela representa: É uma aplicação web? Uma API? Um processo backend ? Preencha detalhes relevantes para sua equipe ou para outras equipes de sua organização.
+* Informações de contato. No menu suspenso, escolha como sua equipe prefere ser contatada.
+* Links para os recursos mais relevantes para operar a workload. Aqui você pode adicionar links para runbooks, repositório de código, ferramentas de produtividade ou qualquer outra coisa.

@@ -1,0 +1,39 @@
+---
+title: Observabilidad de New Relic para SAP - ABAP Hosted
+metaDescription: Introduction to New Relic Observability for SAP - ABAP Hosted.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+New Relic Observabilidad para SAP - ABAP Hosted captura telemetry data de SAP (métricas, eventos, logs y trazas) y los envía a la plataforma New Relic para su análisis y visualización.
+
+## Sistema de monitoreo central vs. sistemas monitoreados
+
+Los sistemas SAP que proporcionan telemetry data se conocen como sistemas monitoreados. El sistema de monitoreo central es donde se instala <DNT>**NRM4SAP**</DNT> —recopila, transforma y transmite telemetry data. Por lo general, se instala <DNT>**NRM4SAP**</DNT> en un único sistema SAP como <DNT>**SAP Solution Manager (SolMan)**</DNT>. <DNT>**NRM4SAP**</DNT> no tiene dependencias funcionales de SolMan —sirve solo como punto de referencia aquí. <DNT>**NRM4SAP**</DNT> utiliza fuentes de datos estándar de SAP como <DNT>**ST-PI**</DNT>, clases MTE (componentes dentro de <DNT>**CCMS**</DNT>) y datos de rendimiento de <DNT>**STAD/ST03N**</DNT>, por lo que no es necesario instalar agentes adicionales en los sistemas monitoreados.
+
+A partir de la versión 3.0, <DNT>**NRM4SAP**</DNT> solo requiere componentes ABAP, que se despliegan exclusivamente en el sistema de monitoreo central.
+
+<img title="Central Monitoring System vs. Monitored Systems" alt="A diagram illustrating the Central Monitoring System vs. Monitored Systems" src="/images/agentless-architecture.webp" width="80%" />
+
+## Arquitectura de flujo de datos
+
+<DNT>**RFC**</DNT> las llamadas extraen telemetry data de SAP al sistema de monitoreo central. El <DNT>**ABAP Enterprise Connector**</DNT> procesa los datos y los transmite de forma segura a New Relic a través de <DNT>**HTTPS**</DNT>.
+
+<img title="Data Flow Architecture" alt="A diagram illustrating the data flow architecture" src="/images/SAP-Private-Cloud.webp" width="80%" />
+
+## Qué incluye
+
+Después de la instalación, puede usar el dashboard listo para usar y las alertas:
+
+* **Visibilidad de gestión**: vea la salud y el rendimiento del sistema SAP junto con otros sistemas de TI en dashboards centralizados.
+
+* **Monitoreo personalizado**: adapte el monitoreo a las necesidades específicas del negocio, como el seguimiento de puntos de integración en los flujos de trabajo de procesamiento de pedidos. Cree dashboards personalizados y visualizaciones usando los telemetry data recopilados.
+
+* **Alertas proactivas**: configure alertas para recibir notificaciones inmediatas de interrupciones del servicio. Esto le ayuda a mantener la continuidad y a solucionar los problemas rápidamente.
+
+## Próximos pasos
+
+Utilice estos recursos para comenzar:
+
+* [Preparación para la instalación](/docs/sap-solutions/before-you-begin): Revise los requisitos previos y los requisitos del sistema
+* [Instalar y configurar](/docs/sap-solutions/install-and-configure/install-new-relic-sap-abap-add-on-package): Comience con la instalación de NRM4SAP

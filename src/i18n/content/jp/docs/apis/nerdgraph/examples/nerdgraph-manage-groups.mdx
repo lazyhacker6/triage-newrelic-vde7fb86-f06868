@@ -1,0 +1,1136 @@
+---
+title: 'NerdGraphチュートリアル: グループとユーザーの管理'
+tags:
+  - APIs
+  - NerdGraph
+metaDescription: 'How to use New Relic''s NerdGraph API to manage groups and users, and grant access to roles.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+[NerdGraph API](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph)を使用して、ユーザー グループとそれらのグループがアクセスできる対象を表示および管理できます。UI でこれを行う方法については、 [ユーザー管理 UI のドキュメント](/docs/accounts/accounts-billing/new-relic-one-user-management/user-management-ui-and-tasks)を参照してください。
+
+NerdGraph を使用してユーザーを作成し、その情報を表示するには、「 [NerdGraph でユーザーを管理する](/docs/apis/nerdgraph/examples/nerdgraph-manage-users)」を参照してください。
+
+## 要件 [#requirements]
+
+NerdGraphを介してユーザーとグループを管理するためのいくつかの要件：
+
+* ユーザー グループとロールをカスタマイズするには[、Pro またはエンタープライズ エディション](https://newrelic.com/pricing)が必要です
+* [SCIMプロビジョニング](/docs/accounts/accounts/automated-user-management/automated-user-provisioning-single-sign)を使用している場合：その認証ドメインでは、グループとユーザーはSCIMを介して管理されるため、グループを作成したり、グループにユーザーを追加したりすることはできません。
+* [ユーザーのタイプ](/docs/accounts/accounts-billing/new-relic-one-user-management/user-type): コア ユーザーまたはフル プラットフォーム ユーザー
+* [役割](/docs/accounts/accounts-billing/new-relic-one-user-management/user-management-concepts/#roles)： <DNT>**Authentication Domain Manager**</DNT>
+
+## 始める前に [#concepts]
+
+NerdGraphを使用してユーザーを管理する前に：
+
+* [ユーザー管理の概念](/docs/accounts/accounts-billing/new-relic-one-user-management/user-management-concepts#understand-concepts)を十分に理解していることを確認してください
+* まだご覧になっていない場合は、 <DNT>**Access management**</DNT> UI をご覧になって、グループとユーザー アクセスの仕組みについての理解を深め、既存のグループについて理解を深めることをお勧めします。 これを実行する前に、作成する必要があるグループ アクセスの計画を作成することをお勧めします。こちらに[計画スプレッドシートの例を示し](https://docs.google.com/spreadsheets/d/1FnguDXRUX9FGY14oV4Gx6O08v4vNC2Pv0GGCsU7Pxuw/edit?usp=sharing)ます。
+* [NerdGraphエクスプローラー](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph/#explorer)には、これらのリクエストで使用されるフィールドを定義するドキュメントが組み込まれていることに注意してください。
+* [NewRelicアカウントへの変更を追跡できることに注意してください](/docs/data-apis/understand-data/event-data/query-account-audit-logs-nrauditevent)。
+
+## グループ作成の推奨ワークフロー [#flow]
+
+これらのクエリとミューテーションはさまざまな方法とさまざまな順序で使用できますが、グループを設定するための一般的なワークフローの 1 つを次に示します。
+
+1. ユーザーの情報と[利用可能な役割](#query-roles)を[クエリする](#query-users)：これは、NewRelicで使用しているユーザーと利用可能な役割を確実に理解するための最初の場所として役立ちます。始めたばかりの場合は、まだユーザーを追加していない可能性があり、標準の役割しか持っていない可能性があります。
+2. [オプション: 新しいグループを作成します](#create-group): <DNT>**Not available if using SCIM provisioning.**</DNT>既存のグループを使用することも、新しいグループを作成することもできます。 グループを作成したら、そのグループにロールとアカウントへのアクセス権を付与する必要があります。 グループ自体では、そのグループ内のユーザーにアクセス権は付与されないことに注意してください。ロールとアカウントが割り当てられている場合にのみ、ユーザーは実際に New Relic にアクセスできます。
+3. [グループへのアクセスを許可する : これは、ロールとアカウントへの](#grant-access)グループ アクセスを割り当てるものです。
+
+完了後、作成したグループにすでにユーザーが存在し、そのグループが少なくとも1つのロールとアカウントへのアクセス権を持っている場合、数分以内にアクセスできるようになります（ただし、[EUおよびJP地域のNew Relicアカウント](/docs/using-new-relic/welcome-new-relic/get-started/our-eu-us-region-data-centers)の場合、これには最大20分ほどかかることがあります）。ユーザーがまだそのグループにいない場合（新しいグループを作成したばかりの場合はこれに該当します）、[そのグループにユーザーを追加](/docs/accounts/accounts-billing/new-relic-one-user-management/account-user-mgmt-tutorial#add-users)できます。
+
+## クエリ グループ [#query-groups]
+
+特定の認証ドメイン内の既存のグループを照会する例を次に示します。
+
+```graphql
+{
+  actor {
+    organization {
+      userManagement {
+        authenticationDomains(id: "YOUR_AUTHENTICATION_DOMAIN_ID") {
+          authenticationDomains {
+            groups {
+              groups {
+                displayName
+                id
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+## 既存の役割を照会する [#query-roles]
+
+ロールに関する情報を返す例を次に示します。
+
+```graphql
+{
+  actor {
+    organization {
+      authorizationManagement {
+        authenticationDomains {
+          authenticationDomains {
+            groups {
+              groups {
+                roles {
+                  roles {
+                    accountId
+                    displayName
+                    id
+                    name
+                    organizationId
+                    type
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+結果の例を次に示します。
+
+```json
+{
+  "data": {
+    "actor": {
+      "organization": {
+        "authorizationManagement": {
+          "authenticationDomains": {
+            "authenticationDomains": [
+              {
+                "groups": {
+                  "groups": [
+                    {
+                      "roles": {
+                        "roles": [
+                          {
+                            "accountId": "account-id",
+                            "displayName": "name",
+                            "id": "id",
+                            "name": "role-name",
+                            "organizationId": null,
+                            "type": "role-type"
+                          },
+                          {
+                            "accountId":null,
+                            "displayName": "name",
+                            "id": "id",
+                            "name": "role-name",
+                            "organizationId": "organization-id",
+                            "type": "role-type"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+## ユーザーに問い合わせる [#query-users]
+
+### ユーザー情報のクエリ [#query-user-info]
+
+ユーザーに関する情報をクエリする例を次に示します。
+
+```graphql
+{
+  actor {
+    organization {
+      userManagement {
+        authenticationDomains {
+          authenticationDomains {
+            groups {
+              groups {
+                users {
+                  users {
+                    id
+                    email
+                    name
+                    timeZone
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+結果の例を次に示します。
+
+```json
+{
+  "data": {
+    "actor": {
+      "organization": {
+        "userManagement": {
+          "authenticationDomains": {
+            "authenticationDomains": [
+              {
+                "groups": {
+                  "groups": [
+                    {
+                      "users": {
+                        "users": [
+                          {
+                            "email": "example@newrelic.com",
+                            "id": "123456789",
+                            "name": "Example Relic",
+                            "timeZone": "Etc/UTC"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### ユーザーのグループメンバーシップをクエリする [#query-user-groups]
+
+ユーザーが所属するグループをクエリする例を次に示します。
+
+```graphql
+{
+  actor {
+    organization {
+      userManagement {
+        authenticationDomains {
+          authenticationDomains {
+            users {
+              users {
+                groups {
+                  groups {
+                    displayName
+                  }
+                }
+                email
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+応答の例を次に示します。
+
+```json
+{
+  "data": {
+    "actor": {
+      "organization": {
+        "userManagement": {
+          "authenticationDomains": {
+            "authenticationDomains": [
+              {
+                "users": {
+                  "users": [
+                    {
+                      "email": "pete@example.com",
+                      "groups": {
+                        "groups": [
+                          {
+                            "displayName": "Admin"
+                          },
+                          {
+                            "displayName": "Basic Sub Account"
+                          }
+                        ]
+                      }
+                    },
+```
+
+## ロールを作成する [#create-role]
+
+カスタム ロールを作成する前に、そのロールに割り当てる権限を特定する必要があります。
+
+### 権限IDを取得する
+
+アカウント スコープのアクセス許可のリストを取得するには、次のクエリを使用します。
+
+```graphql
+query {
+  customerAdministration {
+    permissions {
+      items {
+        category
+        feature
+        id
+        product
+        subsetIds
+      }
+      nextCursor
+    }
+  }
+}
+```
+
+組織をスコープとする権限の場合は、代わりに次のクエリを実行します。
+
+```graphql
+query {
+  customerAdministration {
+    permissions(filter: {scope: {eq: "organization"}}) {
+      items {
+        category
+        feature
+        id
+        product
+        subsetIds
+      }
+      nextCursor
+    }
+  }
+}
+```
+
+次のフィールドに注意してください。
+
+* `items`: 権限オブジェクトの配列。各オブジェクトには次の属性が含まれます。
+
+  * `category`: (文字列) 権限が属するカテゴリまたはグループ。
+  * `feature`: (文字列) 権限が関連付けられている特定の機能。
+  * `id`: (文字列) 各権限の一意の識別子。
+  * `product`: (文字列) 権限が適用される製品。
+  * `subsetIds`: (配列) サブセットまたは関連する権限を表す ID のリスト。
+
+### カスタムロールを作成する
+
+新しいロールに割り当てる各権限の一意の識別子を取得したら、次のミューテーションを使用して[ロール](/docs/accounts/accounts-billing/new-relic-one-user-management/user-management-concepts/#roles)を作成します。アカウント、組織、エンティティ レベルの 3 つの異なるスコープでロールを作成できます。作成するロールのタイプは、割り当てる権限の範囲と一致する必要があります。
+
+#### アカウントスコープのロール
+
+```graphql
+mutation {
+  customRoleCreate(
+    container: {
+      id: "YOUR_ORGANIZATION_ID"
+      type: "ORGANIZATION"
+    }
+    name: "MY CUSTOM ACCOUNT ROLE"
+    permissionIds: [1, 2, 3]
+    scope: "account"
+  ) {
+    id
+  }
+}
+```
+
+#### 組織スコープのロール
+
+```graphql
+mutation {
+  customRoleCreate(
+    container: {
+      id: "YOUR_ORGANIZATION_ID"
+      type: "ORGANIZATION"
+    }
+    name: "MY CUSTOM ORGANIZATION ROLE"
+    permissionIds: [4, 5, 6]
+    scope: "organization"
+  ) {
+    id
+  }
+}
+```
+
+#### エンティティスコープのロール
+
+```graphql
+mutation {
+  customRoleCreate(
+    container: {
+      id: "YOUR_ORGANIZATION_ID"
+      type: "ORGANIZATION"
+    }
+    name: "MY CUSTOM ENTITY ROLE"
+    permissionIds: [7, 8, 9]
+    scope: "entity"
+  ) {
+    id
+  }
+}
+```
+
+### パラメーター
+
+* `container`：
+
+  * `id`: (文字列) 組織の一意の識別子。`YOUR_ORGANIZATION_ID`実際の組織 ID に置き換えます。
+  * `type`: (文字列) コンテナの種類。現在サポートされているタイプは`"ORGANIZATION"`のみです。
+
+* `name`: (文字列) カスタム ロールに割り当てられた名前。
+
+* `permissionIds`: (配列) カスタム ロールに割り当てられた機能を表す権限 ID のリスト。上記の権限クエリから取得した ID を使用します。
+
+* `scope`: (文字列) ロールの権限が適用されるレベル。サポートされる値:
+
+  * `"account"`: ロール権限はアカウントレベルで適用されます
+  * `"organization"`: 役割権限は組織レベルで適用されます
+  * `"entity"`: ロール権限はエンティティレベルで適用されます
+
+### レスポンス
+
+* `id`: 新しく作成されたカスタム ロールの一意の ID を返します。
+
+  <Callout variant="important">
+    * ミューテーションを実行する前に、 `YOUR_ORGANIZATION_ID`特定の組織 ID に置き換えます。
+    * 例`permissionIds` 、権限クエリから取得した実際の権限 ID に置き換えます。
+    * 使用する権限 ID が、作成するスコープと一致していることを確認します。組織ロールには組織スコープの権限を使用し、アカウント ロールにはアカウント スコープの権限を使用します。
+  </Callout>
+
+## 役割の更新 [#update-role]
+
+[ロールを](/docs/accounts/accounts-billing/new-relic-one-user-management/user-management-concepts/#roles)更新する例を次に示します。
+
+```graphql
+mutation {
+  customRoleUpdate(
+    id: ROLE_ID
+    name: "MY NEW CUSTOM ROLE NAME"
+    permissionIds: [4,5,6] 
+  ) {
+    id
+  }
+}
+```
+
+### パラメーター
+
+* `id`: 変更するカスタム ロールの一意の識別子。 `ROLE_ID`ロールの実際の ID に置き換えます。
+* `name`: カスタム ロールに割り当てる新しい名前。 この例では、 `MY NEW CUSTOM ROLE NAME`です。
+* `permissionIds`: このロールに割り当てる権限 ID の配列。 これらの ID が有効であり、実装する予定の権限に対応していることを確認してください。
+
+## 役割を削除する [#delete-role]
+
+[ロールを](/docs/accounts/accounts-billing/new-relic-one-user-management/user-management-concepts/#roles)削除する例を次に示します。
+
+```graphql
+mutation {
+  customRoleDelete(
+    id: ROLE_ID 
+  ) {
+    id
+  }
+}
+```
+
+### パラメーター
+
+* `id`: 削除するロールの一意の識別子。 `ROLE_ID` 、削除するロールの実際の ID に置き換えます。
+
+### レスポンス
+
+* `id`: 削除されたロールの ID を返し、ミューテーションが正常に実行されたことを確認します。
+
+## グループを作成する [#create-group]
+
+[グループ](/docs/accounts/accounts-billing/new-relic-one-user-management/user-management-concepts/#groups)を作成する例を次に示します。
+
+```graphql
+mutation {
+  userManagementCreateGroup(
+    createGroupOptions: {
+      authenticationDomainId: "YOUR_AUTH_DOMAIN_ID"
+      displayName: "GROUP_DISPLAY_NAME"
+    }
+  ) {
+    group {
+      displayName
+      id
+    }
+  }
+}
+```
+
+成功した応答：
+
+```json
+{
+  "data": {
+    "userManagementCreateGroup": {
+      "group": {
+        "displayName": "GROUP_DISPLAY_NAME"
+	      "id": "GROUP_ID"
+      }
+    }
+  }
+}
+```
+
+## ユーザーグループを更新する [#update-group]
+
+[グループ](/docs/accounts/accounts-billing/new-relic-one-user-management/user-management-concepts/#groups)を更新する例を次に示します。
+
+```graphql
+mutation {
+  userManagementUpdateGroup(
+    updateGroupOptions: {
+      displayName: "YOUR_UPDATED_GROUP_NAME"
+      id: "YOUR_GROUP_ID"
+    }
+  ) {
+    group {
+      id
+      displayName
+    }
+  }
+}
+```
+
+成功への対応：
+
+```json
+{
+  "data": {
+    "userManagementUpdateGroup": {
+      "group": {
+        "displayName": "YOUR_UPDATED_GROUP_NAME",
+        "id": "GROUP_ID"
+      }
+    }
+  }
+}
+```
+
+失敗への対応：
+
+```json
+{
+  "data": {
+    "userManagementUpdateGroup": null
+  },
+  "errors": [
+    {
+      "extensions": {
+        "errorClass": "SERVER_ERROR"
+      },
+      "locations": [
+        {
+          "column": 3,
+          "line": 2
+        }
+      ],
+      "message": "Group could not be found",
+      "path": [
+        "userManagementUpdateGroup"
+      ]
+    }
+  ]
+}
+```
+
+## グループを削除する [#delete-group]
+
+[グループ](/docs/accounts/accounts-billing/new-relic-one-user-management/user-management-concepts/#groups)を削除する例を次に示します。
+
+```graphql
+mutation {
+  userManagementDeleteGroup(groupOptions: {id: "YOUR_GROUP_ID"}) {
+    group {
+      id
+    }
+  }
+}
+```
+
+成功への対応：
+
+```json
+{
+  "data": {
+    "userManagementDeleteGroup": {
+      "group": {
+        "id": "GROUP_ID"
+      }
+    }
+  }
+}
+```
+
+失敗への対応：
+
+```json
+{
+  "data": {
+    "userManagementDeleteGroup": null
+  },
+  "errors": [
+    {
+      "extensions": {
+        "errorClass": "SERVER_ERROR"
+      },
+      "locations": [
+        {
+          "column": 3,
+          "line": 2
+        }
+      ],
+      "message": "Couldn't find Group with 'id'='ENTERED_GROUP_ID",
+      "path": [
+        "userManagementDeleteGroup"
+      ]
+    }
+  ]
+}
+```
+
+## グループへのユーザー追加 [#add-users]
+
+グループにユーザーを追加する例を次に示します。
+
+```graphql
+mutation {
+  userManagementAddUsersToGroups(
+    addUsersToGroupsOptions: {
+      groupIds: [FIRST_GROUP_ID, SECOND_GROUP_ID]
+      userIds: [YOUR_USERS_IDS]
+    }
+  ) {
+    groups {
+      displayName
+      id
+    }
+  }
+}
+```
+
+成功への対応：
+
+```json
+{
+  "data": {
+    "userManagementAddUsersToGroups": {
+      "groups": [
+        {
+          "displayName": "GROUP_1_NAME",
+          "id": "GROUP_ID_1"
+        },
+        {
+          "displayName": "GROUP_NAME_2",
+          "id": "GROUP_ID_2"
+        }
+      ]
+    }
+  }
+}
+```
+
+失敗への対応：
+
+```json
+{
+  "data": {
+    "userManagementAddUsersToGroups": null
+  },
+  "errors": [
+    {
+      "extensions": {
+        "errorClass": "SERVER_ERROR"
+      },
+      "locations": [
+        {
+          "column": 3,
+          "line": 2
+        }
+      ],
+      "message": "The following ids were not found: group_ids: 'NON_EXISTENT_GROUP_ID'",
+      "path": [
+        "userManagementAddUsersToGroups"
+      ]
+    }
+  ]
+}
+```
+
+## グループからユーザーを削除する [#remove-users]
+
+グループからユーザーを削除する例を次に示します。
+
+```graphql
+mutation {
+  userManagementRemoveUsersFromGroups(
+    removeUsersFromGroupsOptions: {
+      groupIds: [YOUR_GROUP_IDS]
+      userIds: [YOUR_USER_IDS]
+    }
+  ) {
+    groups {
+      displayName
+      id
+    }
+  }
+}
+```
+
+成功への対応：
+
+```json
+{
+  "data": {
+    "userManagementRemoveUsersFromGroups": {
+      "groups": [
+        {
+          "displayName": "YOUR_GROUP_NAME",
+          "id": "YOUR_GROUP_ID"
+        }
+      ]
+    }
+  }
+}
+```
+
+失敗への対応：
+
+```json
+{
+  "data": {
+    "userManagementRemoveUsersFromGroups": null
+  },
+  "errors": [
+    {
+      "extensions": {
+        "errorClass": "SERVER_ERROR"
+      },
+      "locations": [
+        {
+          "column": 3,
+          "line": 2
+        }
+      ],
+      "message": "The following ids were not found: user_ids: 'NON-EXISTENT_USER_ID'",
+      "path": [
+        "userManagementRemoveUsersFromGroups"
+      ]
+    }
+  ]
+}
+```
+
+## グループまたはユーザーにアクセスを許可する [#grant-access]
+
+アクセス許可は、グループまたはユーザーをロールに接続し、アクセスできる内容を定義します。アクセス許可を作成すると、ロールで定義され、特定の対象 (組織、アカウント、エンティティ、またはその他のグループ) に適用されるアクセス許可がユーザーまたはグループに付与されます。
+
+アクセス許可の受信者を指定するには:
+
+* **ユーザーの場合**: `id`で`grantee`問題を使用し、 `type: USER`
+* **グループの場合**: `grantee`を `groupId: "YOUR_GROUP_ID"`
+
+### アカウントスコープの付与
+
+アカウント スコープのロールへのアクセスを許可する例を次に示します。
+
+```graphql
+mutation {
+  authorizationManagementGrantAccess(
+    grantAccessOptions: {
+      accountAccessGrants: {
+        accountId: YOUR_ACCOUNT_ID
+        dataAccessPolicyId: "YOUR_DATA_ACCESS_POLICY_ID"
+        roleId: "YOUR_ROLE_ID"
+        grantee: {
+          id: "YOUR_USER_ID"
+          type: USER
+        }
+      }
+    }
+  ) {
+    accessGrants {
+      id
+    }
+    roles {
+      name
+    }
+  }
+}
+```
+
+### 組織規模の助成金
+
+組織スコープのロールにアクセス権を付与する例を次に示します。
+
+```graphql
+mutation {
+  authorizationManagementGrantAccess(
+    grantAccessOptions: {
+      organizationAccessGrants: {
+        roleId: "YOUR_ROLE_ID"
+        grantee: {
+          id: "YOUR_USER_ID"
+          type: USER
+        }
+      }
+    }
+  ) {
+    accessGrants {
+      id
+    }
+    roles {
+      name
+    }
+  }
+}
+```
+
+### エンティティスコープの付与
+
+エンティティ スコープのロールへのアクセスを許可する例を次に示します。
+
+```graphql
+mutation {
+  authorizationManagementGrantAccess(
+    grantAccessOptions: {
+      entityAccessGrants: {
+        entity: {
+          id: "YOUR_ENTITY_ID"
+          type: "YOUR_ENTITY_TYPE"
+        }
+        roleId: "YOUR_ROLE_ID"
+        grantee: {
+          id: "YOUR_USER_ID"
+          type: USER
+        }
+      }
+    }
+  ) {
+    accessGrants {
+      id
+    }
+    roles {
+      name
+    }
+  }
+}
+```
+
+### グループスコープの付与
+
+グループスコープのロールへのアクセスを許可する例を次に示します。
+
+```graphql
+mutation {
+  authorizationManagementGrantAccess(
+    grantAccessOptions: {
+      groupAccessGrants: {
+        groupId: "YOUR_TARGET_GROUP_ID"
+        roleId: "YOUR_ROLE_ID"
+        grantee: {
+          id: "YOUR_USER_ID"
+          type: USER
+        }
+      }
+    }
+  ) {
+    accessGrants {
+      id
+    }
+    roles {
+      name
+    }
+  }
+}
+```
+
+### 回答例
+
+成功への対応：
+
+```json
+{
+  "data": {
+    "authorizationManagementGrantAccess": {
+      "accessGrants": [
+        {
+          "id": "ACCESS_GRANT_ID"
+        }
+      ],
+      "roles": [
+        {
+          "name": "ROLE_NAME"
+        }
+      ]
+    }
+  }
+}
+```
+
+失敗への対応：
+
+```json
+{
+  "data": {
+    "authorizationManagementGrantAccess": null
+  },
+  "errors": [
+    {
+      "extensions": {
+        "errorClass": "SERVER_ERROR"
+      },
+      "locations": [
+        {
+          "column": 3,
+          "line": 2
+        }
+      ],
+      "message": "Validation failed: Role must exist, Role can't be blank, Role scope does not match granted_on type",
+      "path": [
+        "authorizationManagementGrantAccess"
+      ]
+    }
+  ]
+}
+```
+
+## アクセス許可の更新 [#update-grants]
+
+既存のアカウントアクセス許可を更新して、データ アクセス ポリシーを変更できます。更新する許可 ID を指定した`authorizationManagementUpdateAccess`ミューテーションを使用します。
+
+<Callout variant="important">
+  アクセス許可の更新は現在、アカウント スコープのアクセス許可に対してのみ可能です。
+</Callout>
+
+アカウント アクセス許可を更新する例を次に示します。
+
+```graphql
+mutation {
+  authorizationManagementUpdateAccess(
+    updateAccessOptions: {
+      accountAccessGrant: {
+        dataAccessPolicyId: "YOUR_NEW_DATA_ACCESS_POLICY_ID"
+      }
+      ids: "YOUR_ACCESS_GRANT_ID"
+    }
+  ) {
+    grants {
+      id
+    }
+  }
+}
+```
+
+## ロール ID を検索する [#role-id]
+
+グループへのアクセス許可など、一部のユースケースでは、ロールの ID (New Relic でそのロールを表す数値 ID) が必要になる場合があります。
+
+デフォルトの[役割](/docs/accounts/accounts-billing/new-relic-one-user-management/user-management-concepts/#standard-roles)と[管理設定](/docs/accounts/accounts-billing/new-relic-one-user-management/user-management-concepts/#admin-settings)の ID をいくつか示します。
+
+* <DNT>**All product admin**</DNT>: `1254` 。
+
+* <DNT>**Standard user**</DNT>: `1253` 。
+
+* <DNT>**Read only**</DNT>: `1252` 。
+
+* <DNT>**Organization manager setting**</DNT> `1994`
+  * <DNT>**Read only**</DNT>： `1995`
+
+* <DNT>**Authentication domain setting**</DNT>：
+
+  * <DNT>**Manage**</DNT>： `1996`
+  * <DNT>**Read only**</DNT>： `1997`
+  * <DNT>**Add users**</DNT>： `14517`
+  * <DNT>**Read users**</DNT>： `14603`
+
+* <DNT>**Group admin**</DNT>： `14516`
+
+カスタム ロールの ID を検索するクエリは次のとおりです。
+
+```graphql
+{
+  actor {
+    organization {
+      authorizationManagement {
+        authenticationDomains(id: "YOUR_AUTHENTICATION_DOMAIN_ID") {
+          authenticationDomains {
+            groups {
+              groups {
+                displayName
+                id
+                roles {
+                  roles {
+                    roleId
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+## グループまたはユーザーからの許可を取り消す [#revoke-grants]
+
+アクセス許可を取り消すと、グループまたはユーザーとロール間の接続が削除され、それらのユーザーが持っていた権限が失われます。組織、アカウント、エンティティ、またはグループのレベルで付与を取り消すことができます。取り消す場合は、アクセスを許可する場合と同様に、 `grantee` (ユーザーの場合) または`groupId` (グループの場合) を使用して、アクセスを失うユーザーを指定します。
+
+### アカウントスコープの取り消し
+
+アカウント スコープのロールへのアクセスを取り消す例を次に示します。
+
+```graphql
+mutation {
+  authorizationManagementRevokeAccess(
+    revokeAccessOptions: {
+      accountAccessGrants: {
+        accountId: YOUR_ACCOUNT_ID
+        dataAccessPolicyId: "YOUR_DATA_ACCESS_POLICY_ID"
+        roleId: "YOUR_ROLE_ID"
+        grantee: {
+          id: "YOUR_USER_ID"
+          type: USER
+        }
+      }
+    }
+  ) {
+    accessGrants {
+      id
+    }
+    roles {
+      id
+    }
+  }
+}
+```
+
+### 組織スコープの取り消し
+
+組織スコープのロールへのアクセスを取り消す例を次に示します。
+
+```graphql
+mutation {
+  authorizationManagementRevokeAccess(
+    revokeAccessOptions: {
+      organizationAccessGrants: {
+        roleId: "YOUR_ROLE_ID"
+        grantee: {
+          id: "YOUR_USER_ID"
+          type: USER
+        }
+      }
+    }
+  ) {
+    accessGrants {
+      id
+    }
+    roles {
+      id
+    }
+  }
+}
+```
+
+### エンティティスコープの取り消し
+
+エンティティ スコープのロールへのアクセスを取り消す例を次に示します。
+
+```graphql
+mutation {
+  authorizationManagementRevokeAccess(
+    revokeAccessOptions: {
+      entityAccessGrants: {
+        entity: {
+          id: "YOUR_ENTITY_ID"
+          type: "YOUR_ENTITY_TYPE"
+        }
+        roleId: "YOUR_ROLE_ID"
+        grantee: {
+          id: "YOUR_USER_ID"
+          type: USER
+        }
+      }
+    }
+  ) {
+    accessGrants {
+      id
+    }
+    roles {
+      id
+    }
+  }
+}
+```
+
+### グループスコープの取り消し
+
+グループ スコープのロールへのアクセスを取り消す例を次に示します。
+
+```graphql
+mutation {
+  authorizationManagementRevokeAccess(
+    revokeAccessOptions: {
+      groupAccessGrants: {
+        groupId: "YOUR_TARGET_GROUP_ID"
+        roleId: "YOUR_ROLE_ID"
+        grantee: {
+          id: "YOUR_USER_ID"
+          type: USER
+        }
+      }
+    }
+  ) {
+    accessGrants {
+      id
+    }
+    roles {
+      id
+    }
+  }
+}
+```
+
+### 回答例
+
+成功への対応：
+
+```json
+{
+  "data": {
+    "authorizationManagementRevokeAccess": {
+      "accessGrants": [
+        {
+          "id": "ACCESS_GRANT_ID"
+        }
+      ],
+      "roles": [
+        {
+          "id": "ROLE_ID"
+        }
+      ]
+    }
+  }
+}
+```

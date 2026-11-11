@@ -1,0 +1,26 @@
+---
+title: NerdGraphチュートリアルダッシュボードをファイルとしてエクスポートする
+tags:
+  - APIs
+  - NerdGraph
+  - Examples
+metaDescription: Use New Relic NerdGraph to export dashboards as PDF or PNG files programmatically.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+NerdGraphの`dashboardCreateSnapshotUrl`ミューテーションを使用して、プログラムで<InlinePopover type="dashboards" />をPDFまたはPNGファイルとしてエクスポートできます。また、[UIを使用してダッシュボードをエクスポートする](/docs/query-your-data/explore-query-data/dashboards/dashboards-charts-import-export-data/#export-dashboards-pdf)こともできます。
+
+ミューテーションの完全なドキュメント、利用可能なすべてのパラメーター、および例 — 変数のオーバーライド、カスタムディメンション、ウィジェットごとのチャート画像のエクスポートなど — については、[NerdGraph APIを介したダッシュボードとチャートのエクスポート](/docs/query-your-data/explore-query-data/dashboards/dashboards-charts-import-export-data/#export-api)を参照してください。
+
+## トラブルシューティング [#troubleshooting]
+
+ダッシュボードをエクスポートしようとしたときに次のエラーが発生した場合の対処方法は次のとおりです。
+
+* New Relic UIから: <DNT>**We ran into an error while creating the PDF. Please try again**</DNT>
+
+* New Relic NerdGraphより: <DNT>**Operation on dashboard entity failed with guid:YOUR\_GUID with cause: Error 504: upstream request timeout**</DNT>
+
+これらのエラーは、エクスポートがAPIの最大レスポンスタイムを超えた場合に発生する可能性があります。ダッシュボード上のウィジェットが大きなタイムウィンドウを使用しているかどうかを確認してください — たとえば、1か月全体のデータを比較している場合などです。その場合は、タイムウィンドウを短くしてみてください。
+
+もう1つの考えられる原因は、多数のウィジェットを含むダッシュボードです。未使用のウィジェットを削除して、エラーが解決するかどうかを確認してください。

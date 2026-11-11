@@ -1,0 +1,61 @@
+---
+title: Visão geral do New Relic Lens
+tags:
+  - New Relic Lens
+  - Query data
+  - SQL queries
+  - Cross-database joins
+  - Data analysis
+  - Multiple data sources
+metaDescription: 'Learn about New Relic Lens, a unified query platform for querying multiple data sources using ANSI SQL and performing cross-database joins.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Como usuário do New Relic, você pode precisar analisar seus dados de telemetria juntamente com dados armazenados em vários bancos de dados, data warehouses e planilhas. Exportar dados manualmente de cada fonte e combiná-los com seus dados de observabilidade offline leva tempo, pode reduzir a produtividade ou pode não atender às suas políticas ou requisitos internos.
+
+<DNT>New Relic Lens</DNT> ajuda a abordar esses desafios. O <DNT>Lens</DNT> é uma plataforma de consulta unificada no New Relic que permite conectar e consultar certas fontes de dados diretamente do New Relic. Escreva uma consulta no <DNT>Lens</DNT> usando ANSI SQL e realize junções entre bancos de dados para ajudar a analisar e correlacionar dados de várias fontes. Em vez de extrair dados brutos para o New Relic, o <DNT>Lens</DNT> envia cada parte da consulta para a fonte de dados onde os dados residem, para que cada fonte faça seu próprio processamento e retorne apenas os resultados. O <DNT>Lens</DNT> então combina esses resultados, minimizando a transferência de dados e a ingestão de dados brutos de fontes externas.
+
+<img title="New Relic Lens Architecture" alt="A schematic diagram of New Relic Lens architecture." src="/images/nr-lens-arch.webp" />
+
+## Capacidades [#capabilities]
+
+<DNT>Lens</DNT> oferece a você:
+
+* **Consultas SQL entre bancos de dados**: escreva SQL ANSI e combine dados de múltiplas fontes em uma única consulta.
+* **Acesso integrado ao NRDB**: consulte dados de telemetria, entidade e <DNT>materialized view</DNT> por meio do <DNT>system connectors</DNT> integrado, sem necessidade de configuração.
+* **Conectores de dados externos**: conecte-se a data warehouses na cloud, bancos de dados relacionais, bancos de dados de documentos, planilhas, data lakes e ferramentas de monitoramento. Consulte [Configurar conectores](/docs/new-relic-lens/set-up-connectors) para ver a lista completa.
+* **Visualizações materializadas**: Salve os resultados de consultas complexas e executadas frequentemente como [visualizações materializadas](/docs/new-relic-lens/materialized-views) para reduzir custos e melhorar o desempenho.
+* **Consulte de qualquer lugar**: Execute consultas <DNT>Lens</DNT> no [criador de consulta, Notebooks ou dashboards personalizados](/docs/new-relic-lens/query-data).
+
+## Casos de uso [#use-cases]
+
+<DNT>Lens</DNT> permite vários cenários de análise de dados:
+
+* **Análise de orçamento**: Compare os dados de utilização do New Relic de <DNT>NRDB</DNT> com os dados de orçamento armazenados em <DNT>Snowflake</DNT> para monitorar os gastos em relação aos orçamentos alocados.
+* **Otimização de fluxo de trabalho**: Substitua várias etapas manuais de exportação/importação (de um banco de dados para outro) por uma única consulta SQL que une todos os dados necessários, reduzindo custos e melhorando a eficiência.
+* **Agregue dados entre regiões**: Monitore o tráfego de usuários em várias regiões geográficas unindo dados de diferentes fontes de dados.
+* **Otimização de desempenho com <DNT>materialized views</DNT>**: Um dashboard executivo combina dados de mais de 5 bancos de dados e atualiza semanalmente. Ao armazenar os resultados da consulta `JOIN` de múltiplos bancos de dados em um <DNT>materialized view</DNT>, você evita executar a consulta computacionalmente custosa toda vez que alguém carrega o dashboard. Isso pode reduzir os custos de consulta e melhorar a velocidade de carregamento da página.
+
+<Callout title="Alertas não suportados" variant="important">
+  <DNT>Lens</DNT> não oferece suporte a alertas. Você não pode criar condições de alerta com base nos resultados da consulta <DNT>Lens</DNT>.
+</Callout>
+
+## Preços [#pricing]
+
+<DNT>**Lens**</DNT> está disponível para clientes pagantes, incluindo contas sem fins lucrativos pagas:
+
+* No modelo de preços [<DNT>Data + User</DNT>](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/new-relic-one-pricing-billing/), não há custo extra.
+* No modelo de preços [<DNT>Data + Core Compute</DNT>](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/new-relic-one-pricing-billing/), as [Core CCUs](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/new-relic-one-pricing-billing/#core-compute-capacity-unit) são consumidas quando você consulta tabelas `telemetry.<New Relic event>`, o que a <DNT>Lens</DNT> cobra como uma chamada de API.
+
+## Configuração em um relance [#at-a-glance]
+
+A configuração do <DNT>Lens</DNT> envolve as seguintes etapas:
+
+1. Verifique se você tem [as permissões necessárias](/docs/new-relic-lens/set-up-connectors#requirements)
+2. Configurar um conector
+3. Verifique sua configuração
+
+## A seguir: configurar conectores [#next]
+
+[**Configurar conectores →**](/docs/new-relic-lens/set-up-connectors)

@@ -1,0 +1,310 @@
+---
+title: "Get started with NRQL: The language of data"
+tags:
+  - Query your data
+  - 'NRQL: New Relic query language'
+  - Get started
+translate:
+  - jp
+  - kr
+metaDescription: "Learn how to query your New Relic data with NRQL, our SQL-like query language."
+redirects:
+  - /docs/insights/new-relic-insights/using-new-relic-query-language/using-nrql
+  - /docs/insights/new-relic-insights/using-new-relic-query-language/get-started-nrql
+  - /docs/insights/nrql-new-relic-query-language/using-nrql/introduction-nrql
+  - /docs/insights/insights-data-sources/default-events-attributes/view-default-data-other-new-relic-products-insights
+  - /docs/query-data/nrql-new-relic-query-language/getting-started/introduction-nrql
+  - /docs/query-your-data/explore-query-data/nrql/nrql
+  - /docs/query-data/nrql-new-relic-query-language/getting-started/introduction-nrql
+  - /docs/query-your-data/explore-query-data/nrql/nrql
+  - /docs/insights/
+  - /docs/rubicon/known-limitations
+  - /docs/insights/known-limitations
+  - /docs/insights/new-relic-insights/troubleshooting/known-limitations
+  - /docs/insights/new-relic-insights
+  - /docs/apis/server-api-v2
+  - /docs/apm/apis/api-v2-examples/server-examples-api-v2
+  - /docs/apm/apis/server-examples-v2/obtaining-available-used-disk-space-api-v2
+  - /docs/apm/apis/server-examples-v2/obtaining-disk-io-rates-api-v2
+  - /docs/apm/apis/server-examples-v2/obtaining-disk-io-data-api-v2
+  - /docs/apm/apis/server-examples-v2/listing-your-server-id-metric-data-api-v2
+  - /docs/apm/apis/server-examples-v2/calculating-average-available-server-memory-api-v2
+  - /docs/apis/server-examples-v2/calculating-average-available-server-memory-v2
+  - /docs/apm/apis/server-examples-v2/getting-average-cpu-percentages-api-v2
+  - /docs/apm/apis/server-examples-v2/listing-cpu-load-data-api-v2
+  - /docs/apm/apis/server-examples-v2/obtaining-load-average-values-server
+  - /docs/apm/apis/server-examples-v2/obtaining-server-networking-data-api-v2
+  - /docs/apm/apis/server-examples-v2/removing-server-dashboard-api-v2
+  - /docs/apis/server-examples-v2/obtaining-available-used-disk-space-v2
+  - /docs/apis/server-examples-v2/obtaining-disk-io-data-v2
+  - /docs/apis/server-examples-v2/listing-your-server-id-metric-data-v2
+  - /docs/apis/server-examples-v2/obtaining-load-average-values-server-v2
+  - /docs/apis/server-examples-v2/obtaining-server-networking-data-v2
+  - /docs/apis/rest-api-v2/server-examples-v2/removing-server-dashboard-v2
+  - /docs/apis/rest-api-v2/server-examples-v2/obtaining-available-used-disk-space-v2
+  - /docs/apis/rest-api-v2/server-examples-v2/listing-your-server-id-metric-data-v2
+  - /docs/apis/rest-api-v2/server-examples-v2/calculating-average-available-server-memory-v2
+  - /docs/apis/server-examples-v2/getting-average-cpu-percentages-v2
+  - /docs/apis/rest-api-v2/server-examples-v2/obtaining-server-networking-data-v2
+  - /docs/servers/rest-api-examples-v2/server-api-examples/obtaining-server-networking-data-v2
+  - /docs/apis/rest-api-v2/server-examples-v2/obtaining-disk-io-data-v2
+  - /docs/apis/rest-api-v2/server-examples-v2/list-your-server-id-metric-data-v2
+  - /docs/apis/rest-api-v2/server-examples-v2/calculate-average-available-server-memory-v2
+  - /docs/apis/server-examples-v2/get-average-cpu-percentages-v2
+  - /docs/apis/rest-api-v2/server-examples-v2/listing-cpu-load-data-v2
+  - /docs/apis/rest-api-v2/server-examples-v2/obtaining-load-average-values-server-v2
+  - /docs/apis/rest-api-v2/server-examples-v2/removing-server-index-v2
+  - /docs/apis/rest-api-v2/server-examples-v2/get-available-used-disk-space-v2
+  - /docs/servers/rest-api-examples-v2/server-api-examples/calculate-average-available-server-memory-v2
+  - /docs/servers/rest-api-examples-v2/server-api-examples/delete-server-index-v2
+  - /docs/servers/rest-api-examples-v2/server-api-examples/get-server-networking-data-v2
+  - /docs/servers/rest-api-examples-v2/server-api-examples/get-load-average-values-server-v2
+  - /docs/intro-new-relic-apis
+  - /docs/servers/rest-api-examples-v2/server-api-examples/get-host-networking-data-v2
+  - /docs/servers/rest-api-examples-v2/server-api-examples/list-your-server-id-metric-data-v2
+  - /docs/servers/rest-api-examples-v2/server-api-examples/calculate-average-available-host-memory-v2
+  - /docs/servers/rest-api-examples-v2/server-api-examples/get-average-cpu-percentages-v2
+  - /docs/servers/rest-api-examples-v2/server-api-examples/get-load-average-values-host-v2
+  - /docs/servers/rest-api-examples-v2/server-api-examples/delete-host-index-v2
+  - /docs/servers/rest-api-examples-v2
+  - /docs/servers/rest-api-examples-v2/server-api-examples
+  - /docs/rubicon/query-history
+  - /docs/insights/query-history
+  - /docs/insights/new-relic-insights/managing-dashboards-and-data/query-history
+  - /docs/insights/new-relic-insights/using-insights-interface/query-history
+  - /docs/insights/new-relic-insights/using-insights-interface/query-history-creating-editing-nrql-queries
+  - /docs/insights/new-relic-insights/using-insights-interface/query-page-creating-editing-nrql-queries
+  - /docs/insights/using-insights-ui/basic-ui-tasks/query-page-create-edit-nrql-queries
+  - /docs/insights/use-insights-ui/basic-ui-tasks/query-page-create-edit-nrql-queries
+  - /docs/insights/nrql-new-relic-query-language/using-nrql/query-page-create-edit-nrql-queries
+  - /docs/insights/use-insights-ui/manage-account-data/query-page-create-edit-nrql-queries
+  - /docs/insights/use-insights-ui/getting-started/introduction-new-relic-insights/  
+  - /docs/insights/use-insights-ui/explore-data/query-page-create-edit-nrql-queries/
+  - /docs/insights/use-insights-ui/manage-dashboards/add-customize-nrql-charts/
+  - /docs/insights/use-insights-ui/manage-dashboards/add-customize-metric-charts/
+  - /docs/insights/new-relic-insights/managing-dashboards-data/add-edit-agent-metric-widgets
+  - /docs/insights/new-relic-insights/managing-dashboards-data/add-customize-agent-metric-widgets
+  - /docs/insights/new-relic-insights/managing-dashboards-data/add-customize-metric-widgets
+  - /docs/insights/using-insights-ui/advanced-ui-tasks/add-customize-metric-widgets
+  - /docs/insights/use-insights-ui/manage-dashboards/add-customize-metric-widgets  
+  - /docs/insights/nrql-reference
+  - /docs/query-your-data/nrql-new-relic-query-language  
+  - /docs/query-your-data/nrql
+  - /docs/query-your-data/nrql-new-relic-query-language/get-started/introduction-nrql-new-relics-query-language
+freshnessValidatedDate: 2026-08-28
+---
+
+New Relic Query Language (NRQL) is a SQL-like language for querying your New Relic data. The same query language that powers New Relic's built-in charts and dashboards is available to you, so you can build the views and alerts your team needs.
+
+Here's a video to help introduce you to using NRQL by showing you how to find a query from a [dashboard](/docs/query-your-data/explore-query-data/dashboards/introduction-dashboards) and modify it in the [query builder](/docs/query-your-data/explore-query-data/query-builder/introduction-query-builder). For more detailed information on querying, including a listing of clauses, functions, and example queries, see our [NRQL reference](/docs/query-your-data/nrql-new-relic-query-language/get-started/nrql-syntax-clauses-functions).
+
+<Video
+  id="ad6hZPHAsME"
+  type="youtube"
+/>
+
+## What you can do with NRQL [#nrql-overview]
+
+Use NRQL to:
+
+* Build charts that show transaction throughput, error rates, or latency over time
+* Answer a specific question for the purpose of troubleshooting or business analysis
+* Investigate a performance issue by querying the specific events and attributes involved
+* Set up [NRQL-based alerts](/docs/alerts-applied-intelligence/new-relic-alerts/alert-conditions/create-nrql-alert-conditions) that fire when a metric crosses a threshold
+* Make API queries for your New Relic data for example, using our [NerdGraph](/docs/apis/graphql-api/tutorials/nerdgraph-graphiql-nrql-tutorial) API.
+
+NRQL works for both basic queries (fetching raw rows of event data) and calculated results, such as funnels based on how users interact with your site or application.
+
+<Callout variant="tip">
+  New Relic uses NRQL internally to power the charts and dashboards in the New Relic platform. That same query language is available to you.
+</Callout>
+
+
+## Queryable data types [#what-you-can-query]
+
+NRQL lets you query nearly every type of our telemetry data, including:
+
+* [Event data](/docs/using-new-relic/data/understand-data/new-relic-data-types#event-data) from all New Relic products. Examples include:
+  * [APM events](/docs/insights/insights-data-sources/default-data/apm-default-events-insights), like `Transaction`
+  * [Browser monitoring events](/docs/insights/insights-data-sources/default-data/browser-default-events-insights), like `PageView`
+  * [Mobile monitoring events](/docs/insights/insights-data-sources/default-data/mobile-default-events-insights), like `Mobile`
+  * [Infrastructure events](/docs/infrastructure/manage-your-data/data-instrumentation/default-infrastructure-events), like `ProcessSample`
+  * [Synthetic events](/docs/insights/insights-data-sources/default-data/synthetics-default-events-insights), like `SyntheticCheck`
+  * Custom events, like those reported by the [Event API](/docs/insights/insights-data-sources/custom-data/introduction-event-api)
+* The [`Metric` data type](/docs/data-apis/understand-data/new-relic-data-types/#dimensional-metrics) (metrics reported by the Metric API and data sources that use that API)
+* The [`Span` data type](/docs/using-new-relic/data/understand-data/new-relic-data-types#trace-data) (distributed tracing data)
+* The [`Log` data type](/docs/using-new-relic/data/understand-data/new-relic-data-types#log-data) (data from our log management capabilities)
+
+<Callout variant="tip">
+  Some data, like relationships between monitored entities, is not available via NRQL but is available using our [NerdGraph API](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph).
+</Callout>
+
+## Where to use NRQL [#where]
+
+NRQL is available across the platform:
+
+<Tabs>
+  <TabsBar>
+    <TabsBarItem id="query-builder-nrql-intro">
+      The query builder
+    </TabsBarItem>
+
+    <TabsBarItem id="nrql-alerts-nrql-intro">
+      NRQL-based alerts
+    </TabsBarItem>
+
+    <TabsBarItem id="nerdgraph-api-nrql-intro">
+      NerdGraph API
+    </TabsBarItem>
+  </TabsBar>
+
+  <TabsPages>
+    <TabsPageItem id="query-builder-nrql-intro">
+      <img
+        title="new-relic-view-chart-nrql-query.png"
+        alt="A screenshot of a NRQL query chart"
+        src="/images/queries-nrql_screenshot-crop_view-query-for-chart.webp"
+      />
+
+      <figcaption>
+        Access the query builder through the <DNT>Query your data</DNT> drawer at the bottom of any New Relic page to run queries and create custom charts.
+      </figcaption>
+
+      You can run an NRQL query in the [query builder](/docs/chart-builder/use-chart-builder/get-started/introduction-chart-builder) within [the platform](/docs/new-relic-one/use-new-relic-one/get-started/introduction-new-relic-one). This NRQL query shows a count of [distributed tracing](/docs/understand-dependencies/distributed-tracing/get-started/introduction-distributed-tracing) spans faceted by their entity names.
+    </TabsPageItem>
+
+    <TabsPageItem id="nrql-alerts-nrql-intro">
+      [NRQL-based alerts](/docs/alerts-applied-intelligence/new-relic-alerts/alert-conditions/create-nrql-alert-conditions/) are the primary alert type in New Relic. To create one, go to <DNT>**[one.newrelic.com > All capabilities](https://one.newrelic.com/all-capabilities) > Alerts > Alert conditions (Policies) > (select a policy) > Add a condition**</DNT>, click <DNT>**NRQL**</DNT>, and then <DNT>**Next, define thresholds**</DNT>.
+    </TabsPageItem>
+
+    <TabsPageItem id="nerdgraph-api-nrql-intro">
+      <img
+        title="Nerdgraph API example"
+        alt="A screenshot of the Nerdgraph API"
+        src="/images/apis-and-data_screenshot-crop_NerdGraph-internal-docs.webp"
+      />
+
+      You can also use NRQL with our [NerdGraph API](/docs/apis/graphql-api/tutorials/nerdgraph-graphiql-nrql-tutorial). This lets you run [asynchronous queries](/docs/apis/nerdgraph/examples/async-queries-nrql-tutorial) that aren't available in the UI.
+    </TabsPageItem>
+  </TabsPages>
+</Tabs>
+
+## NRQL query structure [#nrql-rules]
+
+NRQL follows a structured, clause-based syntax. Here's an NRQL query that counts all transactions in the last hour:
+
+```sql
+SELECT count(*) FROM Transaction SINCE 1 hour ago
+```
+
+Here's a breakdown of all available clauses:
+
+```sql
+<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#state-select">SELECT</a> <a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#functions">function(attribute)</a> [<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-as">AS</a> 'label'][, ...] 
+  <a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-from">FROM</a> data type
+  [<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-where">WHERE</a> attribute [comparison] [AND|OR ...]][AS 'label'][, ...]
+  [<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-facet">FACET</a> attribute | function(attribute)]
+  [<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-limit">LIMIT</a> number]
+  [<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-since">SINCE</a> time]
+  [<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-until">UNTIL</a> time]
+  [<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-timezone">WITH TIMEZONE</a> timezone]
+  [<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-compare">COMPARE WITH</a> time]
+  [<a href="/docs/insights/new-relic-insights/using-new-relic-query-language/nrql-reference#sel-timeseries">TIMESERIES</a> time]
+```
+
+Here are the rules that NRQL follows:
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>
+        <DNT>
+          **NRQL rule**
+        </DNT>
+      </th>
+
+      <th>
+        Details
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        Required values
+      </td>
+
+      <td>
+        The [`SELECT`](#state-select) clause and [`FROM`](#sel-from) clause are required. All other clauses are optional. You can start your query with either `SELECT` or `FROM`.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Query string size
+      </td>
+
+      <td>
+        The query string must be less than 4 KB.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Case sensitivity
+      </td>
+
+      <td>
+        Data type names and attribute names are case sensitive. [NRQL clauses and functions](/docs/nrql/nrql-syntax-clauses-functions/) aren't case sensitive.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Syntax for strings
+      </td>
+
+      <td>
+        NRQL uses single quotes to designate strings. The following example shows the syntax:
+
+        ```sql
+        ... WHERE traceId = '030a573f0df02c57'
+        ```
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Non-standard custom event and attribute names
+      </td>
+
+      <td>
+        Events that we report by default have names that contain alphanumeric characters, colons (`:`), and underscores (`_`). Attribute names can have those characters and periods (`.`). Default-reported names start with a letter. You must enclose custom names that don't follow these guidelines in backticks in NRQL queries. The following example shows a custom name enclosed in backticks:
+
+        ```sql
+        ... FACET `Logged-in user`
+        ```
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Data type coercion
+      </td>
+
+      <td>
+        We don't support data type "coercion." For more information, see [Data type conversion](/docs/insights/nrql-new-relic-query-language/nrql-reference/nrql-syntax-components-functions#type-conversion).
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+For more information, see our [NRQL reference](/docs/query-your-data/nrql-new-relic-query-language/get-started/nrql-syntax-clauses-functions/) to help you build your queries.
+
+## Next steps [#next-steps]
+
+* [How NRQL works](/docs/query-your-data/nrql-new-relic-query-language/get-started/introduction-nrql-how-nrql-works/) (query execution, data freshness, and limits)
+* [Charts and dashboards with NRQL](/docs/query-your-data/nrql-new-relic-query-language/get-started/charts-and-dashboards-with-nrql/) (visualize your query results)
+* [Guided NRQL tutorial](/docs/query-your-data/nrql-new-relic-query-language/get-started/introduction-nrql-tutorial/) (hands-on walkthrough for new users)
+* [NRQL reference](/docs/query-your-data/nrql-new-relic-query-language/get-started/nrql-syntax-clauses-functions/) (full syntax, clauses, and functions)

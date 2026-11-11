@@ -1,0 +1,440 @@
+---
+title: "Layered instrumentation"
+metaDescription: Instrument your Lambda function with the New Relic Lambda layer.
+freshnessValidatedDate: never
+redirects:
+  - /docs/serverless-function-monitoring/aws-lambda-monitoring/enable-lambda-monitoring/instrument-your-own
+---
+
+You can instrument your Lambda functions by adding the New Relic Lambda layer. This integrates the New Relic agent, enabling automatic monitoring whenever your functions are invoked.
+
+<Callout variant="tip">
+  **Lambda Managed Instance (LMI)**: Layered instrumentation is supported for LMI functions. Attach the New Relic Lambda layer as you would for any Lambda function — LMI functions automatically run in APM mode without requiring `NEW_RELIC_APM_LAMBDA_MODE = true`.
+</Callout>
+
+<img
+  title="non-containerized"
+  alt="a diagram depicting non-containerized lambda function instrumentation"
+  src="/images/serverless_diagram_non-containerized-lambda-function.webp"
+/>
+
+<Callout variant="tip">
+    We recommend integrating your AWS account using the [AWS integration](/docs/infrastructure/amazon-integrations/get-started/introduction-aws-integrations/) to automatically discover and monitor your Lambda functions. This allows you to leverage the full power of New Relic APM for your serverless functions.
+</Callout>
+
+## Instrumentation methods [#instrumentation]
+
+New Relic offers several methods to instrument your AWS Lambda functions for comprehensive monitoring:
+
+* **Command Line Interface (CLI)**: Use the AWS CLI to quickly add the New Relic layer to your Lambda functions.
+* **Serverless Framework**: Seamlessly integrate New Relic instrumentation into your serverless deployments.
+* **CloudFormation/SAM**: Include the New Relic layer in your infrastructure-as-code templates.
+* **AWS CDK**: Add New Relic Lambda layer in your CDK code alongside other infrastructure resources.
+* **Terraform**: Easily manage New Relic instrumentation alongside your other infrastructure resources.
+* **Manual Instrumentation**: Directly add the New Relic layer through the AWS Lambda console for more granular control.
+
+Regardless of the method you choose, the New Relic layer adds the New Relic agent to your functions. This agent automatically instruments your functions upon invocation, generating a payload, `NR_LAMBDA_MONITORING`,  that is sent to New Relic via the New Relic Lambda extension.
+
+Depending on your needs, you can choose to either bypass the extension and only see telemetry in CloudWatch, bypass CloudWatch, or use CloudWatch as a fallback. The [CloudWatch](#CloudWatch) section at the end of this doc will guide you through each option.
+
+<CollapserGroup>
+  <Collapser
+    id="cli"
+    title="New Relic CLI"
+  >
+    You can instrument your Lambda function with the `newrelic-lambda` CLI quickstart.
+
+    To install or upgrade the New Relic instrumentation layer, run this command:
+
+    ```shell
+    newrelic-lambda layers install --nr-account-id YOUR_NR_ACCOUNT_ID --function my-function --upgrade --apm
+    ```
+
+    This command automatically finds the newest available layer for your Lambda's region and runtime.
+
+    ### Choosing which key to use 
+
+    The New Relic Lambda extension sends telemetry using an ingest (license) key only—it never uses a User API key. When you run `layers install`, you configure this with either `--nr-api-key` or `--nr-ingest-key`. These serve different purposes, and picking the wrong one for your situation can result in an unexpected key being assigned to your function:
+
+    * **`--nr-api-key`** (your [User API key](/docs/apis/intro-apis/new-relic-api-keys/#user-key)): The CLI uses this key only to authenticate with New Relic and look up an ingest key on your behalf. It queries your account for available ingest keys and uses the first one returned to populate the `NEW_RELIC_LICENSE_KEY` environment variable. This is the fastest way to get started, but the key the CLI selects isn't guaranteed to be the one you'd choose yourself—in an account with multiple ingest keys for different purposes, the CLI may assign a key you intended to reserve for something else.
+    * **`--nr-ingest-key`** (your [ingest/license key](/docs/apis/intro-apis/new-relic-api-keys/#license-key)): Supplying this key directly sets `NEW_RELIC_LICENSE_KEY` to the exact value you provide, skipping the CLI's automatic lookup entirely. Use this if your organization needs explicit control over which ingest key each function uses—for example, to support key rotation policies, to keep environments on separate keys for governance, or to attribute billing accurately per key.
+
+    <Callout variant="important">
+      `--nr-api-key` and `--nr-ingest-key` are mutually exclusive. Providing both returns an error: `Please provide either the --nr-api-key or the --nr-ingest-key flag, but not both.`
+    </Callout>
+
+    To install with an explicit ingest key instead of relying on auto-selection:
+
+    ```shell
+    newrelic-lambda layers install --nr-account-id YOUR_NR_ACCOUNT_ID --nr-ingest-key YOUR_INGEST_KEY --function my-function --upgrade --apm
+    ```
+
+    This command provides a rapid way to initiate New Relic instrumentation and can be easily integrated into your CI/CD pipeline.  However, since it modifies existing Lambda function resources, redeployment of updated code may inadvertently remove the instrumentation. To ensure continuous monitoring, either re-run the command after each deployment or, preferably, incorporate the New Relic layer and configuration directly into your deployment process.
+
+    Note that the CLI can operate on many functions in a batch: use `--function all`, `--function installed`, or
+    `--function not-installed` to operate on all functions in a region, or only those with or without existing
+    New Relic instrumentation.
+  </Collapser>
+
+  <Collapser
+    id="cloudformation"
+    title="CloudFormation / SAM templates"
+  >
+    AWS's Serverless Application Model, or SAM, is a variant of CloudFormation templates that simplifies relating functions to the resources they depend on, and managing the lifecycle of an entire application. We use SAM and CloudFormation for most of our Lambda example functions, and many other tools are built on top of CloudFormation templates, providing an additional layer of abstraction.
+
+    CloudFormation is an AWS service that simplifies the provisioning and management of AWS resources. By defining the desired state of resources in YAML or JSON templates, CloudFormation automatically handles the underlying API calls to create, update, or delete resources as needed. This declarative approach automates infrastructure management, ensuring consistency and reproducibility.
+
+    To monitor your Lambda function with New Relic:
+
+    1. Install the [New Relic Lambda layer](https://layers.newrelic-external.com/). Below are examples for Node.js and Java agent Lambda functions.
+
+        **Node.js example:**
+
+        ```yaml
+        AWSTemplateFormatVersion: '2010-09-09'
+        Transform: AWS::Serverless-2016-10-31
+        Description: An example of a simple instrumented Node.js Lambda
+
+        Resources:
+          NewRelicExample:
+            Type: AWS::Serverless::Function
+            Properties:
+              # In this example, we're using the SAM CLI to package and deploy our lambda. SAM will transform this value during the publish step.
+              CodeUri: newrelic-example-node/
+              # The handler for your function needs to be the one provided by the instrumentation layer, below.
+              Handler: newrelic-lambda-wrapper.handler
+              Runtime: nodejs22.x
+              Environment:
+                Variables:
+                  # For the instrumentation handler to invoke your real handler, we need this value
+                  NEW_RELIC_LAMBDA_HANDLER: YOUR_PATH_TO_INITIAL_LAMBDA_HANDLER
+                  # Distributed tracing needs your account ID, and your trusted account ID
+                  NEW_RELIC_ACCOUNT_ID: YOUR_ACCOUNT_ID_HERE
+                  # If your New Relic account has a parent account, this value should be that account ID. Otherwise, just
+                  # your account id.
+                  NEW_RELIC_TRUSTED_ACCOUNT_KEY: YOUR_PARENT_ACCOUNT_ID_HERE
+                  NEW_RELIC_APM_LAMBDA_MODE: 'true'
+              Tags:
+              # This tag is to enable APM mode.
+                NR.Apm.Lambda.Mode: true
+              Layers:
+                # This layer includes the New Relic Lambda extension, a sidecar process that sends telemetry,
+                # as well as the New Relic agent for Node.js, and a handler wrapper that makes integration easy.
+                - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:451483290750:layer:NewRelicNodeJS16X:103
+              Policies:
+                # This policy allows the lambda to know the value of the New Relic license key. We need this so
+                # that we can send telemetry back to New Relic
+                - AWSSecretsManagerGetSecretValuePolicy:
+                    SecretArn: !ImportValue NewRelicLicenseKeySecret-NewRelic-LicenseKeySecretARN
+        ```
+
+        Typically, you'll have a file named `template.yaml` that describes your function, and its resources.
+
+        **Legacy Java example (based on Open Tracing):**
+
+        <Callout variant="important">
+          Recommended for customers using Serverless Monitoring for Java prior to April 10, 2026 or if they are using Java 8 or 11.
+        </Callout>
+
+        ```yaml
+        AWSTemplateFormatVersion: '2010-09-09'
+        Transform: AWS::Serverless-2016-10-31
+        Description: An example of a simple Java Lambda using our Legacy Open Tracing based solution
+
+        Resources:
+          NewRelicJavaExample:
+            Type: AWS::Serverless::Function
+            Properties:
+              CodeUri: my-java-function/
+              # Set the handler to the New Relic Java HandlerWrapper.
+              # Use handleRequest for RequestHandler implementations,
+              # or handleStreamsRequest for RequestStreamHandler implementations.
+              Handler: com.newrelic.java.HandlerWrapper::handleRequest
+              Runtime: java17
+              Environment:
+                Variables:
+                  # For the instrumentation handler to invoke your real handler, we need this value
+                  NEW_RELIC_LAMBDA_HANDLER: YOUR_PATH_TO_INITIAL_LAMBDA_HANDLER
+                  # Required: your New Relic ingest license key.
+                  NEW_RELIC_LICENSE_KEY: YOUR_NEW_RELIC_LICENSE_KEY
+                  # Required: your New Relic account ID (or parent account ID if applicable).
+                  NEW_RELIC_TRUSTED_ACCOUNT_KEY: YOUR_ACCOUNT_ID_HERE
+              Layers:
+                # x86_64: arn:aws:lambda:us-east-1:451483290750:layer:NewRelicJava11:55
+                # ARM64:  arn:aws:lambda:us-east-1:451483290750:layer:NewRelicJava11ARM64:40
+                - arn:aws:lambda:us-east-1:451483290750:layer:NewRelicJava17:21
+        ```
+
+        **New Java Agent example (slim layer, recommended):**
+
+        <Callout variant="important">
+          This is a seperate solution from the Open Tracing based solution and is only released since April 10, 2026.
+          The new Java-Agent layer requires Java 17 or later. Java 11 and older runtimes are not supported.
+        </Callout>
+
+        ```yaml
+        AWSTemplateFormatVersion: '2010-09-09'
+        Transform: AWS::Serverless-2016-10-31
+        Description: An example of a simple instrumented Java Lambda using the new Java-Agent slim layer
+
+        Resources:
+          NewRelicJavaExample:
+            Type: AWS::Serverless::Function
+            Properties:
+              CodeUri: my-java-function/
+              # Set the handler for your lambda.
+              # Since the new convention layer does not use a wrapper, you should point to your actual lambda method.
+              # The handler follows AWS's standard format: <package>.<Class>::<handler_method_name>
+              # See AWS's docs for more details: https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html#java-example-naming
+              Handler: YOUR_PATH_TO_INITIAL_LAMBDA_HANDLER com.newrelic.java.HandlerWrapper::handleRequest
+              Runtime: java17
+              Environment:
+                Variables:
+                  # Required: points AWS Lambda to the New Relic Java agent wrapper in the layer.
+                  AWS_LAMBDA_EXEC_WRAPPER: /opt/newrelic-java-handler
+                  # Required: your New Relic ingest license key.
+                  NEW_RELIC_LICENSE_KEY: YOUR_NEW_RELIC_LICENSE_KEY
+                  # Required: your New Relic account ID (or parent account ID if applicable).
+                  NEW_RELIC_TRUSTED_ACCOUNT_KEY: YOUR_ACCOUNT_ID_HERE
+                  # Required: When the APM UI is enabled, this will identify your serverless function. We recommend it to be identical to your serverless function name.
+                  NEW_RELIC_APP_NAME: YOUR_NEW_RELIC_APP_NAME_HERE
+              Layers:
+                # Slim layer (recommended): only aws-lambda-java-core instrumentation enabled.
+                # Replace us-east-1 with your AWS region. Layer version increments with each release.
+                # For the latest versions, see https://layers.newrelic-external.com
+                # x86_64: arn:aws:lambda:us-east-1:451483290750:layer:NewRelicAgentJava-slim:1
+                # ARM64:  arn:aws:lambda:us-east-1:451483290750:layer:NewRelicAgentJavaARM64-slim:1
+                - arn:aws:lambda:us-east-1:451483290750:layer:NewRelicAgentJava-slim:1
+        ```
+
+        Two layer variants are available for Java. Use the slim layer unless you need full auto-instrumentation:
+
+        * **Slim layer (recommended)**: Only instruments `RequestHandler` / `RequestStreamHandler`. Lower cold start overhead.
+        * **Full layer**: All auto-instrumentation modules enabled. Higher cold start overhead.
+
+        See [Java serverless AWS Lambda performance monitoring](/docs/apm/agents/java-agent/getting-started/java-agent-approaches-lambda) for details on the two variants.
+
+    2. Configure the required [environment variables](/docs/serverless-function-monitoring/aws-lambda-monitoring/instrument-lambda-function/env-variables-lambda).
+    3. Deploy your Lambda function with the updated configuration.
+
+
+  </Collapser>
+
+  <Collapser
+    id="serverless"
+    title="Serverless Framework"
+  >
+    Serverless Framework is a popular development and deployment tool for serverless applications. It's written for AWS in Node.js, and acts mostly as a high level abstraction on top of CloudFormation templates. It works well for Node, Python, Ruby, Java, and .NET functions.
+
+    New Relic provides a [Serverless Framework Plugin](https://github.com/newrelic/serverless-newrelic-lambda-layers) to simplify instrumentation of your Serverless Framework application.
+
+    **Prerequisites:**
+
+    * An existing application that uses the Serverless Framework.
+    * [New Relic Account ID](/docs/accounts/accounts-billing/account-structure/account-id)
+    * [New Relic Personal API Key](/docs/apis/intro-apis/new-relic-api-keys)
+
+    **To install and configure your Serverless Framework application with New Relic:**
+
+    1. If you use `npm`, run the following command:
+
+      ```bash
+      npm install --save-dev serverless-newrelic-lambda-layers
+      ```
+
+      OR, If you use `yarn`, run the following command:
+
+      ```bash
+      yarn add --dev serverless-newrelic-lambda-layers
+      ```
+
+    2. Open your `serverless.yaml` file and add the following configuration:
+
+        1. Add `serverless-newrelic-lambda-layers` to your `plugins` list.
+        2. Add the following New Relic configuration in the custom section:
+
+            ```yaml
+            plugins:
+              - serverless-newrelic-lambda-layers
+            custom:
+              newRelic:
+                accountId: your-new-relic-account-id-here
+                apiKey: your-new-relic-personal-api-key-here
+                linkedAccount: your-new-relic-integration-account-name-here
+                apm: true
+            ```
+
+            The plugin uses `apiKey` (your [User API key](/docs/apis/intro-apis/new-relic-api-keys/#user-key)) only to look up your account's license key automatically and configure `NEW_RELIC_LICENSE_KEY` for you. If you need explicit control over which ingest key is used—for key rotation, environment governance, or billing attribution—set `ingestKey` (your [ingest/license key](/docs/apis/intro-apis/new-relic-api-keys/#license-key)) instead:
+
+            ```yaml
+            custom:
+              newRelic:
+                accountId: your-new-relic-account-id-here
+                ingestKey: your-new-relic-ingest-key-here
+                linkedAccount: your-new-relic-integration-account-name-here
+                apm: true
+            ```
+
+            <Callout variant="tip">
+              If you set both `apiKey` and `ingestKey`, `ingestKey` takes precedence and the automatic lookup is skipped.
+            </Callout>
+        3. Add the following `NR.Apm.Lambda.Mode: true` tag in the provider section:
+
+            ```yaml
+            provider:
+              tags:
+                NR.Apm.Lambda.Mode: true
+            ```
+
+    3. Configure the required [environment variables](/docs/serverless-function-monitoring/aws-lambda-monitoring/instrument-lambda-function/env-variables-lambda).
+    4. Deploy your Lambda function with the updated configuration.
+
+  </Collapser>
+
+  <Collapser
+    id="cdk"
+    title="AWS CDK"
+  >
+    The AWS Cloud Development Kit (AWS CDK) is a framework for defining cloud resources in code and provisioning it through AWS CloudFormation.
+
+    To use New Relic with AWS CDK, follow these steps:
+
+    1. Install the [New Relic Lambda layer](https://layers.newrelic-external.com/). Below is an example of a basic CDK app that deploys a New Relic instrumented Node.js Lambda function:
+
+        ```ts
+        import * as cdk from 'aws-cdk-lib';
+        import { Construct } from 'constructs';
+        import * as lambda from 'aws-cdk-lib/aws-lambda';
+
+        export class NewRelicExampleCdkStack extends cdk.Stack {
+          constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+            super(scope, id, props);
+            // Add latest New Relic Lambda layer ARN from https://layers.newrelic-external.com
+            const NewReliclayerArn = 'arn:aws:lambda:us-east-1:451483290750:layer:NewRelicNodeJS22X:38';
+            const myFunction = new lambda.Function(this, "NewRelicExampleLambda", {
+              runtime: lambda.Runtime.NODEJS_20_X,
+              // Update functions handler to point to the New Relic Lambda wrapper
+              handler: "newrelic-lambda-wrapper.handler",
+              code: lambda.Code.fromAsset('lib/lambda-runtime-code'),
+              layers: [lambda.LayerVersion.fromLayerVersionArn(this, 'NewRelicLayer', NewReliclayerArn)],
+              environment: {
+                // Set the NEW_RELIC_LAMBDA_HANDLER environment variable to the path of your initial handler.
+                NEW_RELIC_LAMBDA_HANDLER: 'index.handler',
+                NEW_RELIC_APM_LAMBDA_MODE: 'true'
+              },
+            });
+            // Add the New Relic APM Lambda Mode tag
+            cdk.Tags.of(myFunction).add('NR.Apm.Lambda.Mode', 'true');
+          }
+        }
+        ```
+
+    2. Configure the required [environment variables](/docs/serverless-function-monitoring/aws-lambda-monitoring/instrument-lambda-function/env-variables-lambda).
+    3. Deploy your Lambda function with the updated configuration.
+  </Collapser>
+
+  <Collapser
+    id="terraform"
+    title="Terraform"
+  >
+    Terraform is a popular general-purpose infrastructure as code tool. It can be used to manage AWS resources. We offer [some examples](https://github.com/newrelic/newrelic-lambda-extension/tree/main/examples/terraform) of New Relic instrumented Lambda functions deployed using Terraform scripts.
+
+    You can use the [New Relic Terraform provider](https://registry.terraform.io/providers/newrelic/newrelic/latest/docs/resources/cloud_aws_integrations) to set up your AWS integrations.
+    Upon setting up the provider, configure the required [environment variables](/docs/serverless-function-monitoring/aws-lambda-monitoring/instrument-lambda-function/env-variables-lambda), and add the `NR.Apm.Lambda.Mode: true` tag to your Lambda function.
+
+  </Collapser>
+
+  <Collapser
+    id="console"
+    title="AWS manual instrumentation"
+  >
+    While it's more error-prone and labor-intensive than the approaches above, you can manually alter the configuration of a Lambda function to use New Relic from the AWS Lambda Console, for Node.js, Python, Ruby, and Java (which includes the Java's legacy Open Tracing based solution and the new alternative APM agent based solution).
+
+    Here's an example for how to instrument New Relic Lambda monitoring for a Ruby runtime:
+
+    1. Navigate to the **Lambda** service section in the AWS web console. From there, find the Lambda function you would like to connect to New Relic.
+    2. In the default **Code** tab, scroll down to the **Layers** section, and click on the **Add a layer** button.
+    3. Click the **Create layer** button.
+    4. Go to the **Choose a layer** and select the **Specify an ARN** option.
+    5. Go to [New Relic's list of layers](https://layers.newrelic-external.com/) and use the drop-down list to select the AWS region where your Lambda function is hosted. From there, locate the ARN that matches your Lambda function's Ruby (or any other language's) version and architecture. There should be two options: X86 and ARM64. Use the **Copy to clipboard** button or manually copy the ARN string.
+        * Customers using Java will find Old Convention Java layers and New Convention Java-Agent layers which represent **2 seperate solutions for Java lambda monitoring**.
+          * **The legacy Java Layer** is based on Open Tracing which is recommended for customers using our serverless monitoring prior to April 10, 2026 and for customers on Java 11 and/or 8. All arns contain the substring `NewRelicJava`. An example arn of such a layer is: 
+            ```
+            arn:aws:lambda:us-east-1:451483290750:layer:NewRelicJava17:21
+            ```
+
+          * **New Java-Agent Layer** is based on the APM Java agent and is recommended for new Java applications. There is a full layer and a slim layer which reduces visibility but improves cold start performance. **This is not a drop in replacement for the legacy Open Tracing solution**. Check out our [APM agent doc](/docs/apm/agents/java-agent/getting-started/java-agent-approaches-lambda) for more details. All arns contain the substring `NewRelicAgentJava`. An example arn of such a layer is: 
+            ```
+            arn:aws:lambda:us-east-1:451483290750:layer:NewRelicAgentJava:4
+            ```
+    6. In the **Specify an ARN** section of the AWS console form, paste in the New Relic Lambda layer ARN.
+    7. On the AWS console form, click the **Add** button to add the layer to your Lambda function.
+    8. On your Lambda function's page, with the default **Code** tab selected, scroll down to the **Runtime settings** section and click the **Edit** button.
+    9. Make a safe copy of the existing **Handler** value. You'll need it for a later step.
+    10. Change the **Handler** value to: `newrelic_lambda_wrapper.handler` and click **Save**.
+    11. Switch to the **Configuration** tab on your Lambda function's page.
+    12. Select the **Environment variables** sub-tab and based on your requirement, define the [Environmental Variables](/docs/serverless-function-monitoring/aws-lambda-monitoring/instrument-lambda-function/env-variables-lambda).
+    13. Modify the Execution Role to allow access to the New Relic license key secret.
+        * Find the ARN of the secret named `NEW_RELIC_LICENSE_KEY`.
+        * Add a new inline policy in the function's execution role that looks like this the code below. Replace the `SECRET_ARN` with the value you found above.
+          ```json
+          "Statement": [
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue"
+              ],
+              "Resource": "SECRET_ARN",
+              "Effect": "Allow"
+            }
+          ]
+          ```
+          <Callout variant="tip">
+            The New Relic layer will automatically deliver the New Relic Ruby agent and be loaded via a Ruby `require` prior to your Lambda function's invocation. To avoid conflicts, don't include a copy of the Ruby agent anywhere else. Feel free to perform any desired New Relic Ruby agent API calls within your function to take advantage of the agent's presence.
+          </Callout>
+      14. In your AWS Management Console, on the Configuration tab, add the `NR.Apm.Lambda.Mode: true` tag to your Lambda function.
+      15. Deploy your Lambda function with the updated configuration.
+
+    Java, Python, Node.js, and .Net runtimes will follow the same instrumentation flow as Ruby, but with some different handlers. Here's how to update your function's handler to point to the newly attached layer in the console for your function:
+
+    * Java (legacy Open Tracing Based Solution):
+      * `RequestHandler` implementation: `com.newrelic.java.HandlerWrapper::handleRequest`.
+      * `RequestStreamHandler` implementation: `com.newrelic.java.HandlerWrapper::handleStreamsRequest`.
+    * Python: `newrelic_lambda_wrapper.handler` (underscores).
+    * Node:
+      * CommonJS: `newrelic-lambda-wrapper.handler` (hyphens).
+      * ESM: `/opt/nodejs/node_modules/newrelic-esm-lambda-wrapper/index.handler` (hyphens).
+    * For .Net you don't have to set the handler.
+    * For the new Java-Agent solution you don't have to set the handler.
+
+    Note that for Go, you must make source code changes to your Lambda function to instrument it. Configuration changes are not enough.
+  </Collapser>
+</CollapserGroup>
+
+
+## Find and use data [#find-data]
+
+After you instrument your AWS Lambda functions, you can find and use the data in the New Relic APM interface. The data is organized into several key areas, each providing different insights into the performance and health of your Lambda functions.
+
+In the APM interface, you can explore various aspects of your Lambda functions including [distributed tracing](/docs/distributed-tracing/concepts/introduction-distributed-tracing/), [service maps](/docs/new-relic-solutions/new-relic-one/ui-data/service-maps/service-maps/), [transactions](/docs/apm/transactions/intro-transactions/transactions-new-relic-apm/), [error analysis](/docs/triage-inbox/getting-started/), and more. Each of these areas provides detailed insights into the performance, latency, and error rates of your Lambda functions, allowing you to quickly identify and resolve issues.
+
+<Callout variant="tip">
+
+The Invocation experience is now integrated with APM transaction traces. This allows you to use a specific `AWS RequestId` to drill-down into an APM transaction trace for detailed information about that particular Lambda execution.
+
+</Callout>
+
+To view your Lambda functions in the New Relic APM interface:
+
+1. Go to <DNT>[https://one.newrelic.com](https://one.newrelic.com) > APM & Services</DNT>.
+2. Set the search criteria as `isLambdaFunction = true`.
+3. From the displayed list, select your Lambda Function to view the data.
+
+
+
+
+## Related articles [#related-docs]
+
+<DocTiles>
+  <DocTile title="Compatibility and requirement" path="/docs/serverless-function-monitoring/aws-lambda-monitoring/instrument-lambda-function/compatibility-requirement-lambda-monitoring">Learn more about supported runtimes and prerequisites</DocTile>
+  <DocTile title="Troubleshooting" path="/docs/serverless-function-monitoring/aws-lambda-monitoring/troubleshooting/troubleshoot-enabling-serverless-monitoring-aws-lambda" >Learn how to troubleshoot installation related issues</DocTile>
+</DocTiles>

@@ -1,0 +1,390 @@
+---
+title: '「Hello, World!」を作成します。応用'
+tags:
+  - New Relic solutions
+  - Build with New Relic
+metaDescription: 'Build a "Hello, World!" app and publish it to New Relic'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+<br />「Hello, world!」を作成する方法は次のとおりです。 New Relic でのアプリケーション。
+
+このガイドでは、次のことを行います。
+
+* アプリケーションのプロトタイプを作成する New Relic サイトのローカル バージョンを作成する
+* アプリケーションを Instant Observability に公開して、チームメイトとアプリケーションを共有する
+
+## あなたが始める前に
+
+アプリケーションの開発には、New Relic アカウントと New Relic One CLI ( `nr1` ) が必要です。
+
+まだ行っていない場合:
+
+* New Relic アカウントに[サインアップします](https://newrelic.com/signup/) 。 このガイドを完了するには、 [公開および購読のアクセス許可が](https://developer.newrelic.com/build-apps/permission-manage-apps/) 必要です。
+* [Node.js](https://nodejs.org/en/download/)をインストールする
+* [CLI クイック スタート](https://one.newrelic.com/launcher/developer-center.launcher?pane=eyJuZXJkbGV0SWQiOiJkZXZlbG9wZXItY2VudGVyLmRldmVsb3Blci1jZW50ZXIifQ==)を完了する
+
+これで、 `my-awesome-nerdpack`という Nerdpack ができました。この Nerdpack には、名前を付けた Nerdlet とランチャーがあります (ただし、このガイドでは、デフォルトのランチャー名「launcher」と Nerdlet 名「home」を使用します)。このガイドでは、この Nerdpack を使用します。
+
+最後に、 `nr1`が最新であることを確認してください。
+
+```sh
+nr1 update
+```
+
+環境設定の詳細については、 [「開発環境の設定」](https://developer.newrelic.com/build-apps/set-up-dev-env/)および[「Nerdpack の高度な構成を有効にする」](/docs/new-relic-solutions/new-relic-one/build-nr-apps/advanced-config)を参照してください。
+
+<Callout variant="tip">
+  VSCode を使用する場合、アプリのビルドに使用できる [拡張機能](https://marketplace.visualstudio.com/items?itemName=new-relic.nr1) と [拡張パック](https://marketplace.visualstudio.com/items?itemName=new-relic.new-relic-extension-pack) があります。
+</Callout>
+
+## アプリケーションをローカルで更新して提供する
+
+`nr1`を使用すると、Nerdpack のローカル ビルドを New Relic に提供できます。これは、アプリケーションを公開する前に、実稼働環境に似た環境でアプリケーションを開発するのに役立ちます。
+
+コードを変更する前に、Nerdpack のディレクトリ構造をよく理解しておいてください。
+
+```txt lineHighlight=3-10,12
+my-awesome-nerdpack/
+├───README.md
+├───launchers/
+│   └───launcher/
+│       └───nr1.json
+├───nerdlets/
+│   └───home
+│       ├───index.js
+│       ├───nr1.json
+│       └───styles.scss
+├───node_modules/
+├───nr1.json
+├───package-lock.json
+└───package.json
+```
+
+*launchers* および *nerdlets* ディレクトリには、アプリケーションのロジックが含まれています。 ほとんどのコードを更新するのは、これらのディレクトリです。Nerdpack 全体の *nr1.json* ファイルには、Nerdpack、Nerdlets、およびランチャーに関するメタデータが保持されます。
+
+<Callout variant="tip">
+  Nerdpack ファイル構造の詳細については、[ドキュメントを](/docs/new-relic-solutions/build-nr-ui/nerdpack-file-structure/)お読みください。
+</Callout>
+
+<Steps>
+  <Step>
+    *my-awesome-nerdpack/nerdlets/home/index.js*で、デフォルトの返信メッセージを「Hello, world!」に変更します。
+
+    ```jsx lineHighlight=7
+    import React from 'react';
+
+    // https://docs.newrelic.com/docs/new-relic-programmable-platform-introduction
+
+    export default class HomeNerdlet extends React.Component {
+      render() {
+        return <h1>Hello, world!</h1>;
+      }
+    }
+    ```
+  </Step>
+
+  <Step>
+    オプションの手順として、 [](https://developer.newrelic.com/build-apps/publish-deploy/catalog/#update-your-nerdpacks-icons)*icon.webp*という名前の画像を使用して、 カスタム ランチャー アイコンを追加できます。
+
+    *launchers/launcher*に、 *icon.png*という画像を追加します。
+
+    ```txt lineHighlight=5
+    my-awesome-nerdpack/
+    ├───README.md
+    ├───launchers/
+    │   └───launcher/
+    │       ├───icon.png
+    │       └───nr1.json
+    ├───nerdlets/
+    │   └───home
+    │       ├───index.js
+    │       ├───nr1.json
+    │       └───styles.scss
+    ├───node_modules/
+    ├───nr1.json
+    ├───package-lock.json
+    └───package.json
+    ```
+
+    これにより、ランチャーのアイコンが作成されます。
+
+    ルート ディレクトリに、同じイメージを追加します。
+
+    ```txt lineHighlight=3
+    my-awesome-nerdpack/
+    ├───README.md
+    ├───icon.png
+    ├───launchers/
+    │   └───launcher/
+    │       ├───icon.png
+    │       └───nr1.json
+    ├───nerdlets/
+    │   └───home
+    │       ├───index.js
+    │       ├───nr1.json
+    │       └───styles.scss
+    ├───node_modules/
+    ├───nr1.json
+    ├───package-lock.json
+    └───package.json
+    ```
+
+    これにより、アプリの詳細ページのアイコンが設定されます。
+  </Step>
+
+  <Step>
+    次に、ランチャーの名前をより意味のある名前に変更します。* my-awesome-nerdpack/launchers/launcher/nr1.json*で、 `displayName`を「Hello world」に変更します。
+
+    ```json lineHighlight=4
+    {
+      "schemaType": "LAUNCHER",
+      "id": "launcher",
+      "displayName": "Hello world",
+      "description": "Describe me",
+      "rootNerdletId": "7c4d08ae-4e6f-40d8-80a9-f8b7722fb96b.home"
+    }
+    ```
+  </Step>
+
+  <Step>
+    新しい変更をローカルで確認するには、Nerdpack 内からローカル ノード サーバーを起動します。
+
+    ```bash
+    nr1 nerdpack:serve
+    [output] Found and loaded {success}2 {plain}nr1.json files on MyAwesomeNerdpack ({purple}123a4b95-678c-9012-3456-d7e8f90g1hi2{plain}) Nerdpack.
+    [output]
+    [output] {purple}Nerdpack:
+    [output]  {success}✔  MyAwesomeNerdpack {plain}({purple}123a4b95-678c-9012-3456-d7e8f90g1hi2{plain}) {blue}nr1.json
+    [output]
+    [output] {purple}Launchers:
+    [output]  {success}✔  launcher {blue}launchers/launcher/nr1.json
+    [output]
+    [output] {purple}Nerdlets:
+    [output]  {success}✔  home {blue}nerdlets/home/nr1.json
+    [output]
+    [output] There is no certificate created yet.
+    [output]  {success}✔  {plain}New certificate created.
+    [output]
+    [output] Webpack bundle analyzer is enabled (you need to wait for the first build to finish)
+    [output]  └  You can head to {blue}http://127.0.0.1:27888
+    [output]
+    [output] {blue}NOTE: {plain}To verify how your assets will look in production, you need to
+    [output]       add "--mode=prod" when starting the development server.
+    [output]
+    [output] 🛠  Built artifact files for:ex.js...
+    [output]  ⁎  {purple}123a4b95-678c-9012-3456-d7e8f90g1hi2--home {plain}built {success}✔
+    [output]
+    [output]  {success}✔  {plain}Nerdpack built successfully!
+    [output]  {yellow}★  {plain}Starting as orchestrator...
+    [output]
+    [output]  {success}✔  {plain}Server ready! Test it at: {blue}https://one.newrelic.com/?nerdpacks=local
+    [output]  {blue}↩  {plain}Server will reload automatically if you modify any file!
+    [output]
+    [output]  {blue}ℹ  {plain}Additionally, you can test the following artifacts at:
+    [output]
+    [output] {purple}Launchers:
+    [output]  ⁎  {success}launcher {blue}https://onenr.io/0JBQrggmDwZ
+    [output]  {blue}ℹ  {plain}You can use "npm start -- --mode=prod" to run the development server in prod mode.
+    ```
+  </Step>
+
+  <Step>
+    出力の下部にある URL を使用して、ランチャーを開きます。
+
+    ```bash
+    [output] {purple}Launchers:
+    [output]  ⁎  {success}launcher {blue}https://onenr.io/0JBQrggmDwZ
+    [output]  {blue}ℹ  {plain}You can use "npm start -- --mode=prod" to run the development server in prod mode.
+    ```
+  </Step>
+
+  <Step>
+    ここに、「Hello, world!」と一緒に Nerdlet が表示されます。メッセージ：
+
+    <img title="Hello, World in the browser" alt="Hello, World in the browser" src="/images/build-with-nr-screenshot-hello-world-output-local.webp" />
+  </Step>
+</Steps>
+
+## アプリケーションを公開する
+
+Nerdpack をローカルで提供しているため、同僚はそれを見ることができません。準備ができたら、統合、ダッシュボード、アラート、Nerdpacks などの統合カタログである [Instant Observability](https://newrelic.com/instant-observability/)に公開します。 Nerdpack の公開に問題がある場合は、 [ドキュメントを](https://developer.newrelic.com/build-apps/permission-manage-apps/) 読んで Nerdpack のアクセス許可について確認してください。
+
+<Steps>
+  <Step>
+    ルート ディレクトリから、Nerdpack を公開します。
+
+    ```bash
+    nr1 nerdpack:publish
+    [output] Found and loaded {success}2 {plain}nr1.json files on MyAwesomeNerdpack ({purple}123a4b95-678c-9012-3456-d7e8f90g1hi2{plain}) Nerdpack.
+    [output]
+    [output] {purple}Nerdpack:
+    [output]  {success}✔  MyAwesomeNerdpack ({purple}123a4b95-678c-9012-3456-d7e8f90g1hi2{plain}) {blue}nr1.json
+    [output]
+    [output] {purple}Launchers:
+    [output]  {success}✔  {blue}launcher launchers/launcher/nr1.json
+    [output]
+    [output] {purple}Nerdlets:
+    [output]  {success}✔  {blue}home nerdlets/home/nr1.json
+    [output]
+    [output] 🛠  Built artifact files for:
+    [output]  ⁎  {purple}123a4b95-678c-9012-3456-d7e8f90g1hi2--home {plain}built {success}✔
+    [output]
+    [output]  {success}✔  {plain}Nerdpack built successfully!
+    [output]
+    [output] Publishing Nerdpack MyAwesomeNerdpack ({purple}123a4b95-678c-9012-3456-d7e8f90g1hi2{plain})
+    [output]  {success}✔  {plain}Nerdpack published successfully!
+    [output]  {success}✔  {plain}Tagged {purple}123a4b95-678c-9012-3456-d7e8f90g1hi2 {plain}version {blue}0.1.0 {plain}as {blue}STABLE.
+    ```
+  </Step>
+
+  <Step>
+    [New Relic](https://one.newrelic.com)で、 <DNT>**Integrations &amp; Agents**</DNT>をクリックします。
+
+    <img title="Navigate to Integrations & Agents" alt="Navigate to Integrations & Agents" src="/images/build-with-nr-screenshot-add-data.webp" />
+  </Step>
+
+  <Step>
+    新しい Nerdpack を見つけてクリックします。
+
+    <img title="Find and click your Nerdpack" alt="search and click your nerdpack" src="/images/build-with-nr-screenshot-find-and-click-nerdpack.webp" />
+  </Step>
+</Steps>
+
+新しいアプリケーションが開いたときに、説明的な情報が表示されないことに注意してください。次のセクションでは、説明的なメタデータを追加する方法を示します。
+
+<img title="An empty application description in Instant Observability" alt="An empty application description in Instant Observability" src="/images/build-with-nr-screenshot-empty-catalog-description.webp" />
+
+## カタログの詳細を使用してプロジェクトを説明する
+
+新しいアプリケーションが Instant Observability になったので、ユーザーがアプリケーションの機能と使用方法を理解するのに役立つ情報を追加できます。
+
+<Steps>
+  <Step>
+    Nerdpack のルート ディレクトリで、次のコマンドを実行します。
+
+    ```bash
+    nr1 create --type catalog
+    [output]  {success}✔  {plain}created: launchers/launcher/catalog
+    [output]  {success}✔  {plain}created: nerdlets/home/catalog
+    [output]
+    [output]  {success}✔  {plain}catalog created successfully!
+    [output]     {purple}catalog {plain}is available at "./catalog"
+    ```
+
+    これにより、次の 3 つのディレクトリが作成されます。
+
+    * *launchers/launcher/catalog*: ランチャーのスクリーンショットを保持します
+    * *nerdlets/home/catalog*: これには Nerdlet のスクリーンショットが保存されます
+    * *catalog*: これには、ドキュメント、スクリーンショット、説明、および Nerdpack に関する詳細情報が含まれています。
+
+    <Callout variant="tip">
+      他のランチャー、Nerdlets、またはカスタム ビジュアライゼーションがある場合は、このコマンドからカタログ ディレクトリも取得します。
+    </Callout>
+
+    プロジェクトでの結果は次のようになります。
+
+    ```txt lineHighlight=4-9,13-14,20-21
+    my-awesome-nerdpack/
+    ├───README.md
+    ├───icon.png
+    ├───catalog/
+    │   ├───README.md
+    │   ├───additionalInfo.md
+    │   ├───config.json
+    │   ├───documentation.md
+    │   └───screenshots/
+    ├───launchers/
+    │   └───launcher/
+    │       ├───icon.png
+    │       ├───catalog/
+    │       │   └───screenshots/
+    │       └───nr1.json
+    ├───nerdlets/
+    │   └───home
+    │       ├───index.js
+    │       ├───nr1.json
+    │       ├───catalog/
+    │       │   └───screenshots/
+    │       └───styles.scss
+    ├───node_modules/
+    ├───nr1.json
+    ├───package-lock.json
+    └───package.json
+    ```
+  </Step>
+
+  <Step>
+    プロジェクトのルート *カタログ* ディレクトリに、スクリーンショットまたはさまざまな種類のメタデータを追加して、プロジェクトを説明します。 ランチャーまたは Nerdlet のカタログ ディレクトリにスクリーンショットを追加することもできます。追加できるものの詳細については、 [「Nerdpack のカタログ メタデータを更新する」を](https://developer.newrelic.com/build-apps/publish-deploy/catalog/#update-your-nerdpacks-catalog-metadata)参照してください。
+  </Step>
+
+  <Step>
+    必要なスクリーンショットと説明を追加したら、次のコマンドを実行して、メタデータを Instant Observability カタログに保存します。
+
+    ```bash
+    nr1 catalog:submit
+    ```
+  </Step>
+
+  <Step>
+    Instant Observability に戻り、ページを更新して、プロジェクトを説明する新しいスクリーンショットとメタデータを確認します。
+
+    <img title="An Nerdpack in Instant Observability" alt="Overview view of Nerdpack in Instant Observability" src="/images/build-with-nr-screenshot-overview-view.webp" />
+
+    ランチャーまたは Nerdlet にスクリーンショットを追加した場合は、 <DNT>**What&apos;s inside**</DNT>で確認できます。
+
+    <img title="A Nerdpack's inside overview" alt="What's Inside View of a Nerdpack in Instant Observability" src="/images/build-with-nr-screenshot-whats-inside-view.webp" />
+  </Step>
+</Steps>
+
+## アカウントをアプリケーションにサブスクライブする
+
+アプリケーションを使用するには、アプリケーションをサブスクライブする必要があります。アカウントのどのユーザーがサブスクライブできるかについては、 [権限に関するドキュメント を](https://developer.newrelic.com/build-apps/permission-manage-apps/)お読みください。
+
+<Steps>
+  <Step>
+    まだそこにいない場合は、Instant Observability でアプリケーションに移動します。
+
+    <img title="Find and click your Nerdpack" alt="search and click your nerdpack" src="/images/build-with-nr-screenshot-find-and-click-nerdpack.webp" />
+  </Step>
+
+  <Step>
+    アプリケーションの説明ページで、 <DNT>**Add this app**</DNT>をクリックします。
+
+    <img title="Add app to your account" alt="add this app" src="/images/build-with-nr-screenshot-add-app.webp" />
+  </Step>
+
+  <Step>
+    アプリケーションをサブスクライブするアカウントを選択し、アカウントを更新します。
+
+    <img title="Update your accounts" alt="Update your accounts" src="/images/build-with-nr-screenshot-update-account.webp" />
+  </Step>
+
+  <Step>
+    <DNT>**Apps**</DNT>ページに移動します:
+
+    <img title="Apps page" alt="Navigate to Apps page" src="/images/build-with-nr-screenshot-apps.webp" />
+
+    ここには、アカウントが購読しているアプリが表示されます。
+  </Step>
+
+  <Step>
+    ランチャーをクリックします。
+
+    <img title="Click your launcher" alt="click your launcher" src="/images/build-with-nr-screenshot-launcher.webp" />
+
+    ここに、アプリケーションが表示されます。
+
+    <img title="Hello, World in the browser" alt="Hello, World in the browser" src="/images/build-with-nr-screenshot-hello-world-output-local.webp" />
+  </Step>
+</Steps>
+
+## 概要
+
+この例の手順を完了したので、次の基本的な手順を学習しました。
+
+* ローカル アプリケーションを作成する
+* アプリケーションを Instant Observability に公開して、同僚と共有できるようにします
+* ユーザーが使用方法を理解できるように、カタログ内のプロジェクトに詳細を追加します
+* アカウントをアプリケーションにサブスクライブして、他のユーザーが使用できるようにします

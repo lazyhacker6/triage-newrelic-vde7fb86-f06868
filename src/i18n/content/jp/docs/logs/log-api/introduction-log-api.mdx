@@ -1,0 +1,1027 @@
+---
+title: ログデータは、New RelicのLog APIを使用して送信します。
+tags:
+  - Logs
+  - Log management
+  - Log API
+metaDescription: Use our Log API so you can send your monitored log data directly to New Relic via HTTP input.
+freshnessValidatedDate: never
+translationType: human
+---
+
+New Relicの[ログ転送ソリューション](/docs/logs/forward-logs/)ではニーズを満たせない場合、Log API使用して、HTTPエンドポイント経由でログデータをNew Relicに直接送信できます。
+
+## HTTPエンドポイント [#endpoint]
+
+お使いのNew Relicアカウントに応じたエンドポイントを使用してください。
+
+米国（US）エンドポイント（デフォルト）：
+
+```
+https://log-api.newrelic.com/log/v1
+```
+
+[欧州連合](/docs/accounts/accounts-billing/account-setup/choose-your-data-center)（EU）エンドポイント：
+
+```
+https://log-api.eu.newrelic.com/log/v1
+```
+
+[日本](/docs/accounts/accounts-billing/account-setup/choose-your-data-center)のエンドポイント：
+
+```
+https://log-api.jp.nr-data.net/log/v1
+```
+
+FedRAMPエンドポイント：
+
+```
+https://gov-log-api.newrelic.com/log/v1
+```
+
+## HTTP設定 [#setup]
+
+Log API経由でログデータをNew Relicアカウントに送信する方法：
+
+1. <InlinePopover type="licenseKey" />を取得します。
+
+2. JSONペイロードの[制限と制限された文字](#limits)を確認します。
+
+3. 必要な[ヘッダー](#json-headers)と[ボディ](#json-body)フィールドを使用してJSONメッセージを作成します。
+
+4. `Api-Key`または`License-Key`が[ヘッダー](#auth-headers)または[クエリパラメーター](#query-parameters)に含まれていることを確認します。[ログのJSON例](#log-attribute-examples)を参照してください。
+
+5. `POST`リクエストでNew Relicアカウントの適切なHTTPエンドポイントにJSONメッセージを送信します。
+
+   * US： `https://log-api.newrelic.com/log/v1`
+   * EU： `https://log-api.eu.newrelic.com/log/v1`
+   * 日本： `https://log-api.jp.nr-data.net/log/v1`
+   * FedRAMP： `https://gov-log-api.newrelic.com/log/v1`
+
+6. トラフィックを発生させて数分待ってから、[アカウントでデータを確認します](#what-next)。
+
+<InlinePopover type="logs" />機能を有効にしてもデータが表示されない場合は、[トラブルシューティング手順](/docs/logs/log-management/troubleshooting/no-log-data-appears-ui/)を参照してください。
+
+## HTTPヘッダー [#json-headers]
+
+HTTPヘッダーを作成する際は、以下のガイドラインに従ってください。
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+ヘッダー
+</th>
+
+<th>
+サポートされている値
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`Content-Type`
+
+必須
+</td>
+
+<td>
+* `application/json`
+* `json`
+* `application/gzip`
+* `gzip`
+</td>
+</tr>
+</tbody>
+</table>
+
+Gzip圧縮されたJSON形式に対応しています。圧縮されたJSONを送信する場合は、`Content-Type: application/json`ヘッダーと`Content-Encoding: gzip`ヘッダーを含めてください。
+
+## 認証 [#authentication]
+
+<InlinePopover type="licenseKey" />は、Log APIへのリクエストを認証するために使用され、送信されたログメッセージが書き込まれるNew Relicアカウントを決定します。これは、HTTPヘッダーまたは任意の文字列として渡す必要があります。
+
+### オプション1：HTTPヘッダーを使用して認証する [#auth-header]
+
+下記のとおり、カスタムHTTPヘッダーを追加してライセンスキーを渡してください。
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+ヘッダー
+</th>
+
+<th>
+サポートされている値
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`Api-Key`
+</td>
+
+<td>
+New Relic <InlinePopover type="licenseKey" />。これを[クエリパラメーター経由で送信する](#query-parameters)こともできます。
+</td>
+</tr>
+</tbody>
+</table>
+
+### オプション2：クエリ文字列パラメーターを使用して認証する（「ヘッダーレス」認証） [#query-parameters]
+
+ライセンスキーは、URLのクエリ文字列パラメーターとして渡すこともできます。これは、カスタムHTTPリクエストヘッダーを使用できないクラウドベースのソースからログを送信する場合に便利です。
+
+例: `https://LOG_API_ENDPOINT/log/v1?Api-Key=YOUR_API_KEY_HERE`
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+クエリパラメーター
+</th>
+
+<th>
+値
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`Api-Key`
+</td>
+
+<td>
+<InlinePopover type="licenseKey" />。[HTTPヘッダー経由で送信する](#auth-header)こともできます。
+</td>
+</tr>
+</tbody>
+</table>
+
+## JSONボディ [#json-content]
+
+JSONメッセージは、略式の属性セットまたは詳細な属性セットのいずれかを使用して送信できます。
+
+<CollapserGroup>
+<Collapser id="simple-json" title="略式のJSONボディメッセージ">
+略式でJSONメッセージを作成する場合は、次の内容を含む単一のJSONオブジェクトを送信します。
+
+<table>
+<thead>
+<tr>
+<th>
+フィールド
+</th>
+
+<th>
+値のタイプ
+</th>
+
+<th>
+形式
+</th>
+
+<th>
+必須
+</th>
+
+<th>
+メモ
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`"timestamp"`
+</td>
+
+<td>
+Integer、String
+</td>
+
+<td>
+エポックからのミリ秒または秒数（整数の場合）、またはISO8601形式のタイムスタンプ（文字列の場合）
+</td>
+
+<td>
+いいえ
+</td>
+
+<td>
+このフィールドが存在しない場合、または誤って指定されている場合、取り込み時刻がメッセージのタイムスタンプとして設定されます。
+</td>
+</tr>
+
+<tr>
+<td>
+`"message"`
+</td>
+
+<td>
+（任意。ただし、Stringが推奨されます。[サポートされている属性タイプのリスト](#supported-types)を参照してください）
+</td>
+
+<td>
+任意
+</td>
+
+<td>
+いいえ
+</td>
+
+<td>
+デフォルトで検索される<DNT>**main**</DNT>ログメッセージフィールド
+</td>
+</tr>
+
+<tr>
+<td>
+`"logtype"`
+</td>
+
+<td>
+文字列
+</td>
+
+<td>
+任意の文字列
+</td>
+
+<td>
+いいえ
+</td>
+
+<td>
+ログを識別し、解析ルールを照合するための主要フィールド
+</td>
+</tr>
+
+<tr>
+<td>
+その他のフィールド
+</td>
+
+<td>
+（任意。[サポートされている属性タイプのリスト](#supported-types)を参照してください）
+</td>
+
+<td>
+任意
+</td>
+
+<td>
+いいえ
+</td>
+
+<td>
+この内容がログメッセージの属性となります。
+</td>
+</tr>
+</tbody>
+</table>
+</Collapser>
+
+<Collapser id="detailed-json" title="詳細なJSONボディメッセージ">
+詳細な形式でボディを作成する場合、1つ以上のJSONオブジェクトを含む<DNT>**JSON array**</DNT>とし、各JSONオブジェクトは次のフォーマットに準拠する必要があります。
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+フィールド
+</th>
+
+<th>
+値のタイプ
+</th>
+
+<th>
+形式
+</th>
+
+<th>
+必須
+</th>
+
+<th>
+メモ
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`"common"`
+</td>
+
+<td>
+オブジェクト
+</td>
+
+<td>
+[common](#json-common)を参照。
+</td>
+
+<td>
+いいえ
+</td>
+
+<td>
+すべてのログメッセージに共通する属性
+</td>
+</tr>
+
+<tr>
+<td>
+`"logs"`
+</td>
+
+<td>
+配列
+</td>
+
+<td>
+[logs](#json-logs)を参照。
+</td>
+
+<td>
+はい
+</td>
+
+<td>
+ログエントリの配列
+</td>
+</tr>
+</tbody>
+</table>
+</Collapser>
+</CollapserGroup>
+
+## サポートされている属性タイプ [#supported-types]
+
+属性は、以下のいずれかのタイプになります。
+
+<table>
+<thead>
+<tr>
+<th>
+JSONリクエスト内のタイプ
+</th>
+
+<th>
+New Relicデータベースに保存されているタイプ
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`boolean`
+</td>
+
+<td>
+`boolean`
+</td>
+</tr>
+
+<tr>
+<td>
+`integer`
+</td>
+
+<td>
+`integer`
+</td>
+</tr>
+
+<tr>
+<td>
+`long`
+</td>
+
+<td>
+`long`
+</td>
+</tr>
+
+<tr>
+<td>
+`float`
+</td>
+
+<td>
+`float`
+</td>
+</tr>
+
+<tr>
+<td>
+`double`
+</td>
+
+<td>
+`double`
+</td>
+</tr>
+
+<tr>
+<td>
+`string`
+</td>
+
+<td>
+`string` （文字列値が文字列化されたJSONである場合、解析され、そのフィールドが変数として抽出されます。[JSONメッセージ属性の解析](#message-attribute-parsin)を参照してください）
+</td>
+</tr>
+
+<tr>
+<td>
+配列
+</td>
+
+<td>
+配列は文字列に変換されてから保存されます。OpenTelemetryのログは、同種の配列をサポートしています。詳細については、[OpenTelemetryの配列](/docs/nrql/using-nrql/arrays-in-nrql/)を参照してください。
+</td>
+</tr>
+</tbody>
+</table>
+
+## 上限値および文字の制限 [#limits]
+
+<Callout variant="caution">
+顧客向けアプリケーションのコード内からNew RelicのAPIを呼び出さないでください。パフォーマンスの問題が発生したり、レスポンスタイムが遅い場合にアプリケーションがブロックされたりする可能性があります。やむを得ずこの方法で処理する必要がある場合は、パフォーマンスの問題を回避するために、New RelicのAPIを非同期で呼び出してください。
+</Callout>
+
+Log APIに送信されるログの制限：
+
+* ペイロードの合計サイズ：<DNT>**1MB(10^6 bytes) maximum per POST**</DNT>。圧縮の使用を強く推奨します。
+* ペイロードは<DNT>**UTF-8**</DNT>としてエンコードする必要があります。
+* イベントあたりの属性数：最大255個。
+* 属性名の長さ：255文字。
+* 属性値の長さ：最初の4,094文字は、`message`のように同じ名前の`Log`イベントフィールドとしてNRDBに格納されます。文字列の値が4,094文字を超える場合、長い文字列を[ブロブ](/docs/logs/ui-data/long-logs-blobs)として保存します。
+
+特定の属性には、追加の制限があります。
+
+* `accountId`：これは予約した属性名です。この名前が含まれている場合は、取り込み中に破棄されます。
+* `appId`：整数である必要があります。整数以外のデータ型を使用した場合、データは取り込まれますが、クエリを実行できなくなります。
+* `entity.guid`、`entity.name`、および`entity.type`：これらの属性は、エンティティを識別するために内部で使用されます。メトリックデータポイントの属性セクションでこれらのキーとともに送信される値によって、UIのエンティティが見つからない、またはテレメトリが予期されるエンティティと関連していないなどの未定義の動作が発生する場合があります。詳細については、[エンティティの合成](/docs/new-relic-one/use-new-relic-one/core-concepts/what-entity-new-relic/#entity-synthesis)を参照してください。
+* `eventType`：これは予約した属性名です。この名前が含まれている場合は、取り込み中に破棄されます。
+* `timestamp`：Unixエポック形式のタイムスタンプ（秒またはミリ秒単位）、またはISO8601形式のタイムスタンプである必要があります。
+
+<Callout variant="important">
+タイムスタンプが48時間以上前のペイロードは破棄される可能性があります。
+</Callout>
+
+Log APIに送信されるログのレート制限：
+
+* Log APIへのHTTPリクエストの最大送信レート：1分あたり30万件のリクエスト
+* Log APIへの非圧縮ログJSONデータの最大送信レート：1分あたり10GB
+
+### レート制限違反
+
+レート制限を超えると、Log APIの動作に影響が出ます。その場合は、以下の手順に従ってください。
+
+<CollapserGroup>
+<Collapser id="http-requests" title="1分あたりのHTTPリクエスト">
+アカウントのリクエスト件数の上限を超えると、New Relic Log APIは次の1分間までの残り時間、`429`レスポンスを返します。このレスポンスには、再送信または新しいデータの送信が可能になるまでの秒数で示す`Retry-After`ヘッダーが含まれます。
+
+この問題を解決するには、送信するデータポイントの数を減らすか、レート制限の変更を申請してください。その後サブスクリプションを変更しても、変更したレート制限には影響しません。アカウントを変更し、レート制限がその影響を受ける場合、レート制限を調整するために当社に通知してください。
+
+レート制限の変更をご希望の場合は、New Relicのアカウント担当者にご連絡いただくか、[サポートポータルを](http://support.newrelic.com)ご覧ください。
+</Collapser>
+
+<Collapser id="json-bytes" title="1分あたりのJSONサイズ（バイト数）">
+アカウントのログJSONサイズの上限を超えると、New Relic Log APIは次の1分間までの残り時間、`429`レスポンスを返します。このレスポンスには、再送信または新しいデータの送信が可能になるまでの秒数で示す`Retry-After`ヘッダーが含まれます。
+
+この問題を解決するには、送信するログデータの量を減らすか、送信期間を長くしてください。
+
+レート制限の変更をご希望の場合は、New Relicのアカウント担当者にご連絡いただくか、[サポートポータルを](http://support.newrelic.com)ご覧ください。
+</Collapser>
+</CollapserGroup>
+
+### ログペイロードの形式 [#payload-format]
+
+有効なJSONペイロードであれば、すべて受け付けます。ペイロードは<DNT>**UTF-8**</DNT>としてエンコードする必要があります。
+
+## JSONメッセージ属性 [#attributes]
+
+<CollapserGroup>
+<Collapser id="json-common" title="共通のブロック属性">
+[`logs`](#json-logs)内のすべてのログエントリに共通する属性を含むブロック。
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+フィールド
+</th>
+
+<th>
+値のタイプ
+</th>
+
+<th>
+形式
+</th>
+
+<th>
+必須
+</th>
+
+<th>
+メモ
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`"timestamp"`
+</td>
+
+<td>
+Integer、String
+</td>
+
+<td>
+エポックからのミリ秒または秒数（整数の場合）、またはISO8601形式のタイムスタンプ（文字列の場合）
+</td>
+
+<td>
+いいえ
+</td>
+
+<td>
+メッセージのタイムスタンプはデフォルトで取り込み時刻になります。
+</td>
+</tr>
+
+<tr>
+<td>
+`"attributes"`
+</td>
+
+<td>
+オブジェクト
+</td>
+
+<td>
+JSON
+</td>
+
+<td>
+いいえ
+</td>
+
+<td>
+このサブオブジェクトには、メッセージのその他のすべての属性が含まれています。
+</td>
+</tr>
+</tbody>
+</table>
+</Collapser>
+
+<Collapser id="json-logs" title="ログのブロック属性">
+以下の形式のログエントリで構成される配列。
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+フィールド
+</th>
+
+<th>
+値のタイプ
+</th>
+
+<th>
+形式
+</th>
+
+<th>
+必須
+</th>
+
+<th>
+メモ
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`"timestamp"`
+</td>
+
+<td>
+Integer、String
+</td>
+
+<td>
+エポックからのミリ秒または秒数（整数の場合）、またはISO8601形式のタイムスタンプ（文字列の場合）
+</td>
+
+<td>
+いいえ
+</td>
+
+<td>
+メッセージのタイムスタンプはデフォルトで取り込み時刻になります。
+</td>
+</tr>
+
+<tr>
+<td>
+`"attributes"`
+</td>
+
+<td>
+オブジェクト
+</td>
+
+<td>
+JSON
+</td>
+
+<td>
+いいえ
+</td>
+
+<td>
+このサブオブジェクトには、メッセージのその他のすべての属性が含まれています。
+</td>
+</tr>
+
+<tr>
+<td>
+`"message"`
+</td>
+
+<td>
+（任意。ただし、Stringが推奨されます。[サポートされている属性タイプのリスト](#supported-types)を参照してください）
+</td>
+
+<td>
+（任意）
+</td>
+
+<td>
+はい
+</td>
+
+<td>
+デフォルトで検索されるメインのログメッセージフィールド
+</td>
+</tr>
+
+<tr>
+<td>
+`"log"`
+</td>
+
+<td>
+文字列
+</td>
+
+<td>
+（任意の文字列）
+</td>
+
+<td>
+いいえ
+</td>
+
+<td>
+取り込み時にこの文字列をフィールド`message`として書き換えます
+</td>
+</tr>
+
+<tr>
+<td>
+`"LOG"`
+</td>
+
+<td>
+文字列
+</td>
+
+<td>
+（任意の文字列）
+</td>
+
+<td>
+いいえ
+</td>
+
+<td>
+取り込み時にこの文字列をフィールド`message`として書き換えます
+</td>
+</tr>
+
+<tr>
+<td>
+`"MESSAGE"`
+</td>
+
+<td>
+文字列
+</td>
+
+<td>
+（任意の文字列）
+</td>
+
+<td>
+いいえ
+</td>
+
+<td>
+取り込み時にこの文字列をフィールド`message`として書き換えます
+</td>
+</tr>
+
+<tr>
+<td>
+`"msg"`
+</td>
+
+<td>
+文字列
+</td>
+
+<td>
+（任意の文字列）
+</td>
+
+<td>
+いいえ
+</td>
+
+<td>
+取り込み時にこの文字列をフィールド`message`として書き換えます
+</td>
+</tr>
+</tbody>
+</table>
+</Collapser>
+</CollapserGroup>
+
+## JSONメッセージ属性の解析 [#message-attribute-parsin]
+
+New Relicのログ管理機能は、`message`属性をJSONとして解析します。messageの解析で得られたJSON属性がイベントに追加されます。`message`属性がJSONでない場合は、そのまま残されます。
+
+以下は、`message`属性の例です。
+
+```json
+{
+    "timestamp": 1562767499238,
+    "message": "{\"service-name\": \"login-service\", \"user\": {\"id\": 123, \"name\": \"alice\"}}"
+}
+```
+
+以下のように扱われます。
+
+```json
+{
+  "timestamp": 1562767499238,
+  "service-name": "login-service",
+  "user": {
+    "id": 123,
+    "name": "alice"
+  }
+}
+```
+
+## ログのJSONの例 [#log-attribute-examples]
+
+属性は、文字列や数値などのスカラー型のJSON値を指定できます。さらに、複合オブジェクト（または[ネストされた](https://www.digitalocean.com/community/tutorials/an-introduction-to-json#working-with-complex-types-in-json)オブジェクト）を指定することもできます。複合属性に関連付けられた属性はフラット化された名前で保存されます。
+
+例えば、ログエントリの属性内には、次のような複合`user`属性があります。
+
+```json
+"attributes": {
+    "action": "login",
+    "user": {
+        "id": 123,
+        "name": "alice"
+    }
+}
+```
+
+これにより、ログイベントに以下の属性が保存されます。
+
+<table>
+<thead>
+<tr>
+<th>
+属性
+</th>
+
+<th>
+値
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`"action"`
+</td>
+
+<td>
+`"login"`
+</td>
+</tr>
+
+<tr>
+<td>
+`"user.id"`
+</td>
+
+<td>
+`123`
+</td>
+</tr>
+
+<tr>
+<td>
+`"user.name"`
+</td>
+
+<td>
+`"alice"`
+</td>
+</tr>
+</tbody>
+</table>
+
+### ログPOSTメッセージの例 [#log-attribute-example]
+
+ログ`POST`メッセージの例：
+
+```bash
+POST /log/v1 HTTP/1.1
+Host: log-api.newrelic.com
+Content-Type: application/json
+Api-Key: <YOUR_LICENSE_KEY>
+Accept: */*
+Content-Length: 319
+[{
+   "common": {
+     "attributes": {
+       "logtype": "accesslogs",
+       "service": "login-service",
+       "hostname": "login.example.com"
+     }
+   },
+   "logs": [{
+       "timestamp": <TIMESTAMP_IN_UNIX_EPOCH_OR_IS08601_FORMAT>,
+       "message": "User 'xyz' logged in"
+     },{
+       "timestamp": <TIMESTAMP_IN_UNIX_EPOCH_OR_IS08601_FORMAT>,
+       "message": "User 'xyz' logged out",
+       "attributes": {
+         "auditId": 123
+       }
+     }]
+}]
+```
+
+この`POST`メッセージによって、New Relicには以下のログメッセージが保存されます。
+
+<table>
+<thead>
+<tr>
+<th>
+属性
+</th>
+
+<th>
+値
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`"logtype"`
+</td>
+
+<td>
+`"accesslogs"`
+</td>
+</tr>
+
+<tr>
+<td>
+`"service"`
+</td>
+
+<td>
+`"login-service"`
+</td>
+</tr>
+
+<tr>
+<td>
+`"hostname"`
+</td>
+
+<td>
+`"login.example.com"`
+</td>
+</tr>
+</tbody>
+</table>
+
+以下は、保存後のログにおけるブロック属性の例です。
+
+<table>
+<thead>
+<tr>
+<th>
+属性
+</th>
+
+<th>
+値
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`"timestamp"`
+</td>
+
+<td>
+`1550086450124`
+</td>
+</tr>
+
+<tr>
+<td>
+`"message"`
+</td>
+
+<td>
+`"User 'xyz' logged out"`
+</td>
+</tr>
+
+<tr>
+<td>
+`"auditId"`
+</td>
+
+<td>
+`123`
+</td>
+</tr>
+</tbody>
+</table>
+
+### JSON POSTリクエストの例 [#example-post]
+
+以下はJSON POSTリクエストの例です。
+
+```bash
+POST /log/v1 HTTP/1.1
+Host: log-api.newrelic.com
+Content-Type: application/json
+Api-Key: <YOUR_LICENSE_KEY>
+Accept: */*
+Content-Length: 133
+{
+    "timestamp": <TIMESTAMP_IN_UNIX_EPOCH_OR_IS08601_FORMAT>,
+    "message": "User 'xyz' logged in",
+    "logtype": "accesslogs",
+    "service": "login-service",
+    "hostname": "login.example.com"
+}
+```
+
+## 次のステップ [#what-next]
+
+[プラットフォーム全体のロギングデータ](/docs/logs/ui-data/use-logs-ui/)を調べます。
+
+* [コンテキスト内のログ](/docs/logs/logs-context/configure-logs-context-apm-agents/)機能でログを転送することで、アプリケーションとプラットフォームのパフォーマンスデータをより深く可視化することができます。
+* [アラート](/docs/alerts-applied-intelligence/new-relic-alerts/alert-conditions/create-alert-conditions/)の設定
+* [データをクエリ](/docs/query-your-data/explore-query-data/get-started/introduction-querying-new-relic-data/)し、[ダッシュボードを作成](/docs/query-your-data/explore-query-data/dashboards/introduction-dashboards/)します。

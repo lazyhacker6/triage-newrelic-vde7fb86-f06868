@@ -1,0 +1,258 @@
+---
+title: 스트리밍 대시보드용 커스텀 위젯 생성
+tags:
+  - Streaming Video & Ads
+  - Dashboards
+  - Custom widgets
+metaDescription: Use the NRQL editor to create custom chart widgets inside the Media Streaming Quality Metrics dashboard in New Relic.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+사용자 지정 위젯을 사용하면 자체 NRQL 쿼리로 작성된 차트 시각화로 미디어 스트리밍 대시보드를 확장할 수 있습니다. 팀에서 모니터해야 하는 특정 데이터 포인트를 기본 제공 품질 메트릭에서 다루지 않는 경우에 사용하십시오.
+
+<Callout variant="important">
+각 계정은 **대시보드 컨텍스트당 50개의 사용자 지정 위젯** 이라는 소프트 제한을 지원합니다 — <DNT>**Video quality metrics**</DNT> 용 50개 및 <DNT>**Ad quality metrics**</DNT>용 50개로 별도로 계산됩니다. 제한에 도달하면 새 위젯을 추가하기 전에 기존 사용자 지정 위젯을 삭제하십시오. 기존 위젯은 계속 정상적으로 작동합니다.
+</Callout>
+
+## 시작하기 전에 [#prereqs]
+
+커스텀 위젯을 생성하기 전에 다음이 필요합니다:
+
+* <DNT>Streaming Video &amp; Ads</DNT> 에이전트가 설치된 뉴렐릭 계정에 대한 액세스. 아직 설정하지 않은 경우 [스트리밍 비디오 및 광고 에이전트 설치](/docs/streaming-video-&-ads/installation/install-the-streaming-video-&-ads-agent)를 참조하십시오.
+* [품질 메트릭 섹션](/docs/streaming-video-&-ads/view-data-in-newrelic/streaming-video-&-ads-features)에 표시되는 <DNT>**+ Add Custom Widget**</DNT> 버튼. 그렇지 않은 경우 뉴렐릭 계정 팀에 문의하여 액세스를 요청하십시오.
+
+## NRQL 쿼리 작성 [#writing-queries]
+
+NRQL 편집기는 유효한 모든 NRQL 쿼리를 지원합니다. NRQL 구문에 대한 소개는 [NRQL 소개](/docs/nrql/get-started/introduction-nrql-how-nrql-works)를 참조하십시오.
+
+### 쿼리 요구 사항 [#query-requirements]
+
+사용자 지정 위젯 쿼리에는 표준 NRQL 외에 두 가지 추가 요구 사항이 있습니다:
+
+* 쿼리에 직접 `SINCE` 또는 `UNTIL` 절을 작성하지 마십시오. 쿼리가 실행될 때 대시보드 타임 피커가 시간 범위를 자동으로 추가합니다.
+* 대시보드 수준의 필터 표시줄 선택에 응답하려면 쿼리에 [필터 플레이스홀더](#placeholders) 를 포함하세요.
+
+### 필터 플레이스홀더 [#placeholders]
+
+쿼리가 실행될 때 대시보드에서 전역 필터를 적용합니다. 쿼리에 일반 `WHERE` 절을 직접 작성하면 대시보드에서 사용자가 선택한 필터 조건을 주입할 수 없습니다. 필터 플레이스홀더는 쿼리가 실행될 때 활성 필터 조건으로 대체되는 특수 NRQL 주석입니다.
+
+| 플레이스홀더                          | 다음으로 대체됨            | 사용 시기                                                                            |
+| ------------------------------- | ------------------- | -------------------------------------------------------------------------------- |
+| `/* {whereClause} */`           | `WHERE [filters]`   | 쿼리에 기존 `WHERE` 절이 없습니다.                                                          |
+| `/* {andWhereClause} */`        | `AND [filters]`     | 쿼리에 이미 `WHERE` 절이 있습니다 — 여기에 필터를 추가합니다                                           |
+| `/* {aggregatorWhereClause} */` | `, WHERE [filters]` | 쿼리는 기존 내부 `WHERE` 절이 없는 `filter()` 집계자를 사용합니다 — 활성 필터가 없으면 `filter()` 래퍼가 제거됩니다. |
+
+**예시 ― 기존 WHERE 절 없음:**
+
+```sql
+SELECT count(*) FROM VideoAction /* {whereClause} */
+```
+
+필터 `City = Ashburn`이(가) 적용된 경우:
+
+```sql
+SELECT count(*) FROM VideoAction WHERE city = 'Ashburn' SINCE 30 minutes ago UNTIL now
+```
+
+**예시 ― 기존 WHERE 절 있음:**
+
+```sql
+SELECT count(*) FROM VideoAction
+WHERE actionName = 'QOE_AGGREGATE' /* {andWhereClause} */
+```
+
+필터 `City = Ashburn`이(가) 적용된 경우:
+
+```sql
+SELECT count(*) FROM VideoAction
+WHERE actionName = 'QOE_AGGREGATE' AND city = 'Ashburn' SINCE 30 minutes ago UNTIL now
+```
+
+**예시 — 혼합 집계자를 사용한 비율 쿼리:**
+
+```sql
+FROM VideoAction
+SELECT filter(sum(elapsedTime), WHERE actionName = 'CONTENT_HEARTBEAT' /* {andWhereClause} */)
+     / filter(uniqueCount(viewId) /* {aggregatorWhereClause} */)
+  AS 'avgWatchTime'
+TIMESERIES
+```
+
+필터 `City = Ashburn`이(가) 적용된 경우:
+
+```sql
+FROM VideoAction
+SELECT filter(sum(elapsedTime), WHERE actionName = 'CONTENT_HEARTBEAT' AND city = 'Ashburn')
+     / filter(uniqueCount(viewId), WHERE city = 'Ashburn')
+  AS 'avgWatchTime'
+TIMESERIES SINCE 30 minutes ago UNTIL now
+```
+
+활성 필터가 없는 경우:
+
+```sql
+FROM VideoAction
+SELECT filter(sum(elapsedTime), WHERE actionName = 'CONTENT_HEARTBEAT')
+     / uniqueCount(viewId)
+  AS 'avgWatchTime'
+TIMESERIES SINCE 30 minutes ago UNTIL now
+```
+
+<Callout variant="tip">
+플레이스홀더는 유효한 NRQL 주석입니다 — 대시보드에 활성화된 필터가 없어도 <DNT>**Run Query**</DNT>을(를) 클릭하면 작동합니다.
+</Callout>
+
+### 차단된 키워드 및 문자 [#blocked]
+
+우발적인 데이터 수정을 방지하기 위해, NRQL 편집기는 다음을 포함하는 쿼리를 거부합니다:
+
+* 키워드 `DROP`, `DELETE`, `INSERT`, `UPDATE`, `CREATE` 또는 `ALTER`
+* 쿼리 체인을 허용하는 세미콜론(`;`)
+
+이 중 하나라도 포함된 쿼리는 유효성 검사에 실패하며 저장하거나 미리 볼 수 없습니다.
+
+### 샘플 쿼리 [#sample-queries]
+
+다음 예시는 비디오 및 광고 모니터링을 위한 일반적인 쿼리 패턴을 보여줍니다. 각각은 해당 쿼리 구조에 적합한 필터 플레이스홀더를 사용합니다.
+
+**기본 시계열 — 총 비디오 시작:**
+
+```sql
+SELECT count(*) AS 'Video Starts'
+FROM VideoAction
+WHERE actionName = 'CONTENT_START' /* {andWhereClause} */
+TIMESERIES
+```
+
+**필터 통합이 포함된 고유 시청자 수:**
+
+```sql
+SELECT uniqueCount(viewId) AS 'Unique Viewers'
+FROM VideoAction /* {whereClause} */
+TIMESERIES
+```
+
+**이벤트 유형 전반의 오류율:**
+
+```sql
+SELECT count(*) AS 'Error Count'
+FROM VideoErrorAction, VideoAction
+WHERE actionName = 'CONTENT_ERROR' /* {andWhereClause} */
+TIMESERIES
+```
+
+**평균 시청 시간(중첩된 집계자가 포함된 비율):**
+
+```sql
+FROM VideoAction
+SELECT filter(sum(elapsedTime), WHERE actionName = 'CONTENT_HEARTBEAT' /* {andWhereClause} */)
+     / filter(uniqueCount(viewId) /* {aggregatorWhereClause} */)
+  AS 'avgWatchTime'
+TIMESERIES
+```
+
+### 제한 사항 [#known-limitations]
+
+전역 필터가 활성화된 경우 일부 NRQL 쿼리 패턴은 지원이 제한되거나 테스트되지 않았습니다. 전체 목록은 [스트리밍 비디오 및 광고에 대한 제한 사항](/docs/streaming-video-&-ads/limitations#nrql-patterns)을 참조하십시오.
+
+## 커스텀 위젯 생성 [#create]
+
+커스텀 위젯을 생성하려면:
+
+1. <DNT>**[one.newrelic.com](https://one.newrelic.com) &gt; All Capabilities &gt; Streaming Video &amp; Ads**</DNT>로 이동한 다음 <DNT>**Video Overview**</DNT> 또는 <DNT>**Ads Overview**</DNT>를 선택합니다.
+2. <DNT>**Video Quality Metrics**</DNT> 또는 <DNT>**Ad Quality Metrics**</DNT> 섹션으로 스크롤합니다.
+3. 섹션 헤더에서 <DNT>**+ Add Custom Widget**</DNT>을(를) 클릭합니다.
+4. 위젯의 고유한 제목을 입력하십시오.
+5. NRQL 편집기에서 NRQL 쿼리를 작성하십시오. 구문, 필터 플레이스홀더 및 예제에 대한 지침은 위의 [NRQL 쿼리 작성](#writing-queries)을 참조하십시오.
+6. <DNT>Run Query</DNT>을(를) 클릭하여 라이브 데이터에 대한 결과를 미리 보십시오. 이 작업은 위젯을 저장하지 않습니다. 미리보기를 사용하여 차트가 예상한 데이터를 렌더링하는지 확인하고, 필터가 활성화될 때 필터 플레이스홀더가 올바르게 적용되는지 검증하며, 저장하기 전에 구문 또는 논리 오류를 찾아내십시오.
+7. 미리 보기가 로드되면 차트 유형 선택기가 나타납니다. 기본값은 <DNT>Line</DNT>입니다 — 필요한 경우 다른 유형을 선택하십시오. 쿼리 결과에 권장되지 않는 일부 차트 유형은 회색으로 표시될 수 있지만, **Billboard**, **Line**, **Area**, **Bar**, **Table** 또는 **Pie** 중 하나를 여전히 선택할 수 있습니다.
+8. <DNT>**Save**</DNT>를 클릭합니다. 뉴렐릭은 메트릭 선택기 드롭다운 메뉴의 <DNT>**Custom Metrics**</DNT> 섹션에 위젯을 추가하고 품질 메트릭 그리드의 상단에 렌더링합니다. 위젯은 세션 간에 유지됩니다.
+
+<Callout variant="tip">
+위젯의 가용성은 위젯을 생성하는 뷰에 따라 달라집니다:
+
+* **모든 플랫폼 뷰** (비디오 개요 또는 광고 개요): 계정의 모든 사용자에게 위젯이 표시됩니다.
+* **단일 애플리케이션 뷰** (특정 애플리케이션의 페이지): 위젯은 해당 애플리케이션에만 적용됩니다.
+
+차트 유형은 뷰에 종속되지 않습니다 ― 설정한 차트 유형은 사용하는 뷰와 관계없이 모든 뷰어에게 적용됩니다.
+</Callout>
+
+## 커스텀 위젯 수정 [#edit]
+
+커스텀 위젯을 수정하려면:
+
+1. <DNT>**Quality Metrics**</DNT> 섹션에서 변경하려는 사용자 지정 위젯을 찾습니다.
+2. 위젯 카드의 연필 <Icon name="fe-edit-2" /> 아이콘을 클릭하십시오. 기존 제목과 쿼리가 미리 채워진 상태로 편집기가 열립니다.
+3. 변경 사항을 적용하고 <DNT>**Run Query**</DNT> 을(를) 클릭하여 확인한 다음 <DNT>**Save**</DNT>을(를) 클릭합니다.
+
+저장 시:
+
+* 원래 생성 날짜와 위젯 ID는 보존됩니다.
+* 위젯이 업데이트된 쿼리로 즉시 다시 렌더링됩니다.
+* 제목을 변경한 경우 메트릭 선택기 드롭다운 메뉴에서 업데이트됩니다.
+
+## 커스텀 위젯 삭제 [#delete]
+
+커스텀 위젯을 삭제하려면:
+
+1. <DNT>**Quality Metrics**</DNT> 섹션에서 위젯 카드의 <Icon name="fe-more-horizontal" /> 아이콘을 클릭합니다.
+2. <DNT>**Delete**</DNT> 선택합니다.
+3. 프롬프트에서 다음을 확인합니다: *&quot;&apos;\[위젯 제목]&apos;을(를) 삭제하시겠습니까? 이 작업은 실행 취소할 수 없습니다.&quot;*
+
+삭제된 경우:
+
+* 뉴렐릭은 위젯을 영구적으로 삭제합니다.
+* 대시보드에서 위젯 카드를 즉시 제거합니다.
+* 메트릭 선택기 드롭다운 메뉴에서 제목 항목을 제거합니다.
+* 위젯이 선택된 경우 대시보드에서 자동으로 선택을 해제합니다.
+
+<Callout variant="caution">
+삭제는 영구적입니다. 나중에 필요할 수 있으므로 위젯을 삭제하기 전에 NRQL 쿼리를 복사하세요.
+</Callout>
+
+## 문제 해결 [#troubleshoot]
+
+아래에서 증상을 확인해 주십시오. 이슈는 발생 빈도가 높은 순서대로 정렬되어 있습니다.
+
+### 대시보드 필터를 적용할 때 위젯이 업데이트되지 않음 [#widget-not-responding-to-filters]
+
+쿼리에 필터 플레이스홀더가 누락되었습니다. `/* {whereClause} */`, `/* {andWhereClause} */` 또는 `/* {aggregatorWhereClause} */`가 없으면 위젯은 항상 작성된 대로 쿼리를 실행하고 대시보드 필터 표시줄 선택을 무시합니다. 쿼리 구조에 맞는 올바른 플레이스홀더를 선택하려면 [필터 플레이스홀더](#placeholders) 를 참조하세요.
+
+### 필터는 적용되지만 쿼리가 오류를 반환하거나 데이터를 반환하지 않습니다 [#wrong-placeholder]
+
+잘못된 플레이스홀더 유형을 사용했을 수 있습니다. 확인:
+
+* 쿼리에 `WHERE` 절이 없는 경우 `/* {whereClause} */`을(를) 사용합니다.
+* 쿼리에 이미 쿼리 수준의 `WHERE` 절이 있는 경우 `/* {andWhereClause} */`을(를) 사용하십시오.
+* 플레이스홀더가 기존 내부 `WHERE`이(가) 없는 `filter()` 집계자 안에 있는 경우 `/* {aggregatorWhereClause} */`을(를) 사용하십시오.
+
+잘못된 플레이스홀더는 쿼리가 실행될 때 유효하지 않은 NRQL을 생성하여 실패를 유발합니다.
+
+### 쿼리가 유효성 검사에 실패하거나 저장되지 않음 [#query-blocked]
+
+쿼리에 `DROP`, `DELETE` 또는 세미콜론과 같은 [차단된 키워드 또는 문자](#blocked)가 포함되어 있는지 확인하십시오. 또한 쿼리가 다음 요구 사항을 충족하는지 확인하십시오:
+
+* 쿼리에는 `SELECT` 및 `FROM` 절이 모두 포함되어 있습니다.
+* 편집기의 인라인 유효성 검사에서 플래그가 지정된 구문 오류가 없습니다.
+
+### 위젯이 저장되지 않습니다 — 제목이 이미 존재합니다 [#duplicate-title]
+
+동일한 대시보드 컨텍스트(비디오 또는 광고 품질 메트릭)에 동일한 제목의 위젯이 이미 존재하는 경우, 토스트 공지와 함께 저장이 실패합니다:
+
+* **제목:** 위젯 저장 실패
+* **설명:** 이 이름의 위젯이 이미 존재합니다
+
+제목 일치는 대소문자를 구분하지 않습니다 — `My Widget` 및 `MY WIDGET`은(는) 동일한 제목으로 처리됩니다. 고유한 제목을 선택하거나 기존 위젯의 이름을 먼저 변경하십시오.
+
+### 위젯이 저장되지만 페이지 새로 고침 후 사라짐 [#widget-not-saving]
+
+이는 저장 실패를 나타낼 수 있습니다. 저장 시 나타난 토스트 공지를 확인하십시오 — 네트워크 오류로 인해 저장이 실패했는지 여부를 나타냅니다. 저장을 다시 시도하거나, 문제가 지속되면 뉴렐릭 계정 팀에 문의하십시오.
+
+### 새 위젯을 추가할 수 없습니다 [#limit-reached]
+
+이 대시보드 컨텍스트(비디오 또는 광고 품질 메트릭)에 대한 50개 위젯 소프트 제한에 도달했습니다. 기존 사용자 지정 위젯을 하나 이상 삭제한 다음, 새 위젯을 추가해 보십시오.
+
+### + 커스텀 위젯 추가 버튼이 표시되지 않습니다 [#button-not-visible]
+
+뉴렐릭은 이 기능에 대한 액세스를 제어합니다. 액세스를 요청하려면 뉴렐릭 계정 팀에 문의하십시오.

@@ -1,0 +1,153 @@
+---
+title: Agrupar funções do Lambda sob uma única entidade de APM
+metaDescription: 'Understand how NEW_RELIC_APP_NAME controls APM entity grouping, multi-region reporting, cross-runtime behavior, and shared naming with non-Lambda services.'
+freshnessValidatedDate: never
+tags:
+  - AWS Lambda
+  - APM
+  - Environment Variables
+  - Configuration
+translationType: machine
+---
+
+`NEW_RELIC_APP_NAME` é uma variável de ambiente do Lambda que controla a qual entidade do APM a telemetria da função é atribuída no New Relic. Quando definida, a telemetria da função do Lambda aparece sob uma entidade do APM nomeada à escolha, em vez de usar o nome da função do Lambda como padrão.
+
+## Como funciona
+
+Quando `NEW_RELIC_APM_LAMBDA_MODE` é `true`, a New Relic Lambda Extension faz uma chamada de APM `connect` a cada cold start. Ela usa `NEW_RELIC_APP_NAME` (ou recorre a `AWS_LAMBDA_FUNCTION_NAME` se não estiver definido) como `app_name` nessa chamada. O coletor de APM resolve ou cria uma entidade para esse nome e retorna seu GUID. Toda a telemetria produzida durante essa invocação recebe a tag com esse GUID e aparece sob a entidade nomeada no New Relic.
+
+## Configuração
+
+Defina `NEW_RELIC_APP_NAME` como uma variável de ambiente do Lambda. Nenhuma alteração de código é necessária — a extensão lida com isso automaticamente na inicialização a frio.
+
+```
+NEW_RELIC_APP_NAME = my-entity-name
+```
+
+## Tempos de execução suportados
+
+`NEW_RELIC_APP_NAME` é compatível com todos os tempos de execução do Lambda no modo APM - Python, Node.js, Java, Ruby. .NET e Go.
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "150px" }}>
+        Tempo de execução
+      </th>
+
+      <th>
+        Suportado
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        Python
+      </td>
+
+      <td>
+        Sim
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Node.js
+      </td>
+
+      <td>
+        Sim
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Java
+      </td>
+
+      <td>
+        Sim
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Ruby
+      </td>
+
+      <td>
+        Sim
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        .NET
+      </td>
+
+      <td>
+        Sim
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        Go
+      </td>
+
+      <td>
+        Sim
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Comportamento da Entidade
+
+Funções que compartilham o mesmo valor `NEW_RELIC_APP_NAME` e conta do New Relic são agrupadas sob uma única entidade do APM na interface do New Relic.
+
+Se o nome que você definir corresponder a uma entidade do APM existente — por exemplo, uma já criada por um serviço não Lambda — a telemetria da sua função do Lambda se mescla a essa entidade automaticamente. Nenhuma entidade separada é criada.
+
+<Callout variant="important">
+  Alterar `NEW_RELIC_APP_NAME` cria uma nova entidade de APM. Dados históricos associados ao nome anterior não são migrados para a nova entidade.
+</Callout>
+
+## Relatórios multirregião
+
+Várias funções do Lambda implantadas em diferentes regiões da AWS podem compartilhar o mesmo `NEW_RELIC_APP_NAME`. Todas essas funções reportam para uma única entidade de APM, independentemente da região em que são implantadas.
+
+Para distinguir funções individuais ou implantações específicas de região dentro da entidade agrupada, filtre pelo atributo `tags.aws.arn` no NRQL ou use a barra de filtro de tag na visualização da entidade.
+
+## Relatórios entre runtimes
+
+As funções do Lambda usando runtimes diferentes (por exemplo, uma função do Python e uma função do Node.js) que compartilham o mesmo `NEW_RELIC_APP_NAME` criam entidades de APM separadas — uma por runtime. O agrupamento não cruza os limites de runtime.
+
+## Mesmo nome de aplicativo em serviços Lambda e não Lambda
+
+Se uma função do Lambda e um serviço de APM não Lambda (por exemplo, um aplicativo web tradicional ou microsserviço) estiverem ambos configurados com o mesmo `NEW_RELIC_APP_NAME`, eles reportam para a **mesma** entidade de APM.
+
+Isso pode ser intencional: se você deseja uma visão unificada de um serviço que é executado tanto no Lambda quanto em infraestrutura baseada em servidor, compartilhar o nome permite que toda a telemetria — transações, erros, taxas de transferência — apareça em um só lugar.
+
+No entanto, se feito de forma não intencional, pode causar confusão. Métricas, taxas de erros e taxas de transferência da função do Lambda e do serviço não Lambda são combinadas, o que pode tornar mais difícil diagnosticar problemas ou entender o desempenho de forma independente.
+
+## Ciclo de Vida da Entidade e Expiração da Tag
+
+Quando uma função do Lambda para de relatar, sua entidade de APM não é removida imediatamente. As tags de entidade (incluindo `aws.arn`) expiram após aproximadamente 1–2 dias sem telemetria de entrada. A própria entidade pode persistir por mais tempo, dependendo das configurações de retenção da conta.
+
+## Solucionar problemas
+
+**A telemetria ainda aparece sob o nome da função após a configuração `NEW_RELIC_APP_NAME`**
+
+* Confirme se a variável está definida no nível do ambiente do Lambda, não apenas no código do aplicativo.
+* Verifique os logs do CloudWatch para entradas de conexão de APM `[NR_EXT]` — o campo `app_name` deve refletir o valor personalizado.
+* Certifique-se de que a versão da New Relic Lambda Extension na camada ofereça suporte a esse recurso.
+
+**Existem duas entidades separadas para a mesma função**
+
+Isso é esperado quando `NEW_RELIC_APP_NAME` é adicionado ou alterado após a função já estar relatando. A entidade antiga retém os dados históricos; toda a nova telemetria vai para a nova entidade.
+
+**Duas funções do Lambda com o mesmo nome de aplicativo aparecem como entidades separadas**
+
+Esse é o comportamento esperado quando os runtimes diferem (por exemplo, Python vs. Node.js). As funções que compartilham o mesmo runtime e o mesmo `NEW_RELIC_APP_NAME` relatarão em uma entidade.

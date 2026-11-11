@@ -1,0 +1,171 @@
+---
+title: Gerencie a qualidade do seu alerta
+metaDescription: How to manage the quality of your alerts with New Relic
+freshnessValidatedDate: '2023-07-20T00:00:00.000Z'
+translationType: machine
+---
+
+Quando as equipes recebem muitos alertas ou muitos alarmes falsos, a fadiga de alertas começa a ocorrer. À medida que qualquer um dos fatores aumenta, essa fadiga começa a ter consequências graves e negativas. Respondentes de eventos de alerta sobrecarregados acostumam-se a alertas falsos e priorizam aqueles que são mais fáceis de resolver rapidamente, em vez de problemas mais graves. Pior ainda, muitas vezes eles começam a simplesmente fechar eventos de alerta não resolvidos para permanecerem dentro das metas de tempo de resposta. Isso significa que os alertas reais se perdem em meio ao ruído, enquanto os tempos de resposta a eventos de alerta e as ocorrências de interrupções graves aumentam.
+
+Para corrigir a fadiga de alertas e evitar que ela ocorra no futuro, você deve melhorar a qualidade de seus alertas. Adotar uma política de gerenciamento de qualidade de alertas (AQM) concentra-se em reduzir o número de eventos de alerta incômodos para que você foque apenas em <InlinePopover type="alerts" />com verdadeiro impacto nos negócios. Isso reduz a fadiga de alertas e garante que você e sua equipe concentrem sua atenção nos lugares certos e nos momentos certos.
+
+Você é um bom candidato para AQM se:
+
+* Você tem muitos alertas.
+* Você tem alertas que ficam abertos por longos períodos de tempo.
+* Você tem muitos alertas que não são relevantes.
+* Seus clientes descobrem seus problemas antes das ferramentas de monitoramento.
+
+<Callout variant="tip">
+  Quer experimentar uma abordagem de aprendizagem prática antes de começar a implementar isso na sua conta? Confira o [curso de gestão da qualidade da Alerta](https://learn.newrelic.com/elevate-your-alerts-alert-quality-management).
+</Callout>
+
+## Porquê utilizar a gestão de qualidade alerta? [#why-aqm]
+
+Ao adotar práticas baseadas no gerenciamento da qualidade de alertas, você reduzirá o tempo de resposta e aumentará a conscientização sobre eventos críticos. Ao melhorar a relação sinal-ruído dos seus alertas, você reduzirá a confusão e poderá identificar e isolar rapidamente a causa raiz dos seus problemas. O objetivo é reduzir alertas menos valiosos, criando maneiras mais fáceis de identificar quando ocorrem eventos de alerta mais valiosos. Isso resulta em:
+
+* Aumento do tempo de operação e disponibilidade.
+* Tempo médio de resolução (MTTR) reduzido.
+* Diminuição do volume de alerta.
+* A capacidade de identificar facilmente alertas que não são valiosos, para que você possa torná-los valiosos ou removê-los.
+
+## Utilização dos principais indicadores de desempenho [#kpi]
+
+Usar os indicadores-chave de desempenho (KPIs) corretos ajuda você a encontrar os alertas mais ruidosos e menos valiosos, para que possa melhorar seu valor ou removê-los. Você usará o processo AQM para coletar e medir o volume de eventos de alerta e os KPIs de engajamento, depois usá-los para identificar tendências para corrigir questões que causam problemas graves. Abaixo, você encontrará informações sobre todos os KPIs, bem como uma consulta NRQL para cada um, para ajudá-lo a monitorá-los de qualquer lugar na interface do New Relic.
+
+### Volume de eventos de alerta [#volume]
+
+Você deve tratar eventos de alerta (com ou sem alertas) como uma fila de tarefas. Assim como uma fila, o número de alertas deve ser sempre o mais próximo possível de zero. Cada evento de alerta deve acionar uma ação investigativa ou corretiva para resolver a condição. Se um alerta não resultar em algum tipo de ação, você deve questionar o valor da condição de alerta.
+
+Em particular, se você observar eventos de alerta específicos sendo acionados frequentemente, deve se perguntar se está em um estado constante de impacto significativo ou se tem apenas um grande volume de ruído. Os KPIs de volume de eventos de alerta ajudam você a responder a essas perguntas e a medir o progresso em direção a um estado saudável de alertas de alta qualidade.
+
+<CollapserGroup>
+  <Collapser id="kpi-alert-event-count" title="KPI de contagem de eventos de alerta">
+    Este é o número de eventos de alerta gerados durante um período de tempo. Geralmente, você deve comparar as semanas atual e anterior.
+
+    <DNT>**Goal:**</DNT> Reduza o número de eventos de alerta de baixo valor e incômodos.
+
+    <DNT>
+      **Best practices:**
+    </DNT>
+
+    * Certifique-se de que as configurações de condição sejam destinadas a detectar o impacto real nos negócios.
+    * Certifique-se de que as configurações de condição estejam detectando comportamento anormal.
+    * Use o recurso de detalhes do evento de alerta `Acknowledge` para ajudar a medir o valor dos alertas. Consulte o [KPI de porcentagem de reconhecimento de eventos de alerta](#kpi-user-engagement).
+    * Reportar KPIs de AQM a todas as partes interessadas.
+
+    ```sql
+    FROM NrAiIncident SELECT count(*) AS 'Incident Count' WHERE event = 'open' AND priority = 'critical' SINCE 1 WEEK AGO COMPARE WITH 1 WEEK AGO
+    ```
+  </Collapser>
+
+  <Collapser id="kpi-alert-event-duration" title="KPI de duração acumulada do evento de alerta">
+    Esta é a soma total de minutos que todos os eventos de alerta acumularam durante um período de tempo. Geralmente, você deve comparar as semanas atual e anterior.
+
+    <DNT>**Goal:**</DNT> Reduza o total de minutos acumulados de eventos de alerta.
+
+    <DNT>
+      **Best practices:**
+    </DNT>
+
+    * Não feche manualmente eventos de alerta, pois isso pode distorcer a precisão deste KPI.
+    * Remova alertas que não resultam em ações de correção por parte dos destinatários.
+    * Melhore os KPIs <DNT>**percent investigated**</DNT> e <DNT>**mean-time-to-investigate**</DNT> comunicando sua importância na melhoria da detecção e do ritmo de resposta.
+    * Reportar KPIs de AQM a todas as partes interessadas.
+
+    ```sql
+    FROM NrAiIncident SELECT sum(durationSeconds)/60 AS 'Incident Minutes' WHERE event = 'close' AND priority = 'critical' SINCE 1 WEEK AGO COMPARE WITH 1 WEEK AGO
+    ```
+  </Collapser>
+
+  <Collapser id="kpi-mttc" title="KPI de tempo médio para fechar (MTTC)">
+    Esta é a duração média dos eventos de alerta dentro do período de tempo medido. Você quer que esse número seja o mais baixo possível.
+
+    <DNT>**Goal:**</DNT> Reduzir MTTC
+
+    <DNT>
+      **Best practices:**
+    </DNT>
+
+    * Não feche manualmente eventos de alerta, pois isso pode distorcer a precisão deste KPI.
+    * Melhore as habilidades de engenharia de confiabilidade.
+    * Reportar KPIs de AQM a todas as partes interessadas.
+
+    ```sql
+    FROM NrAiIncident SELECT average(durationSeconds/60) AS 'Incident MTTC (minutes)' WHERE event = 'close' AND priority = 'critical' SINCE 1 WEEK AGO COMPARE WITH 1 WEEK AGO
+    ```
+  </Collapser>
+
+  <Collapser id="kpi-pct-under-five" title="Porcentagem de KPI abaixo de 5 minutos">
+    Esta é a porcentagem de eventos de alerta com uma duração total inferior a cinco minutos. Isso pode indicar um evento de alerta mudando de estado com muita frequência, o que obscurece a causa e a gravidade do evento de alerta. Este estado é conhecido como <DNT>**alert event flapping**</DNT>.
+
+    <DNT>**Goal:**</DNT> Minimize a porcentagem de eventos de alerta de curta duração.
+
+    <DNT>
+      **Best practices:**
+    </DNT>
+
+    * Certifique-se de que as condições detectem anomalias legítimas com impacto significativo no seu sistema.
+    * Entenda o gerenciamento a nível de serviço.
+
+    ```sql
+    FROM NrAiIncident SELECT percentage(count(*), WHERE durationSeconds <= 5*60) AS '% Under 5min' WHERE event = 'close' AND priority = 'critical' SINCE 1 WEEK AGO COMPARE WITH 1 WEEK AGO 
+    ```
+  </Collapser>
+</CollapserGroup>
+
+### Engajamento do usuário [#user]
+
+Você deve medir o valor de um evento de alerta pela quantidade de atenção que ele recebe. A quantidade de engajamento que um alerta individual recebe é uma medida direta do seu valor. Mais engajamento implica um alerta valioso, enquanto menos (ou nenhum) engajamento implica que um alerta pode ser simplesmente ruidoso e deve ser modificado ou desativado.
+
+Há uma diferença significativa entre medir o momento da percepção do evento de alerta e reconhecer quando a atividade de resolução começa. Se você estiver usando uma integração com alertas do New Relic, certifique-se de que o evento `Acknowledge` enviado ao New Relic seja acionado quando a atividade de resolução começar, e não quando o evento de alerta for enviado para a ferramenta externa de gerenciamento de eventos de alerta.
+
+<CollapserGroup>
+  <Collapser id="kpi-pct-ack" title="Porcentagem de KPI reconhecido">
+    Isso identifica a porcentagem de eventos de alerta com uma flag de reconhecimento `true`. Você deve comparar as semanas atual e anterior.
+
+    <DNT>**Goal:**</DNT> Aumente a porcentagem de engajamento com eventos de alerta.
+
+    <DNT>
+      **Best practices:**
+    </DNT>
+
+    * Certifique-se de que sua equipe de DevOps saiba quando é apropriado reconhecer um alerta, se aplicável.
+    * Reconhecimento de alerta Gamify para impulsionar o uso.
+    * Desencoraje exercícios de reconhecimento em massa.
+
+    ```sql
+    FROM NrAiIssue SELECT filter(count(*), WHERE event='acknowledge')/filter(count(*), WHERE event='create')*100 AS '% Investigated' WHERE priority='CRITICAL' SINCE 1 WEEK AGO COMPARE WITH 1 WEEK AGO
+    ```
+  </Collapser>
+
+  <Collapser id="kpi-mtti" title="KPI de tempo médio para investigar (MTTI)">
+    Isso identifica o tempo médio que você leva para reconhecer um evento de alerta. Geralmente, você deve comparar as semanas atual e anterior.
+
+    <DNT>**Goal:**</DNT> Reduza o tempo médio de investigação.
+
+    <DNT>
+      **Best practices:**
+    </DNT>
+
+    * Trabalhe na construção da confiança do respondente de eventos de alerta nos alertas.
+    * Certifique-se de que alertas valiosos sejam reconhecidos.
+    * Incentive as equipes de resposta a responder rapidamente ao alerta.
+
+    ```sql
+    FROM NrAiIssue SELECT average(acknowledgeTime - activateTime) / 60000 AS 'Incident MTTI (minutes)' WHERE event = 'acknowledge' SINCE 1 WEEK AGO COMPARE WITH 1 WEEK AGO
+    ```
+  </Collapser>
+</CollapserGroup>
+
+## Qual é o próximo? [#next]
+
+Depois de implementar o processo AQM do [documento anterior](/docs/tutorial-create-alerts/improve-with-alerts/), você verá reduções significativas no volume de alertas, mantendo a confiabilidade e a estabilidade. Seus KPIs de AQM podem fornecer informações precisas sobre essas melhorias quando você segue as práticas recomendadas listadas acima.
+
+Depois de concluir a implementação do AQM, você também poderá melhorar e gerenciar outros aspectos da sua plataforma, como:
+
+* [Gerenciamento do nível de serviço](/docs/new-relic-solutions/observability-maturity/uptime-performance-reliability/slm-implementation-guide/)
+* [Engenharia de confiabilidade](/docs/new-relic-solutions/observability-maturity/uptime-performance-reliability/diagnostics-beginner-guide/)
+* [Experiência dos clientes](/docs/new-relic-solutions/observability-maturity/customer-experience/quality-foundation-implementation-guide/)
+
+<UserJourneyControls previousStep={{"path":"/docs/tutorial-create-alerts/improve-with-alerts/","title":"Passo anterior","body":"Aprenda como melhorar sua stack com alerta"}} />

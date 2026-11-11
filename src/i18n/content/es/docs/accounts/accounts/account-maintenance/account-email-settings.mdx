@@ -1,0 +1,73 @@
+---
+title: Ajustes del correo electrónico
+tags:
+  - Accounts
+  - Accounts and billing
+  - General account settings
+metaDescription: 'How to subscribe to and unsubscribe from New Relic emails, and change your email address.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+En la configuración de su cuenta New Relic, puede suscribirse y cancelar la suscripción a tipos específicos de correos electrónicos y editar otras preferencias de correo electrónico.
+
+<Callout variant="tip">
+  Para correos electrónicos relacionados con alertas, consulte [Notificaciones de alertas](/docs/alerts-applied-intelligence/notifications/intro-notifications).
+</Callout>
+
+## Añade New Relic a tu lista de correo electrónico de &apos;permitidos&apos; [#email-allowlist]
+
+Para asegurarse de recibir correos electrónicos de New Relic, puede agregar lo siguiente a la lista de &apos;permitidos&apos; de fuentes de correo electrónico confiables de su organización: `noreply@newrelic.com` y `*@mailer-d.newrelic.com`. Esto ayuda a:
+
+* Evite que los correos electrónicos de New Relic queden atrapados en sus filtros de spam.
+* Evite que su correo electrónico se agregue a las listas de supresión.
+
+## Cambia tu direccion de correo electronico [#change-email]
+
+Para cambiar su dirección de correo electrónico: en el [menú de usuario](/docs/accounts/accounts-billing/general-account-settings/intro-account-settings), haga clic en <DNT>**User preferences**</DNT> y haga clic en <DNT>**Email**</DNT>.
+
+Las direcciones de correo electrónico de los usuarios de New Relic tienen las siguientes restricciones:
+
+* Caracteres: deben estar compuestos por letras (a-z, A-Z), números (0-9) y caracteres especiales `(!#$%&'*+/=?^_{|}~-)`.
+* Longitud: limitada a un máximo de 255 caracteres.
+
+<Callout variant="tip">
+  Usuarios de SSO/SAML:
+
+  Puede actualizar su dirección de correo electrónico mientras está autenticado en una cuenta de SSO/SAML utilizando uno de estos métodos:
+
+  **Opción 1: UI de administración de usuarios**
+
+  1. Ve a [administración de usuarios](https://one.newrelic.com/admin-portal/organizations/users-list)
+  2. Haga clic en los detalles de su usuario.
+  3. Actualice su email y guarde.
+  4. Actualice su correo electrónico en su proveedor de identidad para que coincida exactamente.
+  5. Probar autenticación.
+
+  Si su sesión se cierra durante este proceso y es administrador, puede usar la [omisión de SSO de un solo uso](/docs/accounts/accounts-billing/account-setup/troubleshoot-new-relics-password-email-address-login-problems/#login-troubleshooting) para recuperar el acceso.
+
+  **Opción 2: API de NerdGraph**
+
+  Puede actualizar su correo electrónico a través de la [API de NerdGraph](/docs/apis/nerdgraph/examples/nerdgraph-manage-users/#update-users) para evitar cualquier riesgo de que se cierre la sesión. Para actualizaciones masivas, consulte este [artículo de KCS sobre actualizaciones masivas de correo electrónico de usuarios](https://knowledge.newrelic.com/s/article/Bulk-User-Email-Updates).
+</Callout>
+
+## Cancelar la suscripción de correos electrónicos [#emails]
+
+New Relic envía dos tipos de correos electrónicos:
+
+* Correos electrónicos de marketing: aquellos relacionados con nuevas características, ofertas especiales, etc.
+* Correos electrónicos de producto: aquellos relacionados con información del producto, como informes de rendimiento, alerta, facturación, etc.
+
+Los detalles sobre cómo cancelar la suscripción a estos tipos de correo electrónico se encuentran a continuación.
+
+### Cancelar la suscripción a correos electrónicos de marketing [#marketing-emails]
+
+Los correos electrónicos de marketing de New Relic incluyen un enlace <DNT>**Unsubscribe**</DNT> . El enlace lo dirige a una página donde puede controlar su suscripción a diferentes tipos de mensajes.
+
+### Cancelar la suscripción a correos electrónicos relacionados con productos [#product-emails]
+
+Hay algunos correos electrónicos diferentes relacionados con productos, con diferentes formas de controlarlos:
+
+* Alertas: para saber cómo controlar los correos electrónicos relacionados con <InlinePopover type="alerts" />, consulte [Notificaciones de alertas](/docs/alerts-applied-intelligence/notifications/intro-notifications).
+* <InlinePopover type="apm" />Correos electrónicos de informes semanales: consulte [los informes de rendimiento de APM](/docs/apm/reports/other-performance-analysis/weekly-performance-report#opting_out).
+* Informes de <InlinePopover type="mobile" />: consulte [Correos electrónicos de informes de fallos](/docs/mobile-monitoring/mobile-monitoring-ui/crashes/receive-crash-notifications-email) y [Correos electrónicos de tendencias de versiones](/docs/mobile-monitoring/mobile-monitoring-ui/mobile-app-pages/version-trends-compare-user-adoption-metrics-performance).

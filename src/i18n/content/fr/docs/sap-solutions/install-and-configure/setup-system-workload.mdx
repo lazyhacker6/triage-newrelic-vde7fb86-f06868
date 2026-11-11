@@ -1,0 +1,36 @@
+---
+title: Configurer le workload et le service pack
+metaDescription: Set up a system workload and install a service pack for your SAP system
+freshnessValidatedDate: never
+translationType: machine
+---
+
+## Configurer la workload du système
+
+1. Allez à <DNT>**All entities &gt; Workloads &gt; + Create a workload**</DNT>. Pour plus d&apos;informations, consultez [Créer et définir des workloads](/docs/new-relic-solutions/new-relic-one/workloads/create-workloads/).
+
+   <Callout variant="tip">
+     Si vous ne voyez pas <DNT>**All entities**</DNT> dans la navigation, allez dans <DNT>**[one.newrelic.com](https://one.newrelic.com)**</DNT> &gt; <DNT>**Catalogs**</DNT> et sélectionnez <DNT>**Switch back to all entities**</DNT>.
+   </Callout>
+
+2. Saisissez un nom pour votre <DNT>**workload**</DNT> et sélectionnez un compte dans la liste déroulante.
+
+3. À côté de <DNT>**Entity Type = All**</DNT>, sélectionnez l&apos;icône <DNT>**+**</DNT> et entrez `sap.system = {SAP System SID}` dans la barre de filtre.
+
+   <img title="SAP System" alt="A screenshot displaying the SAP System filter" src="/images/sap-system.webp" />
+
+4. Sélectionnez <DNT>**+ Add this query**</DNT> pour ajouter la requête à votre <DNT>**workload definition**</DNT>.
+
+5. Sélectionnez <DNT>**Create a workload**</DNT>.
+
+Votre nouveau <DNT>**workload**</DNT> apparaît dans <DNT>**All entities**</DNT> et comprend toutes les entités taguées avec votre <DNT>**SAP system**</DNT>.
+
+## Installer le Service Pack
+
+<DNT>**Service packs**</DNT> sont livrés sous forme de fichiers `.SAR` qui suivent la convention de nommage `K-<Version Number>SP<SP Number>IN<Software Component>.SAR` (par exemple, `K-240SP01INNEWR.SAR`).
+
+1. Utilisez la transaction `SPAM` pour installer le <DNT>**service pack**</DNT>.
+2. Chargez le nouveau <DNT>**configuration template**</DNT> à partir de <DNT>**client 000**</DNT>.
+3. Allez dans <DNT>**Install New Release and Patch**</DNT> &gt; <DNT>**Copy Template Tables**</DNT> depuis <DNT>**Client 000**</DNT>.
+4. Générez le nouveau <DNT>**data provider configurations**</DNT> depuis <DNT>**Install New Release and Patch**</DNT> &gt; <DNT>**Generate Configuration for New Data Providers**</DNT>.
+5. Vérifiez l&apos;installation depuis <DNT>**Install New Release and Patch**</DNT> &gt; <DNT>**Verify Installation Completeness**</DNT>.

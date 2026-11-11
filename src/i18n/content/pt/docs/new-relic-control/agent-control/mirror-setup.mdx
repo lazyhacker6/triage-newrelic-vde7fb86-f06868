@@ -1,0 +1,89 @@
+---
+title: Configure um espelho de registro OCI para o Agent Control
+metaDescription: Learn how to configure Agent Control to use an OCI registry mirror.
+tags:
+  - new-relic-control
+  - agent-control
+  - mirror-setup
+  - oci-registry
+  - artifacts
+  - linux
+  - windows
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Por padrão, o Agent Control usa o docker.io como o registro da Open Container Initiative (OCI) para baixar pacotes de agente e definições de tipo de agente. Se o seu ambiente exigir um registro diferente, por exemplo, um ambiente isolado, você pode configurar um registro OCI personalizado ou um espelho.
+
+## Espelhar artefatos assinados
+
+Cada pacote de agente e definição de tipo de agente é assinado com um artefato de assinatura `sigstore/cosign` separado. Seu espelho também deve fornecer esse artefato de assinatura junto com o próprio pacote para manter a verificação de assinatura do Agent Control funcionando.
+
+## Antes de você começar
+
+Antes de configurar um registro OCI personalizado, certifique-se de ter:
+
+1. **Agent Control instalado:** use a CLI do New Relic para concluir a [instalação do Agent Control](/docs/new-relic-control/agent-control/setup).
+2. **Registro espelho disponível:** certifique-se de que seu registro OCI personalizado esteja acessível a partir da máquina host.
+3. **Certificado da CA instalado:** instale na máquina host o certificado da autoridade de certificação necessário para se comunicar com o mirror.
+
+## Configurar em hosts
+
+Após instalar o Agent Control no seu host, siga estas etapas para configurar um registro OCI personalizado:
+
+<Steps>
+<Step>
+### Edite o arquivo de configuração local
+
+Edite o arquivo de configuração local do Agent Control:
+
+* Linux: `/etc/newrelic-agent-control/local-data/agent-control/local_config.yaml`
+* Windows: `C:\Program Files\New Relic\newrelic-agent-control\local-data\agent-control\local_config.yaml`
+
+Adicione as seguintes seções de configuração ao arquivo:
+
+```yaml
+oci:
+  registry: YOUR_REGISTRY_URL
+```
+
+Se você precisar configurar seu nome de usuário e senha, use o seguinte trecho:
+
+```yaml
+oci:
+  registry: YOUR_REGISTRY_URL
+  auth:
+    basic:
+      username: YOUR_USERNAME
+      password: YOUR_PASSWORD
+```
+
+Substitua os valores dos espaços reservados:
+
+* `YOUR_REGISTRY_URL`: o URL do seu registro OCI personalizado (por exemplo, `registry.example.com:5000` ou `mirror.internal.company.com`)
+* `YOUR_USERNAME`: Nome de usuário para autenticação de registro
+* `YOUR_PASSWORD`: Senha para autenticação do registro
+
+Essa configuração se aplica tanto a pacotes de agente quanto a definições de tipo de agente, já que ambos são baixados por meio do mesmo `oci.registry`.
+</Step>
+
+<Step>
+### Reiniciar o Controle do Agente
+
+Reinicie o serviço de Controle do Agente para aplicar a nova configuração e verifique se o serviço reiniciou com sucesso
+
+* Linux:
+
+  ```bash
+  sudo systemctl restart newrelic-agent-control
+  sudo systemctl status newrelic-agent-control
+  ```
+
+* Windows:
+
+  ```powershell
+  Restart-Service -Name newrelic-agent-control
+  Get-Service -Name newrelic-agent-control
+  ```
+</Step>
+</Steps>

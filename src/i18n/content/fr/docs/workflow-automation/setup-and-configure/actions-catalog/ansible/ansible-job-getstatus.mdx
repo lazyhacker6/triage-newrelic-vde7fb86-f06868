@@ -1,0 +1,247 @@
+---
+title: Obtenir le statut d'un job Ansible
+tags:
+  - workflow automation
+  - workflow
+  - workflow automation actions
+  - Ansible actions
+  - Ansible job actions
+metaDescription: Reference for the ansible.job.getStatus action in the workflow automation actions catalog.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Cette page fournit une référence pour l’action `ansible.job.getStatus` disponible dans le catalogue d’actions d’automatisation de workflow. Utilisez cette action pour interroger un job créé par [`ansible.job.launch`](/docs/workflow-automation/setup-and-configure/actions-catalog/ansible/ansible-job-launch) jusqu’à ce qu’il atteigne un état terminal.
+
+Pour les prérequis, voir [Actions de tâche Ansible](/docs/workflow-automation/setup-and-configure/actions-catalog/ansible/ansible-job#prerequisites).
+
+## Obtenir le statut d&apos;un job Ansible
+
+L’identifiant de l’action est `ansible.job.getStatus`.
+
+Obtient le statut et les détails d&apos;un job Automation Controller. Les statuts des jobs passent de `pending` à `waiting` puis à `running` avant d&apos;atteindre un état terminal : `successful`, `failed`, `error`, ou `canceled`. Le point de terminaison est `GET https://{host}/api/controller/v2/jobs/{jobId}/`.
+
+<Tabs>
+<TabsBar>
+<TabsBarItem id="ansible-job-getstatus-inputs">Entrées</TabsBarItem> <TabsBarItem id="ansible-job-getstatus-outputs">Sorties</TabsBarItem> <TabsBarItem id="ansible-job-getstatus-example">Exemple</TabsBarItem>
+</TabsBar>
+
+<TabsPages>
+<TabsPageItem id="ansible-job-getstatus-inputs">
+Le tableau suivant décrit tous les champs de saisie disponibles pour cette action.
+
+<table>
+<thead>
+<tr>
+<th>
+Saisir
+</th>
+
+<th>
+Type
+</th>
+
+<th>
+Description
+</th>
+
+<th>
+Exemple
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+**host**
+</td>
+
+<td>
+Chaîne
+</td>
+
+<td>
+**Obligatoire.** Nom d’hôte (et port facultatif) de l&apos;Automation Controller, sans schéma.
+</td>
+
+<td>
+`${{ :secrets:host }}`
+</td>
+</tr>
+
+<tr>
+<td>
+**authToken**
+</td>
+
+<td>
+Chaîne
+</td>
+
+<td>
+**Obligatoire.** Jeton OAuth2 envoyé en tant que `Authorization: Bearer <token>`.
+</td>
+
+<td>
+`${{ :secrets:ansibleControllerToken }}`
+</td>
+</tr>
+
+<tr>
+<td>
+**jobId**
+</td>
+
+<td>
+Int
+</td>
+
+<td>
+**Obligatoire.** ID de tâche numérique à interroger. Généralement le `id` renvoyé par `ansible.job.launch`.
+</td>
+
+<td>
+`128`
+</td>
+</tr>
+
+<tr>
+<td>
+**selectors**
+</td>
+
+<td>
+List
+</td>
+
+<td>
+**Facultatif.** Sélecteurs JQ pour extraire des champs spécifiques de la sortie de l&apos;action.
+</td>
+
+<td>
+`[{"name": "status", "expression": ".status"}, {"name": "failed", "expression": ".failed"}]`
+</td>
+</tr>
+</tbody>
+</table>
+</TabsPageItem>
+
+<TabsPageItem id="ansible-job-getstatus-outputs">
+Le tableau suivant décrit tous les champs de sortie renvoyés par cette action.
+
+<table>
+<thead>
+<tr>
+<th>
+Sortir
+</th>
+
+<th>
+Type
+</th>
+
+<th>
+Description
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+**success**
+</td>
+
+<td>
+Booléen
+</td>
+
+<td>
+`true` en cas de succès, `false` en cas d’échec.
+</td>
+</tr>
+
+<tr>
+<td>
+**response**
+</td>
+
+<td>
+Objet
+</td>
+
+<td>
+Détails du job de l&apos;API Automation Controller.
+
+```json
+{
+  "id": 128,
+  "status": "successful",
+  "failed": false,
+  "started": "2026-07-08T10:00:00Z",
+  "finished": "2026-07-08T10:02:13Z",
+  "elapsed": 133.0
+}
+```
+</td>
+</tr>
+
+<tr>
+<td>
+**errorMessage**
+</td>
+
+<td>
+Chaîne
+</td>
+
+<td>
+Message d’erreur en cas d&apos;échec. `null` en cas de succès.
+</td>
+</tr>
+</tbody>
+</table>
+</TabsPageItem>
+
+<TabsPageItem id="ansible-job-getstatus-example">
+L&apos;exemple suivant interroge un job Ansible et effectue un branchement en fonction du résultat.
+
+<table>
+<thead>
+<tr>
+<th>
+Exemple de workflow
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+```yaml
+name: check-ansible-job
+description: Fetch the status of a previously launched Ansible job
+steps:
+  - name: get_status
+    type: action
+    action: ansible.job.getStatus
+    version: 1
+    inputs:
+      host: ${{ :secrets:host }}
+      authToken: ${{ :secrets:ansibleControllerToken }}
+      jobId: "128"
+      selectors:
+        - name: status
+          expression: ".status"
+        - name: failed
+          expression: ".failed"
+    next: end
+```
+</td>
+</tr>
+</tbody>
+</table>
+</TabsPageItem>
+</TabsPages>
+</Tabs>

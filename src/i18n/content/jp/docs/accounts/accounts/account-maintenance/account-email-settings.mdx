@@ -1,0 +1,71 @@
+---
+title: メール設定
+tags:
+  - Accounts
+  - Accounts and billing
+  - General account settings
+metaDescription: 'How to subscribe to and unsubscribe from New Relic emails, and change your email address.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+New Relic のアカウント設定では、特定の種類のメールを購読したり、購読を中止したり、その他のメール設定を編集することができます。
+
+<Callout variant="tip">
+  集計関連のメールについては、 [「集計通知」](/docs/alerts-applied-intelligence/notifications/intro-notifications)を参照してください。
+</Callout>
+
+## New Relicをあなたのメール許可リストに追加 [#email-allowlist]
+
+New Relicメールを確実に受信するために、組織の信頼できるメールソースの許可リストに`noreply@newrelic.com`と`*@mailer-d.newrelic.com`を追加できます。これは次のことに役立ちます。
+
+* New Relic のメールがスパムフィルターに引っかかるのを防ぎます。
+* お客様のメールが抑制リストに追加されるのを防ぎます。
+
+## メールアドレスの変更 [#change-email]
+
+メールアドレスを変更するには：[<DNT>**User preferences**</DNT>](https://one.newrelic.com/user-preferences)に移動して<DNT>**Email**</DNT>をクリックします。
+
+New Relic ユーザーのメール アドレスには次の制限があります。
+
+* 文字: 文字 (a-z、A-Z)、数字 (0-9)、および特殊文字`(!#$%&'*+/=?^_{|}~-)`で構成されている必要があります。
+* 長さ: 最大 255 文字に制限されます。
+
+### SSO/SAMLユーザーとしてメールアドレスを変更する [#sso-saml-email]
+
+SSO/SAMLアカウントに認証されている間に、次のいずれかの方法を使用してメールアドレスを更新できます：
+
+**ユーザー管理UI**
+
+1. [ユーザー管理](https://one.newrelic.com/admin-portal/organizations/users-list)に移動します。
+2. ユーザー情報をクリックしてください。
+3. メールアドレスを更新して保存してください。
+4. ご利用のIDプロバイダーに登録されているメールアドレスを、完全に一致するように更新してください。
+5. 認証テスト。
+
+このプロセス中にログアウトされた場合、管理者であれば、 [ワンタイムSSOバイパス](/docs/accounts/accounts-billing/account-setup/troubleshoot-new-relics-password-email-address-login-problems/#login-troubleshooting)を使用してアクセス権を回復できます。
+
+**NerdGraph API**
+
+[NerdGraph API](/docs/apis/nerdgraph/examples/nerdgraph-manage-users/#update-users)を介してメールアドレスを更新することで、ログアウトされるリスクを回避できます。一括更新については、 [KCS の一括ユーザーメール更新に関する記事を](https://knowledge.newrelic.com/s/article/Bulk-User-Email-Updates)参照してください。
+
+## メールの配信停止 [#emails]
+
+New Relicでは2種類のメールを送信しています。
+
+* マーケティングメール：新機能やスペシャルオファーなどに関するもの。
+* 製品メール：パフォーマンスレポート、アラート、請求書など、製品情報に関連するもの。
+
+これらのメールタイプの配信停止の詳細は以下の通りです。
+
+### マーケティングメールの配信停止 [#marketing-emails]
+
+New Relic のマーケティング メールには<DNT>**Unsubscribe**</DNT>リンクが含まれています。 リンクをクリックすると、さまざまな種類のメッセージへのサブスクリプションを管理できるページに移動します。
+
+### 製品関連メールの配信停止 [#product-emails]
+
+製品関連のメールは数種類あり、その制御方法も異なります。
+
+* アラート: <InlinePopover type="alerts" />関連のメールを制御する方法については、 [「集計通知」](/docs/alerts-applied-intelligence/notifications/intro-notifications)を参照してください。
+* <InlinePopover type="apm" />週次レポートメール: [APM パフォーマンス レポート](/docs/apm/reports/other-performance-analysis/weekly-performance-report#opting_out)を参照してください。
+* <InlinePopover type="mobile" />からのレポート:[クラッシュ レポート メール](/docs/mobile-monitoring/mobile-monitoring-ui/crashes/receive-crash-notifications-email)と[バージョン トレンド メール](/docs/mobile-monitoring/mobile-monitoring-ui/mobile-app-pages/version-trends-compare-user-adoption-metrics-performance)を参照してください。

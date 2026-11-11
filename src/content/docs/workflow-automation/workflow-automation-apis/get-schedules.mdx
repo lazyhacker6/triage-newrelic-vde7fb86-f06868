@@ -1,0 +1,78 @@
+---
+title: GetSchedules
+tags:
+  - workflow automation
+  - workflow
+  - Get Schedules
+  - workflow automation API
+metaDescription: "Returns information about schedules."
+freshnessValidatedDate: 2026-10-27
+---
+
+Use the `workflowAutomation.schedules` query to return information about schedules.
+
+## Input parameters [#input-parameters]
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "200px" }}>Parameter</th>
+      <th>Data type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`account.id`</td>
+      <td>Number</td>
+      <td>(Required) Your account ID.</td>
+    </tr>
+  </tbody>
+</table>
+
+## Sample request [#sample-request]
+
+```graphql
+{
+  actor {
+    account(id: 12345678) {
+      workflowAutomation {
+        schedules {
+          results {
+            definition {
+              name
+              scope {
+                id
+                type
+              }
+              version
+            }
+            schedule {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+## Sample response [#sample-response]
+
+The query returns:
+
+- `schedules.results`: An array of schedule objects, each containing:
+  - `definition.name`: The workflow definition name
+  - `definition.scope.id`: The account ID
+  - `definition.scope.type`: The scope type
+  - `definition.version`: The workflow definition version
+  - `schedule.id`: The unique identifier of the schedule
+
+## Related topics [#related-topics]
+
+<DocTiles>
+  <DocTile title='Get schedule' path="/docs/workflow-automation/workflow-automation-apis/get-schedule">Get detailed information about a specific schedule</DocTile>
+  <DocTile title='Create schedule' path="/docs/workflow-automation/workflow-automation-apis/create-schedule">Add a new workflow schedule</DocTile>
+  <DocTile title='Delete schedule' path="/docs/workflow-automation/workflow-automation-apis/delete-schedule">Remove a schedule from the list</DocTile>
+</DocTiles>

@@ -1,0 +1,273 @@
+---
+title: チャートエラーのトラブルシューティング
+tags:
+  - Query your data
+  - Explore and query data
+  - Dashboards
+  - Chartsp
+metaDescription: Troubleshoot errors with your charts and dashboards.
+freshnessValidatedDate: '2024-02-07T00:00:00.000Z'
+translationType: machine
+---
+
+グラフを追加するときに、設定によってはエラー メッセージが表示される場合があります。 その場合、以下の表を使用してエラーの説明と、エラーの再発を防ぐために行うべき変更の提案を確認できます。
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "400px" }}>
+        <DNT>
+          **Error message**
+        </DNT>
+      </th>
+
+      <th style={{ width: "400px" }}>
+        <DNT>
+          **Description**
+        </DNT>
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        外部サービス &apos;NRDB&apos; の実行結果が 400 - 原因です。TIMESERIESのステップ・サイズが現在のタイム・ウィンドウよりも大きい。
+      </td>
+
+      <td>
+        [`TIMESERIES`](/docs/query-your-data/nrql-new-relic-query-language/get-started/nrql-syntax-clauses-functions/#sel-timeseries)のステップ サイズが、選択した時間枠よりも大きくなっています。ステップを変更して、クエリを再度実行してください。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        外部サービス「NRDB」の実行結果が 400 - 原因です。クエリの開始時刻は終了時刻より前でなければなりません。
+      </td>
+
+      <td>
+        クエリの指定された`startTime`は、 `endTime`の前にある必要があります。変更して、クエリを再実行してください。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        NerdGraphGetAuthorizedAccountsCommandの短絡とフォールバックが無効になっています。
+      </td>
+
+      <td>
+        要求の承認中に通信に失敗しました。数分後にもう一度試してください。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        アプリケーションは一致しませんでした（appId、appName、entity.guidを指定しましたか？）
+      </td>
+
+      <td>
+        クエリに一致するエンティティはありませんでした。指定された`appId` 、 `appName`または`entity.guid`を確認して、クエリを再実行してください。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        NRQL構文エラー：1行目15番目の予期しない&apos;FROM&apos;のエラー
+
+        FACETおよびTIMESERIESは、イベントではサポートされていません。
+      </td>
+
+      <td>
+        クエリに構文の問題があります。[クエリビルダー](/docs/query-your-data/explore-query-data/query-builder/introduction-query-builder/)でエラーを確認します。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        クエリの実行中に問題が発生しました。
+      </td>
+
+      <td>
+        データの取得中に予期せぬエラーが発生しました。数分後に再度お試しください。それでも問題が解決しない場合は、 [https://support.newrelic.com/](https://support.newrelic.com/) までお問い合わせください。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        TIMESERIESは最大366個のバケットをサポートします
+      </td>
+
+      <td>
+        [`TIMESERIES`](/docs/query-your-data/nrql-new-relic-query-language/get-started/nrql-syntax-clauses-functions/#sel-timeseries)バケット サイズが小さすぎるため、選択したすべての時間枠にまたがることができません。バケット サイズを変更して、クエリを再実行してください。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        アカウント2022412をクエリする権限がありません
+      </td>
+
+      <td>
+        このアカウントへのアクセス権がありません。詳細については、管理者にお問い合わせください。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        クエリがタイムアウトしたか、負荷が高くなっています。さらにサポートが必要な場合は、[https://support.newrelic.com/](https://support.newrelic.com/)に移動してください。
+      </td>
+
+      <td>
+        NRDBには大きな負荷がかかっており、断続的なタイムアウトが発生します。数分後にもう一度試してください。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        &apos;nrql&apos;の検証エラー：クエリを指定する必要があります
+      </td>
+
+      <td>
+        有効なNRQLクエリを指定する必要があります。[当社のクエリ言語](/docs/query-your-data/nrql-new-relic-query-language/get-started/introduction-nrql-new-relics-query-language/)について詳細をご覧ください。
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## ウィジェットのリンクと説明に関する問題 [#widget-link-issues]
+
+ウィジェットのリンクや説明に問題が発生している場合は、以下のよくある問題とその解決策を確認してください。
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "400px" }}>
+        <DNT>
+          **Problem**
+        </DNT>
+      </th>
+
+      <th style={{ width: "400px" }}>
+        <DNT>
+          **Solution**
+        </DNT>
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        ウィジェットのリンクがクリックできません
+      </td>
+
+      <td>
+        URLが有効であり、サポートされているプロトコル（ `http://`または`https://` ）を使用していることを確認してください。他のプロトコルとの接続はサポートされていません。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        説明ツールチップが表示されない
+      </td>
+
+      <td>
+        説明欄にテキストが入力されていることを確認してください。ツールチップを表示するには、ウィジェットのタイトル領域にカーソルを合わせてください。それでも表示されない場合は、ダッシュボードを更新してみてください。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        URL検証エラー
+      </td>
+
+      <td>
+        URLが2,048文字を超えず、 `http://`または`https://`プロトコルのみを使用していることを確認してください。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        リンクをクリックすると404エラーが表示されます
+      </td>
+
+      <td>
+        ターゲット URL が正しく、アクセス可能であることを確認してください。 外部リンクは、一般に公開されているか、ネットワーク内でアクセス可能である必要があります。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        ウィジェットのリンクや説明は編集できません
+      </td>
+
+      <td>
+        ダッシュボードの編集権限があることを確認してください。ウィジェットの設定を変更できるのは、適切な権限を持つユーザーのみです。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        APIミューテーションはエラーを返さないが、変更が反映されない
+      </td>
+
+      <td>
+        ダッシュボードページを更新してください。それでも変更が表示されない場合は、 NerdGraph APIエクスプローラーを使用して、IDが正しいこと、およびミューテーションが正常に完了したことを確認してください。
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## 隠れた変数の問題 [#hidden-variable-issues]
+
+非表示のテンプレート変数に問題が発生している場合は、以下の一般的な問題と解決策を確認してください。
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "400px" }}>
+        <DNT>
+          **Problem**
+        </DNT>
+      </th>
+
+      <th style={{ width: "400px" }}>
+        <DNT>
+          **Solution**
+        </DNT>
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        必要な変数が見つかりません
+      </td>
+
+      <td>
+        編集モードに入ると、非表示の変数も含め、すべての変数が表示されます。変数を頻繁に操作する必要がある場合は、非表示を解除することを検討してください。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        誤って変数を非表示にしてしまいました
+      </td>
+
+      <td>
+        編集モードに入り、表示オフアイコンが付いている変数を見つけて、 <DNT>**Hide on variables bar**</DNT>設定をオフに切り替えます。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        APIコールで隠し変数が機能しない
+      </td>
+
+      <td>
+        `options`オブジェクトで`hiddenOnVariablesBar`フィールドを使用していることを確認してください。このフィールドは`VariableOptions`型で利用可能である必要があります。
+      </td>
+    </tr>
+  </tbody>
+</table>

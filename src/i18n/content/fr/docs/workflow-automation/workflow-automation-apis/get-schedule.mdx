@@ -1,0 +1,101 @@
+---
+title: Obtenir le calendrier
+tags:
+  - workflow automation
+  - workflow
+  - Get Schedule
+  - workflow automation API
+metaDescription: API gets and returns a schedule.
+freshnessValidatedDate: '2026-10-27T00:00:00.000Z'
+translationType: machine
+---
+
+Utilisez la requête `workflowAutomation.schedule` pour obtenir et renvoyer une planification.
+
+## Paramètres d&apos;entrée [#input-parameters]
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+paramètres
+</th>
+
+<th>
+Type de données
+</th>
+
+<th>
+Description
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`account.id`
+</td>
+
+<td>
+Nombre
+</td>
+
+<td>
+(Requis) Votre ID de compte.
+</td>
+</tr>
+
+<tr>
+<td>
+`schedule.id`
+</td>
+
+<td>
+Chaîne
+</td>
+
+<td>
+(Requis) L&apos;identifiant unique de la planification à récupérer.
+</td>
+</tr>
+</tbody>
+</table>
+
+## Demande d&apos;échantillon [#sample-request]
+
+```graphql
+    {
+      actor {
+        account(id: 12345678) {
+          workflowAutomation {
+            schedule(id: "schedule-id") {
+              id
+            }
+          }
+        }
+      }
+    }
+```
+
+## Exemple de réponse [#sample-response]
+
+La requête retourne :
+
+* `schedule.id`: L&apos;identifiant unique de la planification.
+
+## Sujets connexes [#related-topics]
+
+<DocTiles>
+<DocTile title="Récupérer les plannings" path="/docs/workflow-automation/workflow-automation-apis/get-schedules">
+Lister tous les plannings pour trouver les ID de planning
+</DocTile>
+
+<DocTile title="Créer un planning" path="/docs/workflow-automation/workflow-automation-apis/create-schedule">
+Créer une nouvelle planification de workflow
+</DocTile>
+
+<DocTile title="Supprimer le planning" path="/docs/workflow-automation/workflow-automation-apis/delete-schedule">
+Supprimer ce planning
+</DocTile>
+</DocTiles>

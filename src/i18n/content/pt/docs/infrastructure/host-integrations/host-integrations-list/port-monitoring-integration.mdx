@@ -1,0 +1,104 @@
+---
+title: Integração de monitoramento portuário
+tags:
+  - Integrations
+  - On-host integrations
+  - On-host integrations list
+metaDescription: An introduction to New Relic's open-source port monitoring integration.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Nossa integração de monitoramento portuário monitora o status das portas de rede, como TCP, UDP, etc., e reporta o tempo de operação e dados de interrupção para New Relic.
+
+<img title="port-dashboard" alt="Dashboard of the port monitoring integration" src="/images/infrastructure_screenshot-crop_port-monitoring-dashboard.webp" />
+
+<Callout variant="tip">
+  Esta integração é lançada como [código aberto no Github](https://github.com/newrelic/nri-port-monitor). Um log de alterações também está disponível para as últimas atualizações.
+</Callout>
+
+## Instale a integração [#install]
+
+Siga as etapas abaixo para instalar a integração:
+
+<Steps>
+  <Step>
+    ## Instalar o agente de infraestrutura [#infra-install]
+
+    Para utilizar a integração de monitoramento do Porto, é necessário primeiro [instalar o agente de infraestrutura](/docs/infrastructure/install-infrastructure-agent/get-started/install-infrastructure-agent-new-relic/) no mesmo host. Toda a nossa integração no host requer o agente de infraestrutura, que ajuda a expor e reportar métricas para New Relic.
+  </Step>
+
+  <Step>
+    ## Baixe e prepare a integração [#download]
+
+    1. Escolha e baixe uma release para sua plataforma do [repositório do GitHub](https://github.com/newrelic/nri-port-monitor/releases). Por exemplo:
+
+       ```shell
+       wget https://github.com/newrelic/nri-port-monitor/releases/download/1.4/nri-port-monitor_x86_64.tar.gz && tar -zxvf nri-port-monitor_x86_64.tar.gz  
+       ```
+
+    2. Copie o executável `nri-port-monitor` para `/var/db/newrelic-infra/newrelic-integrations`. Copiar `port-monitor-config.yml` para `/etc/newrelic-infra/integrations.d`
+
+       ```shell
+       cp nri-port-monitor /var/db/newrelic-infra/newrelic-integrations && cp port-monitor-config.yml /etc/newrelic-infra/integrations.d
+       ```
+
+    3. Defina permissões de execução para o arquivo binário `nri-port-monitor` para que ele possa ser executado corretamente:
+
+       ```shell
+       chmod +x /var/db/newrelic-infra/newrelic-integrations/nri-port-monitor
+       ```
+  </Step>
+
+  <Step>
+    ## Configurar a integração [#configure-step]
+
+    1. Abra `port-monitor-config.yml` e edite a configuração com todas as instâncias de porta que você deseja monitorar (adicione várias seções ao bloco de integrações para cada endereço/porta a monitorar:
+
+       ```yml
+       ```
+
+    integrações:
+
+    * name: nri-port-monitor interval: 60s env:
+
+      # Tipo de rede. As redes conhecidas são:
+
+      # tcp, tcp4 (somente IPv4), tcp6 (somente IPv6),
+
+      # udp, udp4 (somente IPv4), udp6 (somente IPv6),
+
+      # ip, ip4 (somente IPv4), ip6 (somente IPv6),
+
+      # unix, unixgram e unixpacket
+
+      REDE: tcp
+
+      # Endereço a ser verificado no formato host:porta
+
+      ENDEREÇO: localhost:80
+
+      # Tempo limite em segundos
+
+      TIMEOUT: 5 rótulos: env: production
+
+    ````
+    </Step>
+
+    <Step>
+    ## Find your data [#find-data]
+
+    To easily find your Port Monitoring data, download our pre-built dashboard:
+
+    1. Go to <DNT>**[one.newrelic.com](https://one.newrelic.com/)**</DNT> and click on <DNT>**+ Integrations & Agents**</DNT>.
+    2. Click on <DNT>**Dashboards**</DNT> tab.
+    3. In the search box, search for <DNT>**Port Monitoring**</DNT>.
+    4. Click on the Port Monitoring dashboard to install it.
+
+    Here's an example NRQL query that returns the status of configured ports:
+
+    ```sql
+    SELECT latest(status) FROM NetworkPortSample FACET address SINCE 30 MINUTES AGO TIMESERIES
+    ````
+  </Step>
+</Steps>

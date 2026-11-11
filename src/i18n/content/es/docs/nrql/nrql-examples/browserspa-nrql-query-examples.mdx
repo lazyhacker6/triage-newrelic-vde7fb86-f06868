@@ -1,0 +1,135 @@
+---
+title: Browser/SPA NRQL ejemplos de consulta
+tags:
+  - Query your data
+  - 'NRQL: New Relic Query Language'
+  - NRQL query tutorials
+metaDescription: 'New Relic NRQL: How to run queries of your browser and single-page application (SPA) data reported by Browser.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Este documento explicará cómo puede utilizar [NRQL](/docs/query-data/nrql-new-relic-query-language/getting-started/introduction-nrql) para consultar y explorar los datos de su [browser](/docs/browser/new-relic-browser/getting-started/introduction-new-relic-browser) , incluidos los datos [de SPA](/docs/browser/single-page-app-monitoring/get-started/welcome-single-page-app-monitoring) .
+
+## Ver errores de JavaScript [#javascriptError-example]
+
+Para ver [los errores de JavaScript](/docs/browser/new-relic-browser/browser-pro-features/javascript-errors-page-examine-errors-over-time), debe ejecutar una [consulta NRQL](/docs/query-data/nrql-new-relic-query-language/getting-started/introduction-nrql) del [evento`JavaScriptError` ](/docs/insights/insights-data-sources/default-data/browser-default-events-attributes-insights#javascriptError-attributes)informado por el navegador. Por ejemplo:
+
+```sql
+SELECT * FROM JavaScriptError
+```
+
+A continuación se muestra un ejemplo de registro de evento `JavaScriptError` con atributos de muestra:
+
+```json
+{
+  "agentVersion": "1.322.0",
+  "appId": 1234567,
+  "appName": "Book Staging Multiverse",
+  "asn": "12345",
+  "asnLatitude": 37.3861,
+  "asnLongitude": -122.0839,
+  "asnOrganization": "EXAMPLE-ISP",
+  "browserInteractionId": "abc123def456ghi789",
+  "browserStackHash": 1234567890,
+  "city": "Example City",
+  "countryCode": "US",
+  "deviceType": "Desktop",
+  "domain": "example.com",
+  "entityGuid": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+  "errorClass": "Error",
+  "errorMessage": "Script error message",
+  "firstErrorInSession": true,
+  "firstOccurrenceTimestamp": 1234567890000,
+  "pageUrl": "https://example.com/example-page",
+  "regionCode": "CA",
+  "releaseIds": "{\"jQuery\":\"v3.1.1\",\"app\":\"1a2b3c4\"}",
+  "requestUri": "/synthetic-multiverse/",
+  "session": "abc123def456ghi789",
+  "sessionTraceId": "abc123def456ghi789",
+  "stackHash": 987654321,
+  "stackTrace": "Error: Script error message.\n    at anonymous:1:1",
+  "timestamp": 1234567890,
+  "transactionName": "Unnamed Transaction",
+  "userAgentName": "Chrome",
+  "userAgentOS": "Linux",
+  "userAgentVersion": "44"
+}
+```
+
+## Ver datos de SPA de muestra [#explore-spa-data]
+
+Para ejecutar una [NRQL consulta](/docs/query-data/nrql-new-relic-query-language/getting-started/introduction-nrql) de browser [los datos SPA de su](/docs/browser/single-page-app-monitoring/get-started/introduction-single-page-app-monitoring), utilice el evento `BrowserInteraction` o `AjaxRequest` . Por ejemplo:
+
+```sql
+SELECT * FROM BrowserInteraction
+```
+
+A continuación se muestran algunos ejemplos de consultas NRQL que puede realizar con los datos de su SPA. Para ver todos los atributos browser , consulte [atributo predeterminadobrowser ](/docs/insights/insights-data-sources/default-data/browser-default-events-attributes-insights).
+
+<CollapserGroup>
+<Collapser id="count-route-changes" title="Cuente los cambios de ruta y las cargas de páginas">
+Para contar los cambios de ruta y las cargas de páginas en el último día:
+
+```sql
+SELECT count(*) FROM BrowserInteraction
+SINCE 1 day ago
+```
+</Collapser>
+
+<Collapser id="avg-duration-route-change" title="Duración promedio de los cambios de ruta y cargas de páginas">
+Para encontrar la duración promedio de los cambios de ruta y las cargas de páginas en el último día:
+
+```sql
+SELECT average(duration) FROM BrowserInteraction 
+SINCE 1 day ago
+```
+</Collapser>
+
+<Collapser id="slowest-route-changes" title="Cambios de ruta más lentos">
+Para encontrar los 10 cambios de ruta más lentos del último día:
+
+```sql
+SELECT average(duration) FROM BrowserInteraction 
+WHERE category = 'Route change' 
+SINCE 1 day ago FACET browserInteractionName
+```
+</Collapser>
+
+<Collapser id="most-popular-route-changes" title="Cambios de ruta más populares">
+Para encontrar los diez cambios de ruta más populares en el último día:
+
+```sql
+SELECT count(*) FROM BrowserInteraction 
+WHERE category = 'Route change' 
+SINCE 1 day ago FACET browserInteractionName
+```
+</Collapser>
+
+<Collapser id="compare-throughput" title="Compare la carga de la página y el rendimiento del cambio de ruta">
+Para comparar el rendimiento entre cargas de páginas y cambios de ruta en el último día, en incrementos de 1 hora:
+
+```sql
+SELECT count(*) FROM BrowserInteraction SINCE 1 day ago FACET category TIMESERIES 1 hour
+```
+</Collapser>
+
+<Collapser id="compare-performance" title="Comparar la carga de la página y el rendimiento del cambio de ruta">
+Para comparar el rendimiento de las cargas de páginas y los cambios de ruta en el último día, en incrementos de 1 hora:
+
+```sql
+SELECT average(duration) FROM BrowserInteraction 
+SINCE 1 day ago FACET category TIMESERIES 1 hour
+```
+</Collapser>
+
+<Collapser id="create-table" title="Crear tabla usando ciertos criterios">
+Para crear una tabla de datos de los recuentos Ajax promedio, mínimo y máximo para los 20 cambios de ruta más lentos:
+
+```sql
+SELECT average(duration), average(ajaxCount), min(ajaxCount), max(ajaxCount) 
+FROM BrowserInteraction WHERE category = 'Route change' SINCE 1 day ago 
+FACET browserInteractionName LIMIT 20
+```
+</Collapser>
+</CollapserGroup>

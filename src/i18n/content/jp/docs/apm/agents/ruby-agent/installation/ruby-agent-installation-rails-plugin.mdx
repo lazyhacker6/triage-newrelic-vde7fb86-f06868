@@ -1,0 +1,112 @@
+---
+title: Rubyエージェントのインストール。Railsプラグイン
+tags:
+  - Agents
+  - Ruby agent
+  - Installation
+metaDescription: Install the New Relic Ruby agent as a Rails plugin for Rails 1.2.6 and earlier.
+freshnessValidatedDate: '2026-08-05T00:00:00.000Z'
+translationType: machine
+---
+
+この方法は、**Rails 2以上**向けにRubyエージェントをRailsプラグインとしてインストールするためのものです。
+
+<Callout variant="important">
+ほとんどのユースケースでは、代わりに[Rubyエージェントをgemとしてインストールしてください](/docs/apm/agents/ruby-agent/installation/install-new-relic-ruby-agent)。gemを使用する方法では、バージョンと依存関係をより適切に制御できます。
+</Callout>
+
+## 前提条件 [#prerequisites]
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+要件
+</th>
+
+<th>
+詳細
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+**New Relicアカウント**
+</td>
+
+<td>
+[New Relicアカウント](https://newrelic.com/signup)と<InlinePopover type="licenseKey" />が必要です。
+</td>
+</tr>
+
+<tr>
+<td>
+**RubyとRailsのバージョン**
+</td>
+
+<td>
+サポートされているバージョンについては、[Rubyエージェントの要件とサポート対象のフレームワーク](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks)を参照してください。
+</td>
+</tr>
+
+<tr>
+<td>
+**ジット**
+</td>
+
+<td>
+GitHubからインストールするには、コマンドラインからGitにアクセスできる必要があります。
+</td>
+</tr>
+</tbody>
+</table>
+
+<Steps>
+<Step>
+## Railsプラグインのインストール [#install]
+
+GitHubからアプリケーションの`vendor/plugins`ディレクトリにプラグインをインストールします：
+
+```sh
+script/plugin install git://github.com/newrelic/newrelic-ruby-agent.git
+mv vendor/plugins/rpm vendor/plugins/newrelic-ruby-agent
+```
+
+git URLから直接インストールできない場合は、手動でリポジトリを`vendor/plugins`ディレクトリにクローンしてください。
+</Step>
+
+<Step>
+## エージェントを構成します [#configure]
+
+プラグインディレクトリからアプリケーションの`config`サブディレクトリに`newrelic.yml`ファイルをコピーします：
+
+```sh
+cp vendor/plugins/newrelic-ruby-agent/newrelic.yml config/newrelic.yml
+```
+
+`config/newrelic.yml`を編集して、2つの必要な値を設定します：
+
+1. `license_key`を<InlinePopover type="licenseKey" />に設定してください。
+2. `app_name`にアプリケーションのわかりやすい名前を設定してください。
+
+その他のすべての設定オプションについては、[Rubyエージェント設定](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration)を参照してください。
+</Step>
+
+<Step>
+## データが流れていることを確認します [#verify]
+
+Webサーバーを再起動し、アプリケーションに少なくとも2つのrequestsを送信してください。2～3分待ってから、[one.newrelic.com &gt; APM](https://one.newrelic.com/apm)を開き、名前でアプリケーションを探してください。
+
+<Callout variant="tip">
+アプリケーションが表示されませんか？[データが表示されない（Ruby）](/docs/apm/agents/ruby-agent/troubleshooting/no-data-appears-ruby)をご覧ください。
+</Callout>
+</Step>
+</Steps>
+
+## 関連記事 [#related-docs]
+
+* [Rubyエージェントをgemとしてインストールする](/docs/apm/agents/ruby-agent/installation/install-new-relic-ruby-agent) — ほとんどのユースケースで推奨される方法。
+* [Rubyエージェントの要件とサポート対象のフレームワーク](/docs/apm/agents/ruby-agent/getting-started/ruby-agent-requirements-supported-frameworks) — サポート対象のRubyとRailsのバージョン。
+* [Rubyエージェント設定](/docs/apm/agents/ruby-agent/configuration/ruby-agent-configuration) — 利用可能なすべての設定。

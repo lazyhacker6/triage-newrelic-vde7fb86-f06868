@@ -1,0 +1,32 @@
+---
+title: 'Inteligencia para costos en la nube: precios'
+metaDescription: 'Understand how Cloud Cost Intelligence is priced, including billing file ingest rates and how usage is measured.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+<DNT>Cloud Cost Intelligence</DNT> es un producto de Advanced Compute. El precio se basa en el volumen de datos de exportación de facturación que publica el proveedor de cloud y que procesa CCI, lo que se conoce como ingesta de archivos de facturación. Para acceder a CCI, los usuarios deben tener una **licencia de usuario de plataforma completa**.
+
+<Callout variant="tip">
+Comuníquese con su equipo de cuenta de New Relic para obtener los detalles de precios más recientes o para analizar opciones basadas en el volumen.
+</Callout>
+
+## Tasa de ingesta de archivos de facturación
+
+La ingesta de archivos de facturación se cobra en aCCU por GB de datos de facturación procesados.
+
+La tarifa por GB difiere según el proveedor de cloud, pero también lo hace el volumen de datos de facturación que cada proveedor genera para un entorno de infraestructura.
+
+Por GB, AWS tiene la tarifa más baja, GCP es más alta que AWS y Azure es más alta que ambas.
+
+Por ejemplo, si tiene un entorno de infraestructura comparable en los tres proveedores, vería costos totales de ingesta muy similares en AWS, GCP y Azure — aunque las tarifas por GB difieran.
+
+## ¿Qué es la ingesta de archivos de facturación?
+
+La ingesta de archivos de facturación se refiere al tamaño de los archivos de exportación de facturación que su proveedor de cloud (AWS, Azure o GCP) publica en su contenedor de almacenamiento designado. CCI importa estos archivos para crear análisis de costos e información valiosa.
+
+<Callout variant="important">
+La ingesta de archivos de facturación es diferente de la [ingesta de datos](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/data-ingest-billing/) estándar de New Relic, que se aplica a telemetry data en streaming como métricas, logs y trazas. Los dos se miden y se facturan por separado.
+</Callout>
+
+Para obtener una descripción general de cómo se aplican los precios de New Relic de manera más amplia, consulta [Precios de New Relic](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/new-relic-one-pricing-billing/).

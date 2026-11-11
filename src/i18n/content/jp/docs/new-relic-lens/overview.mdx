@@ -1,0 +1,61 @@
+---
+title: New Relic Lensの概要
+tags:
+  - New Relic Lens
+  - Query data
+  - SQL queries
+  - Cross-database joins
+  - Data analysis
+  - Multiple data sources
+metaDescription: 'Learn about New Relic Lens, a unified query platform for querying multiple data sources using ANSI SQL and performing cross-database joins.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+New Relicユーザーとして、複数のデータベース、データウェアハウス、スプレッドシートに保存されているデータとともに、テレメトリーデータを分析する必要が生じる場合があります。各ソースからデータを手動でエクスポートし、オフラインでオブザーバビリティデータと結合する作業は、時間がかかり、生産性を低下させる可能性があるほか、社内のポリシーや要件を満たさない場合があります。
+
+<DNT>New Relic Lens</DNT> これらの課題に対処するのに役立ちます。<DNT>Lens</DNT>は、New Relicから直接特定のデータソースに接続してクエリを実行できる、New Relic内の統合クエリプラットフォームです。ANSI SQLを使用して<DNT>Lens</DNT>でクエリを記述し、クロスデータベース結合を実行して、さまざまなソースからのデータの分析と相関付けに役立てます。生データをNew Relicに取り込む代わりに、<DNT>Lens</DNT>はクエリの各部分をデータが存在するデータソースに送信するため、各ソースが独自の処理を行い、結果のみを返します。その後、<DNT>Lens</DNT>はこれらの結果を結合し、データ転送と外部ソースからの生データの取り込みを最小限に抑えます。
+
+<img title="New Relic Lens Architecture" alt="A schematic diagram of New Relic Lens architecture." src="/images/nr-lens-arch.webp" />
+
+## 機能 [#capabilities]
+
+<DNT>Lens</DNT> 次を提供します：
+
+* **クロスデータベースSQLクエリ**：ANSI SQLを記述し、単一のクエリで複数のソースにまたがるデータを結合します。
+* **組み込みのNRDBアクセス**：セットアップ不要で、組み込みの<DNT>system connectors</DNT>を通じてテレメトリー、エンティティ、および<DNT>materialized view</DNT>データをクエリします。
+* **外部データコネクタ**：cloudデータウェアハウス、リレーショナルデータベース、ドキュメントデータベース、スプレッドシート、データレイク、および監視ツールに接続します。完全なリストについては、[コネクタのセットアップ](/docs/new-relic-lens/set-up-connectors)をご覧ください。
+* **マテリアライズドビュー**：複雑で頻繁に実行されるクエリの結果を[マテリアライズドビュー](/docs/new-relic-lens/materialized-views)として保存し、コストを削減してパフォーマンスを向上させます。
+* **どこからでもクエリを実行**：[クエリビルダー、Notebooks、またはカスタムダッシュボード](/docs/new-relic-lens/query-data)で<DNT>Lens</DNT>クエリを実行します。
+
+## 使用事例 [#use-cases]
+
+<DNT>Lens</DNT> さまざまなデータ分析シナリオを可能にします：
+
+* **予算分析**: <DNT>NRDB</DNT>の New Relic 使用率データと<DNT>Snowflake</DNT>に保存されている予算データを比較して、割り当てられた予算に対する支出を追跡します。
+* **ワークフローの最適化**: 複数の手動エクスポート/インポート手順 (1 つのデータベースから別のデータベースへ) を、必要なすべてのデータを結合する単一の SQL クエリに置き換えて、コストを削減し、効率を向上させます。
+* **地域全体のデータを集約**: さまざまなデータ ソースからのデータを結合して、さまざまな地理的地域にわたるユーザー トラフィックを追跡します。
+* **<DNT>materialized views</DNT>によるパフォーマンスの最適化**：エグゼクティブダッシュボードは、5つ以上のデータベースからのデータを結合し、毎週更新されます。マルチデータベースの`JOIN`クエリの結果を<DNT>materialized view</DNT>に保存することで、ダッシュボードを読み込むたびに計算コストの高いクエリを実行することを回避できます。これにより、クエリコストを削減し、ページの読み込み速度を向上させることができます。
+
+<Callout title="アラートはサポートされていません" variant="important">
+<DNT>Lens</DNT> アラートをサポートしていません。<DNT>Lens</DNT>クエリ結果に基づくアラート条件は作成できません。
+</Callout>
+
+## 価格 [#pricing]
+
+<DNT>**Lens**</DNT> 有料の非営利アカウントを含む、有料顧客が利用できます：
+
+* [<DNT>Data + User</DNT>](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/new-relic-one-pricing-billing/)価格モデルをご利用の場合は、追加費用はかかりません。
+* [<DNT>Data + Core Compute</DNT>](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/new-relic-one-pricing-billing/)価格モデルをご利用の場合、`telemetry.<New Relic event>`テーブルをクエリすると[Core CCUs](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/new-relic-one-pricing-billing/#core-compute-capacity-unit)が消費され、<DNT>Lens</DNT>によってAPIコールとして請求されます。
+
+## セットアップの概要 [#at-a-glance]
+
+<DNT>Lens</DNT> のセットアップには、次の手順が含まれます：
+
+1. [必要な権限](/docs/new-relic-lens/set-up-connectors#requirements)があることを確認してください
+2. コネクタをセットアップする
+3. 設定を確認する
+
+## 次へ：コネクタをセットアップする [#next]
+
+[**コネクタをセットアップする →**](/docs/new-relic-lens/set-up-connectors)

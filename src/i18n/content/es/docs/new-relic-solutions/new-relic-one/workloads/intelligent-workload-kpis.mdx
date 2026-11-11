@@ -1,0 +1,159 @@
+---
+title: Administrar KPIs personalizados
+tags:
+  - New Relic
+  - Use New Relic
+  - Workloads
+  - Intelligent Workloads
+  - KPIs
+metaDescription: Define and monitor custom key performance indicators for your Intelligent Workloads.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Los KPI personalizados le permiten definir y monitorear métricas específicas del negocio a nivel de carga de trabajo, conectando el rendimiento técnico con los resultados comerciales. Disponible exclusivamente para [Intelligent Workloads](/docs/new-relic-solutions/new-relic-one/workloads/workloads-overview#intelligent-workloads), los KPI proporcionan visibilidad de las métricas que más importan a su negocio.
+
+## KPIs predeterminados [#default-kpis]
+
+Hay dos KPI predeterminados que se generan automáticamente al crear la carga de trabajo. Estos mosaicos listos para usar establecen visibilidad instantánea de la actividad principal de la transacción sin requerir ninguna configuración inicial o configuración de NRQL personalizada. Son **no editables**, pero se pueden ocultar si no se necesitan:
+
+### Rendimiento de la transacción
+
+Realiza un seguimiento del volumen total de requests entrantes que se procesan a través de la transacción seleccionada a lo largo del tiempo.
+
+### Tasa de errores de transacción
+
+Monitorea el porcentaje de transacciones fallidas, lo que le proporciona una línea de base inmediata de la confiabilidad de la transacción.
+
+## Agregar un KPI [#add-kpi]
+
+Puede agregar KPIs a sus Intelligent Workloads de dos maneras: crear KPIs personalizados o agregar KPIs existentes de otras cargas de trabajo.
+
+### Crear un KPI personalizado [#create-custom-kpi]
+
+Cree nuevos KPI para monitorear las métricas más importantes para su negocio:
+
+1. Abra la página de resumen de la carga de Intelligent Workload.
+
+2. Haga clic en <DNT>**Add new KPI**</DNT>. Puede crear un nuevo KPI escribiendo una consulta NRQL para definir una métrica personalizada o utilizar un KPI existente de otras cargas de trabajo.
+
+3. Para crear un KPI personalizado:
+
+   * **Name**: Asigne un nombre descriptivo y amigable para el negocio
+   * **NRQL query**: Escribe una consulta que calcule la métrica
+   * **Group** (opcional): Organice los KPI por área funcional (p. ej., &quot;Rendimiento&quot;, &quot;Métricas de negocio&quot;)
+   * **Category** (opcional): Clasifique los KPI (p. ej., &quot;Latencia&quot;, &quot;Rendimiento&quot;, &quot;Ingresos&quot;)
+
+4. Haga clic en <DNT>**Preview**</DNT> para verificar que la consulta devuelva los resultados esperados
+
+5. Hacer clic <DNT>**Save**</DNT>
+
+<Callout variant="important">
+  Puede mostrar un máximo de **3 KPIs** en la página de resumen a la vez. Este límite garantiza que el resumen se mantenga enfocado y legible.
+</Callout>
+
+## Ver y monitorear los KPI [#monitor]
+
+Después de agregar KPIs, se pueden mostrar hasta 3 en su página de resumen de carga de trabajo como mosaicos. Cada mosaico de KPI muestra:
+
+* **Valor actual**: Medición de KPI en tiempo real
+* **Indicador de tendencia**: Elemento visual que muestra si la métrica está mejorando o degradándose
+* **Gráfico de series de tiempo**: Rendimiento histórico durante el rango de tiempo seleccionado
+* **Detección de anomalías**: Resalta cuando los KPIs se desvían de los patrones normales
+
+El límite de 3 KPI garantiza que su página de resumen se mantenga enfocada y fácil de escanear. Utilice la página **Manage KPIs** para ver el catálogo completo de todos los KPI disponibles para su carga de trabajo.
+
+## Crear alertas de KPI [#alerts]
+
+Alerte sobre los KPI para notificar a los equipos cuando las métricas críticas para el negocio se desvíen de los objetivos:
+
+1. Haga clic en el KPI sobre el que desea crear una alerta
+
+2. Seleccionar <DNT>**Create alert condition**</DNT>
+
+3. Configure la alerta:
+
+   * **Threshold type**: Por encima o por debajo del valor objetivo
+   * **Threshold value**: Valor numérico que activa la alerta
+   * **Duration**: Cuánto tiempo debe superarse el umbral antes de alertar
+   * **Notification channels**: Dónde enviar alertas (Slack, PagerDuty, correo electrónico, etc.)
+
+4. Asigne un nombre descriptivo a la alerta
+
+5. Guardar la condición de alerta
+
+## Editar o eliminar KPIs [#manage]
+
+La página **Manage KPIs** proporciona una ubicación central para crear, editar, eliminar y ver todos los KPIs de su Intelligent Workload:
+
+<img title="Manage KPIs page" alt="Screenshot showing KPI management interface with KPI table and configuration options" src="/images/intelligent-workload-manage-kpis.webp" />
+
+<figcaption>
+  <DNT>**Manage KPIs:**</DNT> Vea, edite y configure los KPIs de su carga de trabajo desde la página Administrar KPIs.
+</figcaption>
+
+### Editar un KPI [#edit-kpi]
+
+Modifique los detalles de los KPI a medida que evolucionen sus objetivos de negocio:
+
+1. Vaya a <DNT>**Manage KPIs**</DNT> en su Intelligent Workload
+
+2. Busque el KPI que desea modificar
+
+3. Haga clic en <Icon name="fe-more-horizontal" /> junto al nombre del KPI
+
+4. Seleccionar <DNT>**Edit**</DNT>
+
+5. Actualice cualquiera de los siguientes:
+
+   * **NRQL query**: Modifique la lógica de la consulta
+   * **Name**: Cambie el nombre para mostrar del KPI
+   * **Group**: Actualizar la agrupación funcional
+   * **Category**: Ajustar la clasificación
+
+6. Haga clic en <DNT>**Preview**</DNT> para validar los cambios
+
+7. Hacer clic <DNT>**Save**</DNT>
+
+<Callout variant="tip">
+  Los KPIs predeterminados (Rendimiento de la transacción y Tasa de errores de la transacción) no se pueden editar, pero puede ocultarlos de la página de resumen si no se ajustan a sus necesidades.
+</Callout>
+
+### Eliminar un KPI [#delete-kpi]
+
+Elimine permanentemente los KPIs que ya no son relevantes:
+
+1. Ir a <DNT>**Manage KPIs**</DNT>
+2. Busque el KPI a eliminar
+3. Haga clic en <Icon name="fe-more-horizontal" /> junto al nombre del KPI
+4. Seleccionar <DNT>**Delete**</DNT>
+5. Confirmar eliminación
+
+<Callout variant="caution">
+  Eliminar un KPI:
+
+  * Lo elimina permanentemente del catálogo
+  * Elimina cualquier alerta asociada
+  * No se puede deshacer
+
+  Considere exportar las configuraciones de alertas antes de eliminar los KPIs que podría volver a crear más tarde.
+</Callout>
+
+### Ocultar KPI predeterminados [#hide-default]
+
+Si los KPI predeterminados no se ajustan a sus necesidades de monitoreo:
+
+1. Vaya a su página de resumen de carga de trabajo
+2. Busque el mosaico de KPI predeterminado
+3. Haga clic en <Icon name="fe-more-horizontal" />
+4. Seleccionar <DNT>**Hide from summary**</DNT>
+
+Los KPI ocultos permanecen en el catálogo y se pueden volver a mostrar más tarde.
+
+## Próximos pasos [#next-steps]
+
+Mejore su monitoreo inteligente de cargas de trabajo:
+
+* **[Configurar alertas de cargas de trabajo](/docs/new-relic-solutions/new-relic-one/workloads/workload-status-views-notifications)**: Configura notificaciones para cambios de estado de la carga de trabajo
+* **[Aprende la sintaxis de consultas NRQL](/docs/nrql/get-started/introduction-nrql-new-relics-query-language)**: Domina la escritura de consultas para KPI complejos
+* **[Cree dashboards personalizados](/docs/query-your-data/explore-query-data/dashboards/introduction-dashboards)**: Visualice los KPI junto con otras métricas

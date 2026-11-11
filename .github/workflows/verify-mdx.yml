@@ -1,0 +1,52 @@
+name: verify mdx files
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: read
+
+env:
+  NODE_OPTIONS: '--max-old-space-size=4096'
+  CHOKIDAR_USEPOLLING: 1
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  verify-mdx:
+    name: run verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          # the PR merge commit and its base parent, to list changed files
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 24.22.1
+
+      - name: Cache dependencies
+        id: yarn-cache
+        uses: actions/cache@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install dependencies
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        run: yarn install --frozen-lockfile
+
+      - name: Run verify-mdx
+        run: yarn verify-mdx
+
+      # translated pages are built from the English source by the translation
+      # pipeline; catch changes it would turn into broken locale pages
+      - name: Verify translation round-trip of changed docs
+        run: |
+          git diff --name-only --diff-filter=AMR HEAD^1 HEAD -- 'src/content/docs/*.mdx' |
+            xargs -r yarn verify-roundtrip

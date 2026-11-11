@@ -1,0 +1,156 @@
+---
+title: Gestionar la cardinalidad
+metaDescription: You can manage your data cardinality from the New Relic UI.
+freshnessValidatedDate: '2024-09-24T00:00:00.000Z'
+tags:
+  - Cardinality controls
+translationType: machine
+---
+
+New Relic ofrece una cotización de 15 millones de cardinalidad por cuenta por día. En cada cuenta puedes tener múltiples métricas, cada una con una cotización de cardinalidad de 100 000. Si el uso de la cardinalidad de una métrica se acerca al límite, puede gestionar la cardinalidad de las siguientes maneras:
+
+* Crea reglas de poda para eliminar atributos no críticos.
+* Ajuste la cotización per métrica para permitir más atributos para una métrica específica.
+
+<Callout variant="important">
+  También puede [aumentar la cotización de cardinalidad de su cuenta](#additional-account-cardinality-budget-adjustment) hasta 200 millones según sus necesidades de datos. Esta opción solo está disponible con el [complemento Calcular avanzado](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/add-on-billing) como parte del modelo de precios de Calcular. [Las CCU](/docs/licenses/license-information/product-definitions/new-relic-one-pricing-definitions/#compute-capacity-unit) avanzadas se consumen por la cardinalidad adicional empleada más allá de la cotización predeterminada.
+</Callout>
+
+## Advertencias de cardinalidad [#cardinality-warnings]
+
+Cuando la cuenta o una métrica específica alcanza su presupuesto de cardinalidad, New Relic pausa los agregados precalculados para esa cuenta o métrica. Esto significa que los números agregados que los gráficos y dashboards muestran normalmente pueden estar incompletos para el período afectado —aunque **los datos sin procesar se sigan ingiriendo y almacenando**.
+
+Para dejar en claro cuándo sucede esto, las consultas de los datos afectados devuelven una **advertencia de cardinalidad** en los widgets de gráficos, los mosaicos del dashboard y el panel de resultados de NRQL. La advertencia le indica qué cuenta o métrica está afectada, cuándo comenzó la pausa y enlaza a la UI de gestión de cardinalidad donde puede solucionarlo.
+
+Cada variante contiene dos enlaces. El enlace integrado **Cardinality Management UI** abre la página de inicio de Cardinality Management UI de la cuenta, donde puede inspeccionar la cardinalidad en las métricas de la cuenta y tomar medidas de corrección. El enlace **Consulte la documentación para obtener más información** abre esta página de documentación.
+
+### Lo que la advertencia *no* significa
+
+* **Los datos sin procesar no se pierden.** New Relic aún almacena los puntos de datos sin procesar que envió y le permite consultarlos directamente —consulte [Consultar datos sin procesar mientras soluciona el problema](#query-raw-data) a continuación.
+* **La consulta no está rota.** La misma consulta sigue funcionando. Solo los resultados preagregados están incompletos para el período en el que el límite de cardinalidad estuvo activo.
+* **No hay ningún problema con New Relic.** La advertencia es New Relic indicándole que su cuenta está haciendo exactamente lo que se supone que debe hacer cuando New Relic aplica un límite de cardinalidad.
+
+### Consulta de datos sin procesar mientras remedia [#query-raw-data]
+
+Mientras trabaja para que la cardinalidad vuelva a estar dentro del presupuesto, puede recuperar valores exactos de los datos sin procesar subyacentes agregando la palabra clave `RAW` a su consulta NRQL. Los límites de agregación se aplican solo a los resúmenes precalculados — New Relic continúa ingiriendo y almacenando datos sin procesar independientemente de los límites de cardinalidad.
+
+Ejemplo:
+
+```sql
+FROM Metric SELECT count(*) RAW WHERE metricName = 'your.metric' SINCE 1 day ago
+```
+
+<Callout variant="important">
+  Los datos de métricas sin procesar tienen límites de consulta más estrictos que los datos agregados:
+
+  * **Ventana máxima de consulta: 2 días.** Cada consulta de `RAW` puede abarcar como máximo un rango de tiempo de 2 días.
+  * **Retrospectiva máxima: 2 semanas.** Puede consultar cualquier período de 2 días dentro de las últimas 2 semanas. Los datos con más de 2 semanas de antigüedad no se pueden recuperar con `RAW`.
+</Callout>
+
+Las consultas sin procesar también escanean más datos que las consultas agregadas y tardan más en completarse. Utilice `RAW` para verificar valores específicos durante la corrección —no es un sustituto de un dashboard o una consulta de larga duración. La solución duradera es volver a ajustar la cardinalidad al presupuesto para que se reanude la agregación; consulte [Crear reglas de depuración](#create-pruning-rule) y [Ajustar el presupuesto por métrica](#per-metric-limit-adjustment) a continuación.
+
+## Crear reglas de poda [#create-pruning-rule]
+
+Un método común para mantener la cardinalidad de la cuenta dentro de su cotización es implementar reglas de poda para atributos no críticos, lo que elimina datos innecesarios. Para crear reglas de poda:
+
+1. Cerciorar de tener la licencia `Manage pruning rules: modify`. Si no tiene esta licencia, comunicar con su administrador de dominio de autenticación.
+
+2. Vaya a **<DNT>[one.newrelic.com](https://one.newrelic.com)</DNT> &gt; (haga clic en su nombre de usuario) &gt; <DNT>Administration &gt; Cardinality Management</DNT>**.
+
+3. Desde la tabla **Metrics** , seleccione la métrica en la que desea crear una regla de poda. Se abre la página de **Cardinality Management** de la métrica.
+
+4. Vaya a la tabla de **Attributes** y seleccione el atributo que desea podar.
+
+   <img style={{ align: 'left', maxWidth: '90%' }} title="Screenshot showing how to select attributes for pruning rule" alt="Screenshot showing how to select attributes for pruning rule" src="/images/apis-and-data_screenshot-crop_select-attributes-for-pruning-rule.webp" />
+
+5. Haga clic en <DNT>**Create pruning rule**</DNT>. Aparece una ventana emergente que proporciona detalles sobre cómo la regla de poda afecta la cardinalidad de la métrica.
+
+<img style={{ align: 'left' }} title="Screenshot of page to name the pruning rule" alt="Screenshot of page to name the pruning rule" src="/images/apis-and-data_screenshot-crop_name-pruning-rule.webp" />
+
+6. Introduzca un nombre de regla o una descripción.
+
+7. Haga clic en <DNT>**Submit**</DNT>.
+
+<Callout variant="caution">
+  Las reglas de poda entran en vigor inmediatamente. Cerciorar de que desea podar los datos antes de crear una regla. Puede eliminar una regla de poda luego de crearla, pero la regla puede podar algunos datos antes de eliminarla.
+</Callout>
+
+<CollapserGroup>
+  <Collapser id="view-pruning-rules" title="Ver reglas de poda">
+    Para ver las reglas de poda asociadas a su cuenta:
+
+    1. Cerciorar de tener la licencia `Manage pruning rules: view`. Si no tiene esta licencia, comunicar con su administrador de dominio de autenticación.
+    2. Vaya a **<DNT>[one.newrelic.com](https://one.newrelic.com)</DNT> &gt; (haga clic en su nombre de usuario) &gt; <DNT>Administration &gt; Cardinality Management</DNT>**.
+    3. Desde la tabla **Metrics** , haga clic en <DNT>**View Pruning Rules**</DNT>. Aparece una lista desplazable de todas las reglas de poda asociadas a la cuenta.
+  </Collapser>
+
+  <Collapser id="delete-pruning-rule" title="Eliminar reglas de poda">
+    Para eliminar reglas de poda:
+
+    1. Cerciorar de tener la licencia `Manage pruning rules: modify`. Si no tiene esta licencia, comunicar con su administrador de dominio de autenticación.
+    2. Vaya a **<DNT>[one.newrelic.com](https://one.newrelic.com)</DNT> &gt; (haga clic en su nombre de usuario) &gt; <DNT>Administration &gt; Cardinality Management</DNT>**.
+    3. Desde la tabla **Metrics** , seleccione <DNT>**View Pruning Rules**</DNT>.
+    4. Desplazar hasta la regla de poda correspondiente y elimínela.
+  </Collapser>
+</CollapserGroup>
+
+## Ajustar la cotización por métrica [#per-metric-limit-adjustment]
+
+Cuando todos los atributos de una métrica específica son cruciales y usted se acerca a su cotización de cardinalidad, puede ajustar la cotización per métrica para satisfacer sus necesidades. Normalmente, las métricas tienen una cardinalidad máxima predeterminada de 100 000, pero puedes aumentarla hasta 1 millón por métrica.
+
+<Callout variant="tip">
+  La cotización de cardinalidad general de su cuenta permanece sin cambios. Por lo tanto, establecer todas las cotizaciones métricas en 1 millón sin una consideración cuidadosa podría agotar rápidamente la capacidad de cardinalidad de su cuenta.
+</Callout>
+
+Para ajustar la cotización por métrica:
+
+1. Cerciorar de tener la licencia `Manage metric cardinality: modify`. Si no tiene esta licencia, comunicar con su administrador de dominio de autenticación.
+2. Vaya a **<DNT>[one.newrelic.com](https://one.newrelic.com)</DNT> &gt; (haga clic en su nombre de usuario) &gt; <DNT>Administration &gt; Cardinality Management</DNT>**.
+3. Seleccione la métrica para la cual desea ajustar la cotización. Se abre la página de **Cardinality Management** de la métrica.
+4. Haga clic en <DNT>**Adjust metric budget**</DNT>.
+5. Actualice la cotización para satisfacer sus necesidades. Cerciorar de que sea menor o igual a 1 millón.
+
+## Ajustar la cotización de cardinalidad de la cuenta adicional [#additional-account-cardinality-budget-adjustment]
+
+Si bien la cotización de cardinalidad predeterminado de 15 millones es suficiente para la mayoría de los usuarios, es posible que necesite una cotización mayor para satisfacer sus necesidades de datos. Mientras establezca un límite superior, solo se le cobrará por los agregados que genere por encima de la cotización de cardinalidad predeterminado de 15 millones, hasta el nuevo límite que estableció. Actualmente puedes aumentar la cotización de cardinalidad de tu cuenta hasta 200 millones. Si necesita una cotización mayor, [cree un de soporte ticket](https://one.newrelic.com/help-xp).
+
+### Requisitos previos [#prerequisites]
+
+Para ajustar la cotización de cardinalidad de tu cuenta, debes tener:
+
+* Suscrito al [complemento Calcular avanzado](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/add-on-billing).
+* `Manage account cardinality: modify` y `Customer limits management: modify` licencias. Comunicar con su administrador de dominio de autenticación para [agregar estas licencias](#access-management) a su rol personalizado.
+
+### Pasos [#steps]
+
+Para ajustar la cotización de cardinalidad de su cuenta, realice los siguientes pasos. El ajuste puede tardar entre 15 y 20 minutos en surtir efecto.
+
+1. Desde la página <DNT>**Cardinality Management**</DNT> , haga clic en <DNT>**Manage account cardinality**</DNT>.
+
+2. Desde la ventana emergente <DNT>**Manage account cardinality limit**</DNT> :
+
+   1. Ajuste el control deslizante para establecer la nueva cotización de cardinalidad para su cuenta. El límite máximo es de 200 millones.
+   2. Marque la casilla de verificación para aceptar y dar su consentimiento al costo asociado de la ingestión de cardinalidad adicional.
+   3. Haga clic en <DNT>**Adjust cardinality budget**</DNT> para aplicar los cambios.
+
+<img title="Manage account cardinality limit" alt="Manage account cardinality limit" src="/images/adjust-account-cardinality.webp" />
+
+<Callout variant="tip">
+  Desde la ventana emergente <DNT>**Manage account cardinality limit**</DNT>, puede ver el historial de cambios para rastrear cuándo y por qué usuario se ajustó la cardinalidad de la cuenta.
+</Callout>
+
+## Temas relacionados [#related-topics]
+
+<DocTiles>
+  <DocTile title="Monitorizar la cardinalidad" path="/docs/data-apis/ingest-apis/metric-api/monitor-cardinality">
+    Aprenda a monitorear el uso de la cardinalidad.
+  </DocTile>
+
+  <DocTile title="Entender y consultar alta cardinalidad métrica" path="/docs/data-apis/ingest-apis/metric-api/NRQL-high-cardinality-metrics">
+    Comprenda el concepto de cardinalidad y aprenda a consultar y analizar alta cardinalidad métrica empleando NRQL.
+  </DocTile>
+
+  <DocTile title="Gestión de acceso" path="/docs/data-apis/ingest-apis/metric-api/cardinality-access-management">
+    Como administrador de dominio de autenticación, aprenda a gestionar el acceso relacionado con la cardinalidad para los usuarios.
+  </DocTile>
+</DocTiles>

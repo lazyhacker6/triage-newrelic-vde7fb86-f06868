@@ -1,0 +1,49 @@
+title: New Relic AI
+path: /docs/agentic-ai
+pages:
+  - title: New Relic AI overview
+    path: /docs/agentic-ai/new-relic-ai
+  - title: Tools
+    path: /docs/agentic-ai/tools
+  - title: Knowledge
+    path: /docs/agentic-ai/knowledge-integration/overview
+  - title: New Relic Autopilot
+    pages:
+      - title: Overview
+        path: /docs/agentic-ai/autopilot/overview
+      - title: Set up Autopilot
+        path: /docs/agentic-ai/autopilot/setup
+      - title: Use Autopilot
+        path: /docs/agentic-ai/autopilot/use-autopilot
+      - title: Autopilot compute limits
+        path: /docs/agentic-ai/autopilot/autopilot-compute-limits
+      - title: Autopilot Memories
+        path: /docs/agentic-ai/autopilot/memories
+      - title: Slack integration
+        path: /docs/agentic-ai/autopilot/connect-to-slack
+      - title: Connect Autopilot to GitHub
+        path: /docs/agentic-ai/autopilot/connect-to-github
+      - title: Use Autopilot with GitHub
+        path: /docs/agentic-ai/autopilot/use-autopilot-with-github
+      - title: Monitor deployments with New Relic Change Tracking for GitHub Copilot
+        path: /docs/agentic-ai/autopilot/change-tracking-for-github-copilot
+      - title: Troubleshoot GitHub connection
+        path: /docs/agentic-ai/autopilot/troubleshoot-github-connection
+      - title: Troubleshoot Slack connection
+        path: /docs/agentic-ai/autopilot/troubleshoot
+  - title: New Relic AI Agent to Agent Integration
+    pages:
+      - title: Get started with agentic integration
+        path: /docs/agentic-ai/agentic-integration/introduction-agentic-ai
+      - title: ServiceNow integration
+        path: /docs/agentic-ai/agentic-integration/servicenow-integration
+  - title: New Relic Ground Truth
+    pages:
+      - title: MCP overview
+        path: /docs/agentic-ai/mcp/overview
+      - title: Set up MCP
+        path: /docs/agentic-ai/mcp/setup
+      - title: Troubleshoot MCP
+        path: /docs/agentic-ai/mcp/troubleshoot
+      - title: MCP tool reference
+        path: /docs/agentic-ai/mcp/tool-reference

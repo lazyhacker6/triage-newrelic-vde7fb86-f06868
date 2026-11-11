@@ -1,0 +1,106 @@
+---
+title: 'Monitoramento sintético: Solucionar problemas de período de inatividade'
+tags:
+  - Synthetics
+  - Synthetic monitoring
+  - Pages
+metaDescription: Use the Failures page to locate and troubleshoot downtime alert events. Jump to a results from each downtime alert event to understand the failure.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Use a página <DNT>**Failures**</DNT> para localizar e solucionar problemas de eventos de alerta de inatividade ou outros erros. Um evento de alerta de downtime ocorre sempre que um monitor falha ao executar completamente. Por exemplo, um monitor de ping está &quot;inativo&quot; quando a requisição GET falha, enquanto um monitor de navegador com script está &quot;inativo&quot; se qualquer parte do script falhar na execução. Após localizar um tempo de inatividade interessante, selecione-o para [visualizar resultados detalhados desse evento de alerta de inatividade](/docs/synthetics/new-relic-synthetics/using-monitors/viewing-monitor-results#understanding) e solucionar problemas.
+
+## Veja a página de falhas [#viewing]
+
+Para acessar as falhas do seu monitor: <DNT>**[one.newrelic.com &gt;Synthetic monitoring](https://one.newrelic.com/synthetics-nerdlets)**</DNT> &gt; (selecione um monitor) &gt; <DNT>**Failures**</DNT>.
+
+<img title="Synthetic monitoring - Failures page" alt="Synthetic monitoring - Failures page" src="/images/synthetic_screenshot-full_failure-page.webp" />
+
+<figcaption>
+  Passe o mouse sobre uma falha para obter dados rápidos sobre ela. Clique no ponto para abrir um relatório detalhado da falha. Você também pode clicar em <DNT>**Run check**</DNT> para [verificar novamente o monitor com falha](/docs/synthetics/synthetic-monitoring/using-monitors/recheck-failed-monitors).
+</figcaption>
+
+## Ver período de inatividade individual [#individual]
+
+Você pode selecionar eventos individuais de alerta de inatividade para visualizá-los com mais detalhes. Dependendo da falha específica, um resultado de tempo de inatividade pode incluir apenas a mensagem de erro do servidor (como <DNT>**Server replied with &quot;HTTP 500&quot; error**</DNT>), ou uma [visualização em cascata](/docs/synthetics/new-relic-synthetics/using-monitors/viewing-monitor-results#understanding) completa ou parcial.
+
+Os resultados de downtime incluem gráficos em cascata quando apenas parte de um monitor foi executada corretamente. Por exemplo, um [redirecionamento 301](http://en.wikipedia.org/wiki/HTTP_301) pode apontar para uma página da web com falha. O navegador executa o redirecionamento corretamente, mas a página da web de destino retorna um erro. Use a mensagem de erro ou o waterfall para solucionar o evento de alerta de inatividade.
+
+## Usar funções de página [#using]
+
+A página <DNT>**Failures**</DNT> oferece suporte ao seguinte recurso:
+
+<table>
+  <thead>
+    <tr>
+      <th width={200}>
+        <DNT>
+          **If you want to...**
+        </DNT>
+      </th>
+
+      <th>
+        <DNT>
+          **Do this...**
+        </DNT>
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr id="sort-list">
+      <td>
+        Ordenar a lista de período de inatividade
+      </td>
+
+      <td>
+        No cabeçalho da tabela, selecione <DNT>**Time**</DNT> ou <DNT>**Message**</DNT> para classificar a lista. Selecione <DNT>**Time**</DNT> ou <DNT>**Message**</DNT> novamente para mudar da ordem crescente para a ordem decrescente.
+      </td>
+    </tr>
+
+    <tr id="filter-location">
+      <td>
+        Filtrar por localização
+      </td>
+
+      <td>
+        Selecione um rótulo de local para ocultar eventos de alerta de inatividade desse local. Selecione o rótulo de localização novamente para reexibir esses resultados. Para visualizar resultados de apenas um local, oculte todos os outros locais.
+      </td>
+    </tr>
+
+    <tr id="quickly-switch">
+      <td>
+        Acesse rapidamente outro monitor
+      </td>
+
+      <td>
+        1. Na parte superior da tela, clique no nome do monitor atual para abrir o menu dropdown .
+
+        2. Selecione na lista de monitores recentes ou insira um nome no campo de pesquisa para procurar um monitor específico.
+
+           <img title="Switch synthetic monitor quickly" alt="Switch synthetic monitor quickly" src="/images/synthetic_screenshot-crop_new-monitor-quick.webp" />
+      </td>
+    </tr>
+
+    <tr id="time-frame">
+      <td>
+        Alterar o prazo
+      </td>
+
+      <td>
+        Use o [seletor de tempo](/docs/query-your-data/explore-query-data/dashboards/manage-your-dashboard/#dash-time-picker) para ajustar o número de eventos de alerta de inatividade retornados.
+      </td>
+    </tr>
+
+    <tr id="three-strikes">
+      <td>
+        Evite ruídos extras e seja notificado após três falhas
+      </td>
+
+      <td>
+        Recomendamos a leitura da nossa postagem no blog sobre a [regra de três falhas](https://support.newrelic.com/s/hubtopic/aAX8W0000008b18/relic-solution-understanding-the-three-strikes-behavior-in-synthetics).
+      </td>
+    </tr>
+  </tbody>
+</table>

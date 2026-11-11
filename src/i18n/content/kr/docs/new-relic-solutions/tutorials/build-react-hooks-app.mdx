@@ -1,0 +1,347 @@
+---
+title: React 후크로 New Relic 앱 빌드
+tags:
+  - New Relic solutions
+  - Build with New Relic
+metaDescription: Build a simple New Relic app with React hooks
+freshnessValidatedDate: never
+translationType: machine
+---
+
+<br />`nr1` CLI 버전 2.49.1부터 [React hooks를](https://react.dev/reference/react/hooks) 사용하여 뉴럴 애플리케이션과 사용자 지정 시각화를 빌드할 수 있습니다. 이 가이드에서는 React 훅을 실제로 사용하는 몇 가지 Nerdlet 예제를 소개합니다!
+
+## 시작하기 전에
+
+Nerdpacks를 개발하려면 New Relic 계정과 New Relic CLI `nr1`가 필요합니다.
+
+아직 하지 않은 경우:
+
+* New Relic 계정에[가입하세요](https://newrelic.com/signup/)
+* [Node.js](https://nodejs.org/en/download/)설치
+* [CLI 빠른 시작](https://one.newrelic.com/launcher/developer-center.launcher?pane=eyJuZXJkbGV0SWQiOiJkZXZlbG9wZXItY2VudGVyLmRldmVsb3Blci1jZW50ZXIifQ==)완료
+
+이제 `my-awesome-nerdpack` 라는 Nerdpack이 있습니다. 이 Nerdpack에는 Nerdlet과 이름을 지정한 실행기가 있습니다(이 가이드에서는 기본 실행기 이름인 &quot;launcher&quot;와 Nerdlet 이름인 &quot;home&quot;을 사용함). 이 가이드 전체에서 이 Nerdpack을 사용합니다.
+
+마지막으로 `nr1` 이(가) 최신 상태인지 확인하세요. 이 가이드에는 최소 버전 2.49.1이 필요합니다.
+
+```sh
+nr1 update
+nr1 version
+[output] @datanerd/nr1/{purple}2.49.1{normal} darwin-x64 node-v14.15.1
+```
+
+<Callout variant="tip">
+  VSCode를 사용하는 경우 앱을 빌드하는 데 사용할 수 있는 [확장](https://marketplace.visualstudio.com/items?itemName=new-relic.nr1) 및 [확장 팩이](https://marketplace.visualstudio.com/items?itemName=new-relic.new-relic-extension-pack) 있습니다.
+</Callout>
+
+```jsx fileName=index.js
+import React from 'react';
+
+export default class HomeNerdlet extends React.Component {
+  render() {
+    return <h1>Hello, home Nerdlet!</h1>;
+  }
+}
+```
+
+## 로컬에서 애플리케이션 업데이트 및 제공
+
+`nr1` 사용하면 Nerdpack의 로컬 빌드를 New Relic에 제공할 수 있습니다. 이를 통해 애플리케이션을 게시하기 전에 프로덕션과 유사한 환경에서 애플리케이션을 개발할 수 있습니다.
+
+코드를 변경하기 전에 Nerdpack의 디렉토리 구조를 숙지하십시오.
+
+```txt lineHighlight=3-10,12
+my-awesome-nerdpack/
+├───README.md
+├───launchers/
+│   └───launcher/
+│       └───nr1.json
+├───nerdlets/
+│   └───home
+│       ├───index.js
+│       ├───nr1.json
+│       └───styles.scss
+├───node_modules/
+├───nr1.json
+├───package-lock.json
+└───package.json
+```
+
+*런처* 및 *nerdlet* 디렉토리에는 애플리케이션의 로직이 포함되어 있습니다. 대부분의 코드를 업데이트하는 곳은 이 디렉토리입니다. Nerdpack 전체의 *nr1.json* 파일에는 Nerdpack, Nerdlet 및 런처에 대한 메타데이터가 들어 있습니다.
+
+<Callout variant="tip">
+  Nerdpack 파일 구조에 대해 자세히 알아보려면 [설명서를](/docs/new-relic-solutions/build-nr-ui/nerdpack-file-structure/) 읽어보세요.
+</Callout>
+
+<Steps>
+  <Step>
+    *my-awesome-nerdpack/nerdlets/home/index.js*에서 *HomeNerdlet* 클래스를 함수로 변경합니다.
+
+    ```jsx fileName=index.js
+    import React from 'react';
+
+    function HomeNerdlet () {
+        return <h1>Hello, home Nerdlet!</h1>;
+    }
+
+    export default HomeNerdlet
+    ```
+  </Step>
+
+  <Step>
+    다음으로 헤더 대신 빌보드 차트를 반환합니다.
+
+    ```jsx fileName=index.js
+    import React from 'react';
+    import { BillboardChart} from 'nr1'
+
+    function HomeNerdlet () {
+
+      const clickCount = {
+        metadata: {
+            id: '1',
+            name: 'Count',
+            viz: 'main',
+        },
+        data: [
+          { "y": 10 }
+        ]
+      }
+      return <BillboardChart data={[clickCount]}/>
+    }
+
+    export default HomeNerdlet
+    ```
+
+    <br />지금은 빌보드 차트에 정적 값을 표시하고 있지만 이후 단계에서는 함수의 로컬 상태를 사용하여 동적 값을 제공합니다.
+  </Step>
+
+  <Step>
+    아직 제공하지 않은 경우 Nerdpack의 루트 디렉터리에서 애플리케이션을 제공합니다.
+
+    ```bash
+    nr1 nerdpack:serve
+    [output] Found and loaded {success}2 {plain}nr1.json files on MyAwesomeNerdpack ({purple}aad7ebb6-8901-43d0-a681-0719b2c60a11{plain}) Nerdpack.
+    [output]
+    [output] {purple}Nerdpack:
+    [output]  {success}✔  MyAwesomeNerdpack {plain}({purple}aad7ebb6-8901-43d0-a681-0719b2c60a11{plain}) {blue}nr1.json
+    [output]
+    [output] {purple}Launchers:
+    [output]  {success}✔  launcher {blue}launchers/launcher/nr1.json
+    [output]
+    [output] {purple}Nerdlets:
+    [output]  {success}✔  home {blue}nerdlets/home/nr1.json
+    [output]
+    [output] There is no certificate created yet.
+    [output]  {success}✔  {plain}New certificate created.
+    [output]
+    [output] Webpack bundle analyzer is enabled (you need to wait for the first build to finish)
+    [output]  └  You can head to {blue}http://127.0.0.1:27888
+    [output]
+    [output] {blue}NOTE: {plain}To verify how your assets will look in production, you need to
+    [output]       add "--mode=prod" when starting the development server.
+    [output]
+    [output] 🛠  Built artifact files for:ex.js...
+    [output]  ⁎  {purple}aad7ebb6-8901-43d0-a681-0719b2c60a11--home {plain}built {success}✔
+    [output]
+    [output]  {success}✔  {plain}Nerdpack built successfully!
+    [output]  {yellow}★  {plain}Starting as orchestrator...
+    [output]
+    [output]  {success}✔  {plain}Server ready! Test it at: {blue}https://one.newrelic.com/?nerdpacks=local
+    [output]  {blue}↩  {plain}Server will reload automatically if you modify any file!
+    [output]
+    [output]  {blue}ℹ  {plain}Additionally, you can test the following artifacts at:
+    [output]
+    [output] {purple}Launchers:
+    [output]  ⁎  {success}launcher {blue}https://onenr.io/0z7wkEkMnjL
+    [output]  {blue}ℹ  {plain}You can use "npm start -- --mode=prod" to run the development server in prod mode.
+    ```
+  </Step>
+
+  <Step>
+    출력 하단의 URL을 사용하여 런처를 엽니다.
+
+    ```bash
+    [output] {purple}Launchers:
+    [output]  *  {success}launcher {blue}https://onenr.io/0z7wkEkMnjL
+    [output]  {blue}ℹ  {plain}You can use "npm start -- --mode=prod" to run the development server in prod mode.
+    ```
+  </Step>
+
+  <Step>
+    여기에서 숫자 &quot;10&quot;을 표시하는 빌보드 차트와 함께 Nerdlet을 볼 수 있습니다.
+
+    <img title="Static billboard chart in the browser" alt="Static billboard chart in the browser" src="/images/react-hooks-screenshot-static-billboard-local.webp" />
+  </Step>
+</Steps>
+
+파일을 수정할 때 Nerdlet이 자동으로 다시 로드되므로 서버를 실행 상태로 둡니다.
+
+## Nerdlet에서 `useState()` 후크 사용
+
+이전에는 빌보드 차트에 정적 값을 사용했습니다. 이제 함수의 로컬 상태를 사용하여 동적 값을 저장하고 해당 값을 차트에 표시합니다.
+
+<Steps>
+  <Step>
+    *my-awesome-nerdpack/nerdlets/home/index.js*에서 함수 구성요소에서 `useState()` 호출합니다.
+
+    ```jsx fileName=index.js
+    import React, {useState} from 'react';
+    import { BillboardChart} from 'nr1'
+
+    function HomeNerdlet () {
+      const [count, setCount] = useState(0);
+
+      const clickCount = {
+        metadata: {
+            id: '1',
+            name: 'Count',
+            viz: 'main',
+        },
+        data: [
+          { "y": 10 }
+        ]
+      }
+      return <BillboardChart data={[clickCount]}/>
+    }
+
+    export default HomeNerdlet
+    ```
+
+    <br />여기에서 `useState()`호출합니다. 이 후크는 배열에서 캡처하는 두 값을 반환합니다.
+
+    * `count`: 로컬 상태의 현재 값입니다. 기본값은 `useState()`에 전달한 인수인 0입니다.
+    * `setCount`: 업데이트에 사용하는 기능 `count`
+  </Step>
+
+  <Step>
+    `count`사용하도록 빌보드 차트 데이터를 변경합니다.
+
+    ```jsx fileName=index.js
+    import React, {useState} from 'react';
+    import { BillboardChart} from 'nr1'
+
+    function HomeNerdlet () {
+      const [count, setCount] = useState(0);
+
+      const clickCount = {
+        metadata: {
+          id: '1',
+          name: 'Count',
+          viz: 'main',
+        },
+        data: [
+          { "y": count }
+        ]
+      }
+      return <BillboardChart data={[clickCount]}/>
+    }
+
+    export default HomeNerdlet
+    ```
+
+    <br />현재 상태를 업데이트하지 않기 때문에 count 값은 렌더링할 때마다 `0` 가 됩니다. 그렇게 할 방법이 필요합니다.
+  </Step>
+
+  <Step>
+    차트와 함께 버튼을 렌더링하여 `count`를 증가시킵니다.
+
+    ```jsx fileName=index.js
+    import React, {useState} from 'react';
+    import { BillboardChart} from 'nr1'
+
+    function HomeNerdlet () {
+      const [count, setCount] = useState(0);
+
+      const clickCount = {
+        metadata: {
+            id: '1',
+            name: 'Count',
+            viz: 'main',
+        },
+        data: [
+          { "y": count }
+        ]
+      }
+      return (
+        <div>
+          <BillboardChart data={[clickCount]}/>
+          <button onClick={() => setCount(count + 1)}>
+            Increment count
+          </button>
+        </div>
+      );
+    }
+
+    export default HomeNerdlet
+    ```
+
+    <br />여기서 클릭할 때마다 카운트를 1씩 증가시키는 버튼을 Nerdlet에 추가했습니다.
+  </Step>
+
+  <Step>
+    Nerdlet을 실행하는 브라우저로 이동하여 변경 사항을 확인하십시오.
+
+    <img title="Increment count with button click" alt="Increment count with button click" src="/images/react-hooks-screenshot-button-increment.webp" />
+
+    버튼을 몇 번 클릭하면 카운트가 증가합니다.
+  </Step>
+</Steps>
+
+## Nerdlet에서 `useEffect()` 후크 사용
+
+Nerdlet에는 이제 빌보드 차트와 버튼이 있습니다. 차트에는 버튼을 클릭한 횟수가 표시됩니다. `useEffect()` ) 사용하여 `count`자동으로 증가시킵니다.
+
+<Steps>
+  <Step>
+    *my-awesome-nerdpack/nerdlets/home/index.js*에서 효과를 만듭니다.
+
+    ```jsx fileName=index.js
+    import React, {useState, useEffect} from 'react';
+    import { BillboardChart} from 'nr1'
+
+    function HomeNerdlet () {
+      const [count, setCount] = useState(0);
+
+      useEffect(() => {
+        setTimeout(() => {
+          setCount(() => count + 1);
+        }, 1000);
+      });
+
+      const clickCount = {
+        metadata: {
+            id: '1',
+            name: 'Count',
+            viz: 'main',
+        },
+        data: [
+          { "y": count }
+        ]
+      }
+      return (
+        <div>
+          <BillboardChart data={[clickCount]}/>
+        </div>
+      );
+    }
+
+    export default HomeNerdlet
+    ```
+
+    <br />`useEffect()` 1초마다 `count` 값을 자동으로 증가시킵니다. 카운트를 자동화했으므로 증분 버튼도 제거했습니다.
+  </Step>
+
+  <Step>
+    업데이트를 보려면 브라우저로 이동하십시오.
+
+    <img title="Auto increment with Effect Hook" alt="Auto increment with Effect Hook" src="/images/react-hooks-screenshot-auto-increment.webp" />
+  </Step>
+</Steps>
+
+## 요약
+
+이 가이드에서는 다음 방법을 배웠습니다.
+
+* 로컬 New Relic Nerdpack 만들기
+* Nerdpack에서 후크 사용

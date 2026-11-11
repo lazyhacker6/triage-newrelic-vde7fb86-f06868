@@ -1,0 +1,88 @@
+---
+title: Install the Java agent in Docker
+tags:
+  - Agents
+  - Java agent
+  - Additional installation
+metaDescription: How to install the New Relic Java agent in a Docker container.
+redirects:
+  - /docs/agents/java-agent/additional-installation/install-new-relic-java-agent-docker
+  - /docs/agents/java-agent/additional-installation/install-docker
+freshnessValidatedDate: 2026-08-05
+contentType: onboarding-install
+audience: [human, ai]
+surface: [cli]
+integration: apm-java-agent
+flow:
+  prev: /docs/apm/agents/java-agent/installation/java-agent-installation-overview
+  next: null
+---
+
+This page covers installing the New Relic Java agent in a Docker container by adding the agent jar to your image and passing the `-javaagent` JVM argument at startup.
+
+## Compatibility and requirements [#requirements]
+
+### Supported
+
+- Java 8, 11, 17, 21, 24, 25, and 26 *(Java 7 supported on agent v6.5.4 and earlier only)*
+- Any Docker image running a Java application (Tomcat, Spring Boot, or similar) that accepts a `-javaagent` JVM argument
+- See [compatibility and requirements](/docs/apm/agents/java-agent/getting-started/compatibility-requirements-java-agent) for supported framework and library version ranges
+
+### Not supported
+
+- Running alongside other APM agents — the Java agent cannot guarantee correct behavior when another APM agent is active in the same JVM
+
+### You need
+
+- A New Relic account and <InlinePopover type="licenseKey"/>
+- A JVM with SHA-2 (256-bit) SSL support
+- Docker installed with a Java application container
+
+## Install [#install]
+
+Download `newrelic-java.zip`: [#install-step-1]
+
+```bash
+curl -O https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip
+unzip newrelic-java.zip
+```
+
+Add the agent jar to your `Dockerfile`. The example below uses Tomcat — adjust the path for your app server:
+
+```dockerfile
+RUN mkdir -p /usr/local/tomcat/newrelic
+ADD ./newrelic/newrelic.jar /usr/local/tomcat/newrelic/newrelic.jar
+ENV JAVA_OPTS="$JAVA_OPTS -javaagent:/usr/local/tomcat/newrelic/newrelic.jar"
+```
+
+Build your Docker image as usual.
+
+## Configure [#configure]
+
+Pass your app name and license key as environment variables when running the container:
+
+```bash
+docker run -e NEW_RELIC_LICENSE_KEY=YOUR_LICENSE_KEY \
+           -e NEW_RELIC_APP_NAME="Your Application Name" \
+           YOUR_IMAGE_NAME:latest
+```
+
+You can also use `ENV` directives in your `Dockerfile`:
+
+```dockerfile
+ENV NEW_RELIC_APP_NAME="Your Application Name"
+```
+
+For all other configuration options, see [Java agent configuration](/docs/apm/agents/java-agent/configuration/java-agent-configuration-config-file).
+
+## Verify your install [#verify]
+
+Run your container and send at least two requests to your application. Wait 2–3 minutes and your app appears in [APM & services](https://one.newrelic.com/nr1-core?filters=%28domain%20IN%20%28%27APM%27%2C%20%27EXT%27%29%20AND%20type%20IN%20%28%27APPLICATION%27%2C%20%27SERVICE%27%29%29).
+
+If no data appears after five minutes, see [No data appears (Java)](/docs/apm/agents/java-agent/troubleshooting/no-data-appears-java).
+
+## Related articles [#related-articles]
+
+* [Java agent compatibility and requirements](/docs/apm/agents/java-agent/getting-started/compatibility-requirements-java-agent)
+* [Java agent configuration](/docs/apm/agents/java-agent/configuration/java-agent-configuration-config-file)
+* [Install on app servers](/docs/apm/agents/java-agent/installation/java-agent-installation-app-servers)

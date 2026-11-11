@@ -1,0 +1,840 @@
+---
+title: Google Cloud Load Balancing monitoring integration
+tags:
+  - Integrations
+  - Google Cloud Platform integrations
+  - GCP integrations list
+metaDescription: 'New Relic''s Google Cloud Load Balancing integration: how to activate it and what data it reports.'
+redirects:
+  - /docs/integrations/google-cloud-platform-integrations/gcp-integrations-list/google-cloud-load-balancing-monitoring-integration
+  - /docs/gcp-gcp_loadbalancing-integration
+  - /docs/gcp-loadbalancing
+freshnessValidatedDate: never
+---
+
+[New Relic integrations](/docs/infrastructure/introduction-infra-monitoring) with the [Google Cloud Platform (GCP)](https://cloud.google.com/) include one that reports [Google Cloud Load Balancing](https://cloud.google.com/load-balancing/) data to New Relic. This document explains how to activate the GCP Cloud Load Balancing integration and describes the data it reports.
+
+## Features
+
+Cloud Load Balancing is Google Cloud's software-based managed service for distributing traffic across regions, with support for HTTP(S), TCP/SSL proxy, and L4 (network) load balancing. New Relic Load Balancing integration collects request rate, latency, byte-throughput, and connection metrics for each load balancer variant.
+
+## Activate integration [#activate]
+
+To enable the integration, follow standard procedures to [connect your GCP service to New Relic](/docs/connect-google-cloud-platform-services-infrastructure):
+
+* [Connect with Workload Identity Federation (recommended)](/docs/connect-google-cloud-platform-services-infrastructure)
+* [Connect with service account or user account](/docs/connect-google-cloud-platform-services-infrastructure)
+
+## Polling frequency [#polling]
+
+New Relic integrations query your GCP services according to a polling interval that varies by integration. The polling frequency for Google Cloud Load Balancing is 5 minutes. The resolution is 1 data point every minute.
+
+<Callout variant="important">
+  Cloud Load Balancing supports 1-minute polling intervals for WIF integrations in limited preview. To request access, contact [New Relic support](https://support.newrelic.com/).
+</Callout>
+
+## Workload Identity Federation [#wif]
+
+### Find and use data [#find-data-wif]
+
+After you enable the integration, your Cloud Load Balancing resources appear as entities in the New Relic entity explorer. To see dashboards and manage services, go to <DNT>[one.newrelic.com > All capabilities](https://one.newrelic.com/all-capabilities) > Infrastructure > GCP</DNT>.
+
+All Cloud Load Balancing metrics available in GCP Cloud Monitoring are collected as dimensional metrics in the `Metric` event type. Additional metrics beyond this table are collected automatically. See [Google's Cloud Load Balancing metrics documentation](https://cloud.google.com/monitoring/api/metrics_gcp#gcp-loadbalancing) for the complete list.
+
+#### Entities
+
+<CollapserGroup>
+  <Collapser id="entities-table" title="Cloud Load Balancing entities">
+    <table>
+      <thead>
+        <tr>
+          <th style={{ width: "220px" }}>Entity</th>
+          <th style={{ width: "320px" }}>Entity type</th>
+          <th>Resource type</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>HTTP(S) Load Balancer</td>
+          <td>`GCPHTTPLOADBALANCER`</td>
+          <td>`https_lb_rule`</td>
+        </tr>
+        <tr>
+          <td>External Regional HTTP(S) Load Balancer</td>
+          <td>`GCPEXTERNALLOADBALANCER`</td>
+          <td>`http_external_regional_lb_rule`</td>
+        </tr>
+        <tr>
+          <td>Internal HTTP(S) Load Balancer</td>
+          <td>`GCPINTERNALHTTPLOADBALANCER`</td>
+          <td>`internal_http_lb_rule`</td>
+        </tr>
+        <tr>
+          <td>External Network Load Balancer</td>
+          <td>`GCPEXTERNALLOADBALANCER`</td>
+          <td>`loadbalancing.googleapis.com/ExternalNetworkLoadBalancerRule`</td>
+        </tr>
+        <tr>
+          <td>Internal Network Load Balancer</td>
+          <td>`GCPINTERNALLOADBALANCER`</td>
+          <td>`internal_tcp_lb_rule`</td>
+        </tr>
+        <tr>
+          <td>L4 Proxy Load Balancer</td>
+          <td>`GCPL4PROXYLOADBALANCER`</td>
+          <td>`l4_proxy_rule`</td>
+        </tr>
+        <tr>
+          <td>TCP/SSL Proxy Load Balancer</td>
+          <td>`GCPTCPSSLPROXYLOADBALANCER`</td>
+          <td>`tcp_ssl_proxy_rule`</td>
+        </tr>
+      </tbody>
+    </table>
+  </Collapser>
+</CollapserGroup>
+
+### Metric data [#metrics-wif]
+
+#### Key metrics — HTTP(S) Load Balancer
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "440px" }}>Metric name</th>
+      <th style={{ width: "100px" }}>Unit</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`gcp.loadbalancing.https.request_count`</td>
+      <td>Count</td>
+      <td>Number of HTTP(S) requests handled by the load balancer, faceted by `response_code_class`.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.https.backend_request_count`</td>
+      <td>Count</td>
+      <td>Number of requests forwarded to the load balancer's backends.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.https.backend_latencies`</td>
+      <td>Milliseconds</td>
+      <td>Backend response latency distribution for the load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.https.total_latencies`</td>
+      <td>Milliseconds</td>
+      <td>End-to-end request latency distribution for the load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.https.request_bytes_count`</td>
+      <td>Bytes</td>
+      <td>Request bytes received by the load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.https.response_bytes_count`</td>
+      <td>Bytes</td>
+      <td>Response bytes sent by the load balancer.</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Key metrics — Internal HTTP(S) Load Balancer
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "440px" }}>Metric name</th>
+      <th style={{ width: "100px" }}>Unit</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`gcp.loadbalancing.https.internal.backend_request_count`</td>
+      <td>Count</td>
+      <td>Number of requests forwarded to the internal HTTP(S) load balancer's backends.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.https.internal.backend_latencies`</td>
+      <td>Milliseconds</td>
+      <td>Backend response latency distribution for the internal HTTP(S) load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.https.internal.total_latencies`</td>
+      <td>Milliseconds</td>
+      <td>End-to-end request latency distribution for the internal HTTP(S) load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.https.internal.request_bytes_count`</td>
+      <td>Bytes</td>
+      <td>Request bytes received by the internal HTTP(S) load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.https.internal.response_bytes_count`</td>
+      <td>Bytes</td>
+      <td>Response bytes sent by the internal HTTP(S) load balancer.</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Key metrics — External Regional HTTP(S) Load Balancer
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "440px" }}>Metric name</th>
+      <th style={{ width: "100px" }}>Unit</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`gcp.loadbalancing.https.external.regional.request_count`</td>
+      <td>Count</td>
+      <td>Number of requests served by the external regional HTTP(S) load balancer, faceted by `response_code_class`.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.https.external.regional.backend_latencies`</td>
+      <td>Milliseconds</td>
+      <td>Backend response latency distribution for the external regional HTTP(S) load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.https.external.regional.total_latencies`</td>
+      <td>Milliseconds</td>
+      <td>End-to-end request latency distribution for the external regional HTTP(S) load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.https.external.regional.request_bytes_count`</td>
+      <td>Bytes</td>
+      <td>Request bytes received by the external regional HTTP(S) load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.https.external.regional.response_bytes_count`</td>
+      <td>Bytes</td>
+      <td>Response bytes sent by the external regional HTTP(S) load balancer.</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Key metrics — External Network Load Balancer
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "440px" }}>Metric name</th>
+      <th style={{ width: "100px" }}>Unit</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`gcp.loadbalancing.l3.external.ingress_bytes_count`</td>
+      <td>Bytes</td>
+      <td>Ingress bytes received by the external network load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.l3.external.egress_bytes_count`</td>
+      <td>Bytes</td>
+      <td>Egress bytes sent by the external network load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.l3.external.ingress_packets_count`</td>
+      <td>Count</td>
+      <td>Ingress packets received by the external network load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.l3.external.egress_packets_count`</td>
+      <td>Count</td>
+      <td>Egress packets sent by the external network load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.l3.external.rtt_latencies`</td>
+      <td>Milliseconds</td>
+      <td>Round-trip latency distribution measured by the external network load balancer.</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Key metrics — Internal Network Load Balancer
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "440px" }}>Metric name</th>
+      <th style={{ width: "100px" }}>Unit</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`gcp.loadbalancing.l3.internal.ingress_bytes_count`</td>
+      <td>Bytes</td>
+      <td>Ingress bytes received by the internal L3 load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.l3.internal.egress_bytes_count`</td>
+      <td>Bytes</td>
+      <td>Egress bytes sent by the internal L3 load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.l3.internal.ingress_packets_count`</td>
+      <td>Count</td>
+      <td>Ingress packets received by the internal L3 load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.l3.internal.egress_packets_count`</td>
+      <td>Count</td>
+      <td>Egress packets sent by the internal L3 load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.l3.internal.rtt_latencies`</td>
+      <td>Milliseconds</td>
+      <td>Round-trip latency distribution measured by the internal L3 load balancer.</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Key metrics — L4 Proxy Load Balancer
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "440px" }}>Metric name</th>
+      <th style={{ width: "100px" }}>Unit</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`gcp.loadbalancing.l4_proxy.tcp.new_connections_count`</td>
+      <td>Count</td>
+      <td>New TCP connections opened through the L4 proxy load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.l4_proxy.tcp.closed_connections_count`</td>
+      <td>Count</td>
+      <td>TCP connections closed by the L4 proxy load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.l4_proxy.ingress_bytes_count`</td>
+      <td>Bytes</td>
+      <td>Ingress bytes received by the L4 proxy load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.l4_proxy.egress_bytes_count`</td>
+      <td>Bytes</td>
+      <td>Egress bytes sent by the L4 proxy load balancer.</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Key metrics — TCP/SSL Proxy Load Balancer
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "440px" }}>Metric name</th>
+      <th style={{ width: "100px" }}>Unit</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>`gcp.loadbalancing.tcp_ssl_proxy.new_connections`</td>
+      <td>Count</td>
+      <td>New TCP/SSL connections opened through the proxy load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.tcp_ssl_proxy.closed_connections`</td>
+      <td>Count</td>
+      <td>TCP/SSL connections closed by the proxy load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.tcp_ssl_proxy.ingress_bytes_count`</td>
+      <td>Bytes</td>
+      <td>Ingress bytes received by the TCP/SSL proxy load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.tcp_ssl_proxy.egress_bytes_count`</td>
+      <td>Bytes</td>
+      <td>Egress bytes sent by the TCP/SSL proxy load balancer.</td>
+    </tr>
+    <tr>
+      <td>`gcp.loadbalancing.tcp_ssl_proxy.frontend_tcp_rtt`</td>
+      <td>Milliseconds</td>
+      <td>Round-trip time measured between the client and the TCP/SSL proxy front-end.</td>
+    </tr>
+  </tbody>
+</table>
+
+For the complete list of Cloud Load Balancing metrics, see [Google's Cloud Load Balancing metrics documentation](https://cloud.google.com/monitoring/api/metrics_gcp#gcp-loadbalancing).
+
+## Service account or user account [#service-account]
+
+### Find and use data [#find-data]
+
+After activating the integration and waiting a few minutes (based on the [polling frequency](#polling)), data will appear in the New Relic UI. To [find and use your data](/docs/infrastructure/integrations/find-use-infrastructure-integration-data), including links to your <InlinePopover type="dashboards"/> and alert settings, go to <DNT>[one.newrelic.com > All capabilities](https://one.newrelic.com/all-capabilities) > Infrastructure > GCP > (select an integration)</DNT>.
+
+To view [metric data](/docs/telemetry-data-platform/understand-data/new-relic-data-types/#metrics) for your GCP Load Balancing integration in New Relic, [create NRQL queries](/docs/integrations/new-relic-integrations/getting-started/use-integration-data-new-relic-insights#nrql) for `GcpHttpLoadBalancerSample`, `GcpHttpExternalRegionalLoadBalancerSample`, `GcpInternalHttpLoadBalancerSample`, `GcpTcpSslProxyLoadBalancerSample` and `GcpInternalLoadBalancerSample` [events](/docs/data-apis/understand-data/new-relic-data-types/#event-data) and their related attributes.
+
+### GcpHttpLoadBalancerSample [#gcp-http-load-balancer-sample]
+
+Query `GcpHttpLoadBalancerSample` events in New Relic to view data for the following attributes:
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "300px" }}>
+        Attribute
+      </th>
+
+      <th>
+        Description
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        `https.BackendLatencies`
+      </td>
+
+      <td>
+        Mean latency (in milliseconds) calculated from when the request was sent by the External HTTP/S load balancer proxy to the backend until the proxy received from the backend the last byte of response.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `https.BackendRequestBytes`
+      </td>
+
+      <td>
+        The number of bytes sent as requests from External HTTP/S load balancer to backends.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `https.BackendRequests`
+      </td>
+
+      <td>
+        The number of requests served by backends of External HTTP/S load balancer.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `https.BackendResponseBytes`
+      </td>
+
+      <td>
+        The number of bytes sent as responses from backends (or cache) to External HTTP/S load balancer.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `https.FrontendTcpRtt`
+      </td>
+
+      <td>
+        Mean of the Round-Trip Time (RTT) measured for each connection between client and proxy.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `https.RequestBytes`
+      </td>
+
+      <td>
+        The number of bytes sent as requests from clients to External HTTP/S load balancer.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `https.Requests`
+      </td>
+
+      <td>
+        The number of requests served by External HTTP/S load balancer.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `https.ResponseBytes`
+      </td>
+
+      <td>
+        The number of bytes sent as responses from External HTTP/S load balancer to clients.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `https.TotalLatencies`
+      </td>
+
+      <td>
+        Mean of the latency (in milliseconds) calculated from when the request was received by the External HTTP/S load balancer proxy until the proxy got ACK from client on last response byte.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### GcpHttpExternalRegionalLoadBalancerSample [#gcp-http-external-regional-load-balancer-sample]
+
+Query `GcpHttpExternalRegionalLoadBalancerSample` events in New Relic to view data for the following attributes:
+
+<table>
+  <thead>
+  <tr>
+    <th style={{ width: "300px" }}>
+      Attribute
+    </th>
+
+    <th>
+      Description
+    </th>
+  </tr>
+  </thead>
+
+  <tbody>
+  <tr>
+    <td>
+      `https.external.regional.BackendLatencies`
+    </td>
+
+    <td>
+      Mean latency (in milliseconds) calculated from when the request was sent by the Regional External HTTP/S load balancer proxy to the backend until the proxy received from the backend the last byte of response.
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      `https.external.regional.BackendRequestBytes`
+    </td>
+
+    <td>
+      The number of bytes sent as requests from Regional External HTTP/S load balancer to backends.
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      `https.external.regional.BackendRequests`
+    </td>
+
+    <td>
+      The number of requests served by backends of Regional External HTTP/S load balancer.
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      `https.external.regional.BackendResponseBytes`
+    </td>
+
+    <td>
+      The number of bytes sent as responses from backends (or cache) to Regional External HTTP/S load balancer.
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      `https.external.regional.RequestBytes`
+    </td>
+
+    <td>
+      The number of bytes sent as requests from clients to Regional External HTTP/S load balancer.
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      `https.external.regional.Requests`
+    </td>
+
+    <td>
+      The number of requests served by Regional External HTTP/S load balancer.
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      `https.external.regional.ResponseBytes`
+    </td>
+
+    <td>
+      The number of bytes sent as responses from Regional External HTTP/S load balancer to clients.
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      `https.external.regional.TotalLatencies`
+    </td>
+
+    <td>
+      Mean of the latency (in milliseconds) calculated from when the request was received by the Regional External HTTP/S load balancer proxy until the proxy got ACK from client on last response byte.
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### GcpInternalHttpLoadBalancerSample [#gcp-internal-http-load-balancer-sample]
+
+Query `GcpInternalHttpLoadBalancerSample` events in New Relic to view data for the following attributes:
+
+<table>
+  <thead>
+  <tr>
+    <th style={{ width: "300px" }}>
+      Attribute
+    </th>
+
+    <th>
+      Description
+    </th>
+  </tr>
+  </thead>
+
+  <tbody>
+  <tr>
+    <td>
+      `https.internal.BackendLatencies`
+    </td>
+
+    <td>
+      Mean latency (in milliseconds) calculated from when the request was sent by the Internal Application Load Balancer proxy to the backend until the proxy received from the backend the last byte of response.
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      `https.internal.BackendRequestBytes`
+    </td>
+
+    <td>
+      The number of bytes sent as requests from Internal HTTP/S load balancer to backends.
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      `https.internal.BackendRequests`
+    </td>
+
+    <td>
+      The number of requests served by backends of Internal HTTP/S load balancer.
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      `https.internal.BackendResponseBytes`
+    </td>
+
+    <td>
+      The number of bytes sent as responses from backends (or cache) to Internal HTTP/S load balancer.
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      `https.internal.RequestBytes`
+    </td>
+
+    <td>
+      The number of bytes sent as requests from clients to Internal HTTP/S load balancer.
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      `https.internal.Requests`
+    </td>
+
+    <td>
+      The number of requests served by Internal HTTP/S load balancer.
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      `https.internal.ResponseBytes`
+    </td>
+
+    <td>
+      The number of bytes sent as responses from Internal HTTP/S load balancer to clients.
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      `https.internal.TotalLatencies`
+    </td>
+
+    <td>
+      Mean of the latency (in milliseconds) calculated from when the request was received by the Internal Application Load Balancer proxy until the proxy got ACK from client on last response byte.
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+### GcpTcpSslProxyLoadBalancerSample [#gcp-tcp-ssl-proxy-load-balancer-sample]
+
+Query `GcpTcpSslProxyLoadBalancerSample` events in New Relic to view data for the following attributes:
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "300px" }}>
+        Attribute
+      </th>
+
+      <th>
+        Description
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        `tcpSslProxy.ClosedConnections`
+      </td>
+
+      <td>
+        Number of connections that were terminated over TCP/SSL proxy.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `tcpSslProxy.EgressBytes`
+      </td>
+
+      <td>
+        Number of bytes sent from VM to client using proxy.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `tcpSslProxy.FrontendTcpRtt`
+      </td>
+
+      <td>
+        Mean of the smoothed RTT (in milliseconds) measured by the proxy's TCP stack, each minute application layer bytes pass from proxy to client.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `tcpSslProxy.IngressBytes`
+      </td>
+
+      <td>
+        Number of bytes sent from client to VM using proxy.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `tcpSslProxy.NewConnections`
+      </td>
+
+      <td>
+        Number of connections that were created over TCP/SSL proxy.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `tcpSslProxy.OpenConnections`
+      </td>
+
+      <td>
+        Current number of outstanding connections through the TCP/SSL proxy.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+### GcpInternalLoadBalancerSample [#gcp-internal-load-balancer-sample]
+
+Query `GcpInternalLoadBalancerSample` events in New Relic to view data for the following attributes:
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "300px" }}>
+        Attribute
+      </th>
+
+      <th>
+        Description
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        `l3.internal.EgressBytes`
+      </td>
+
+      <td>
+        The number of bytes sent from Internal Load Balancing (ILB) backend to client (for TCP flows it only counts bytes on the application stream).
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `l3.internal.EgressPackets`
+      </td>
+
+      <td>
+        The number of packets sent from ILB backend to client.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `l3.internal.IngressBytes`
+      </td>
+
+      <td>
+        The number of bytes sent from client to ILB backend (for TCP flows it only counts bytes on the application stream).
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `l3.internal.IngressPackets`
+      </td>
+
+      <td>
+        The number of packets sent from client to ILB backend.
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        `l3.internal.RttLatencies`
+      </td>
+
+      <td>
+        Mean of the RTT (in milliseconds) measured over TCP connections for ILB flows.
+      </td>
+    </tr>
+  </tbody>
+</table>

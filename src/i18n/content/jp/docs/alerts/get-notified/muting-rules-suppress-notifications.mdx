@@ -1,0 +1,568 @@
+---
+title: ミュートルール：通知を非表示にする
+tags:
+  - Alerts
+  - Alert notifications
+metaDescription: 'Read about how to mute (suppress) alerts notifications during known system disruptions, such as maintenance windows and deployments.'
+freshnessValidatedDate: never
+translationType: human
+---
+
+アラート機能は、システムに問題が発生した際に適切なタイミングで通知を送信する機能です。場合によっては、特定の既知の通知を表示したくないこともあります。<DNT>**muting rules**</DNT>を使用することで、不要なメッセージの大量送信を停止できます。
+
+不要な通知に共通する要素を見つけたら、それらの要素だけをミュートし、他の通知は通過させるミュートルールを定義できます。 通知をミュートした場合でも、そのアラートに関するデータは<InlinePopover type="alerts" />によって収集されます。ミュートルールはアラート処理には影響せず、通知が送信される直前に適用されます。
+
+## ミュートルールを作成する [#create]
+
+<Callout variant="important">
+ミュートルールを作成する前に、[通知](/docs/alerts-applied-intelligence/notifications/intro-notifications/)を生成する[ポリシー](/docs/alerts/new-relic-alerts/configuring-alert-policies/create-edit-or-find-alert-policy)と[条件](/docs/alerts-applied-intelligence/new-relic-alerts/alert-conditions/create-alert-conditions/)を作成する必要があります。
+</Callout>
+
+ミュートルールを作成する手順は以下のとおりです。
+
+1. <DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Alerts**</DNT>に移動し、左側のナビゲーションペインで<DNT>**Muting rules**</DNT>をクリックします。
+
+2. <DNT>**+ Add a rule**</DNT>をクリックします。
+
+3. ミュートルールの名前と説明（任意）を入力し、ルールを適用するアカウントを選択します。
+
+4. アラートフィルタを作成します。[アラート属性](/docs/alerts/create-alert/condition-details/alert-event-attributes/)のサブセットを使用できます。属性、[演算子](#sub-conditions)、値を選択します。属性：`accountId`、`conditionId`、`conditionName`、`conditionType`、`entity.guid`、`nrqlEventType`、`nrqlQuery`、`policyId`、`policyName`、`product`、`runbookUrl`（`conditionRunbookUrl`）、`tags.<NAME>`、`targetName`。値は、アラートポリシーIDや条件名といったいずれかのアラート属性と比較されます。
+
+<Callout title="注意">
+<DNT>**Attribute**</DNT> フィールドのドロップダウンには、すべての属性が表示されるわけではありません。
+
+必要な属性がデフォルトで表示されない場合は、`tags.`に続けて属性名（たとえば、`tags.environment`）を入力し、リストから選択してください。カスタムタグの属性は、同じ属性がインシデントペイロードに末尾の`s`なしで（`tag.environment`として）表示される場合でも、ミュートルールでは常に`tags.`プレフィックス（複数形）を使用します。`NrAi*`イベントに基づく条件の場合、タグ属性にはこのプレフィックスが2回付与されます。`tags.<NAME>`ではなく、`tags.tags.<NAME>`を使用してください。
+</Callout>
+
+5. さらにフィルターを追加したい場合は、<DNT>**Add another condition**</DNT>をクリックしてください。
+
+{/* <img
+  title="Muting rule edit screen"
+  alt="Muting rule edit screen"
+  src="/images/alerts_screenshot-crop_violation-filter.webp"
+/>
+
+<figcaption>
+  Go to <DNT>**[one.newrelic.com > All capabilities](https://one.newrelic.com/all-capabilities) > Alerts**</DNT> and click <DNT>**Muting rules**</DNT> on the left navigation pane. You can create complex muting rules to target a small or large set of unwanted notifications.
+</figcaption> */}
+
+## ミュートルールを管理する [#manage]
+
+ミュートルールの条件は、ミュートの対象となるアラートを特定する属性、演算子、値で構成される個別の式のセットです。
+
+ミュートルールを作成、有効化、無効化、管理するには、以下の手順に従ってください。
+
+1. <DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Alerts**</DNT>に移動し、左側のナビゲーションペインで<DNT>**Muting rules**</DNT>をクリックします。
+
+2. ミュートルールは<DNT>**Enabled**</DNT>列からいつでも有効または無効にできます。また、各ルールの行にある<Icon name="fe-more-horizontal" />アイコンをクリックすることでルールの編集が可能です。
+
+ルールは以下のいずれかのステータスになります。
+
+* <DNT>**Active**</DNT>：ミュートが有効になっており、アクティブになっています。
+* <DNT>**Scheduled**</DNT>：ミュートは有効になっていますが、まだアクティブなっていません（今後のスケジュールで有効になります）。
+* <DNT>**Ended**</DNT>：ミュートは有効になっていますが、非アクティブになっています（今後のスケジュールが設定されていません）。
+* <DNT>**Inactive**</DNT>：ミュートは無効になっています。
+
+{/* <img
+  title="Manage muting rules"
+  alt="Manage muting rules"
+  src="/images/alerts_screenshot-full_muting-rules.webp"
+/>
+
+<figcaption>
+  Go to <DNT>**[one.newrelic.com > All capabilities](https://one.newrelic.com/all-capabilities) > Alerts > Muting rules**</DNT>: You can create complex muting rules to target a small or large set of unwanted notifications.
+</figcaption> */}
+
+## ミュートルールの通知オプション [#notify]
+
+ミュートルールがアクティブになっている状態でアラートが発生した場合、ユーザーには通知が届きません。ミュートルールが非アクティブになっている場合の通知の動作は、以下の2つの設定が可能です。
+
+* <DNT>**Notify**</DNT>：ミュートルールの適用期間後もアラートが継続している場合、通知が送られます。これは、既存のミュートされたアラートイベントをクローズすることで機能します。なお、引き続き閾値違反の状態にある場合は、新しいアラートイベントがミュートされていない状態で開かれ、通知が送信されます。これがデフォルト設定であり、この設定を使用することが推奨されます。
+
+* <DNT>**Suppress notification**</DNT>ミュートルールの適用期間後もアラートが継続していても、通知は届きません。これは、既存のミュートされたアラートをミュートルールの適用期間の終了時刻を過ぎてもオープンにしたままにしておくことで機能します。
+
+<img width="65%;" style={{align: "left"}} title="How to suppress notifications" alt="How to suppress notifications" src="/images/alerts_screenshot-crop_suppress-notifications.webp" />
+
+<figcaption>
+<DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Alerts**</DNT>に移動して<DNT>**+ Add a rule**</DNT>をクリックします。
+</figcaption>
+
+## ミュートルールのスケジュールを設定する [#schedule-muting-rule]
+
+必要に応じて、ミュートルールをスケジュール設定できます。
+
+スケジュールを設定するには、開始時刻と終了時刻を選択します。必要な場合、ミュートルールを丸一日有効に適用することもできます。
+
+ミュートルールのスケジュール設定では、タイムゾーンを選択することもできます。デフォルトでは、ユーザー設定で選択したタイムゾーンが適用されます。
+
+<img width="50%;" title="Schedule your muting window" alt="Schedule your muting window" src="/images/alerts_screenshot-crop_schedule-muting window.webp" />
+
+<figcaption>
+<DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Alerts**</DNT>に移動し、左側のナビゲーションペインで<DNT>**Muting rules**</DNT>をクリックします。ミュートルールのスケジュール設定では、柔軟で強力なオプションが用意されています。
+</figcaption>
+
+ミュートルールは、毎日、毎週、毎月繰り返すようにスケジュール設定できます。毎週繰り返すように設定する場合は、繰り返す曜日を選択できます。未選択の場合、繰り返す曜日はミュートルールの開始予定日の曜日がデフォルトで設定されます。
+
+<Callout variant="important">
+<DNT>**Repeat**</DNT>曜日のチェックボックスを選択した場合、<DNT>**Starts**</DNT>日と<DNT>**Ends**</DNT>日のフィールドが上書きされます。開始日を設定し、さらに曜日を選択した場合、ミュートルールは開始日以降で最初に到来するその曜日に適用されます。
+</Callout>
+
+また、日付や回数を選択することで、繰り返しの終了時期を指定することもできます。
+
+### ミュートされたアラートとイシューを確認する [#ui]
+
+オープンまたはクローズされた問題を表示すると、アラートと問題は`Muted`とマークされます。ミュートされたアラートと問題は、以下の場所で確認できます。
+
+* **ミュートされた問題を確認するには、**<DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Alerts**</DNT>に移動し、左側のナビゲーションペインで<DNT>**Issues &amp; Activity**</DNT>をクリックします。ミュートされた重大なアラートの詳細を確認するには、ミュートされたイシューをクリックします。
+
+* **ミュートされたアラートの一覧を表示する**には、<DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; Alerts**</DNT>に移動し、左側のナビゲーションペインで<DNT>**Issues &amp; Activity**</DNT>をクリックします。次に<DNT>**alert events tab**</DNT>を選択します。ミュートされたアラートとイシューには、<DNT>**Muted**</DNT>列で<Icon name="fe-bell-off" />アイコンが表示されます。
+
+### ファセット結果をミュートする `tags.` [#facet-muting]
+
+ファセットクエリの結果をミュートするには、`tags.FACETED_ATTRIBUTE`属性を使用します。ここで、`FACETED_ATTRIBUTE`は、NRQL [`FACET`](/docs/query-data/nrql-new-relic-query-language/getting-started/nrql-syntax-clauses-functions#sel-facet)クエリを実行した属性を表します。例えば、NRQLアラート条件の記述に`FACET host`が含まれている場合、`tags.host`を使用してその`FACET`属性をターゲットにすることができます。
+
+NRQL条件クエリは、複数のファセット属性を受け入れることができます。集計されたイベントまたはメトリクス時系列の属性を使ってフィルタリングできるようにするには、それらの属性をNRQLクエリの`FACET`句に追加する必要があります。例：`FACET host, region, cluster`。
+
+`tags.`の使用例については、[「ミュートルールの作成」](#create)を参照してください。
+
+## サブ条件演算子 [#sub-conditions]
+
+これは、ミュートルールを追加する際に属性を比較するために使用できる論理演算子です。ミュートルールを初めて使用する場合は、[こちらの例](/docs/alerts-applied-intelligence/new-relic-alerts/alert-notifications/muting-rules-suppress-notifications/#examples)を参照してください。
+
+<Callout variant="tip">
+すべてのサブ条件演算子の値は、大文字と小文字を区別します。例えば、`policyName STARTS_WITH 'PROD'`を使用した場合、「Prod」で始まるポリシー名は対象になりません。
+</Callout>
+
+* `EQUALS`：指定された値がアラート属性値と等しい。
+* `DOES_NOT_EQUALS`：指定された値がアラート属性値と一致しない。
+* `IN`：アラート属性値が指定された値のリスト（最大500個）に含まれている。
+* `NOT_IN`：アラート属性値が指定された値のリスト（最大 500個）に含まれていない。
+* `CONTAINS`：指定された文字列がアラート属性値に含まれている。
+* `DOES_NOT_CONTAINS`：指定された文字列がアラート属性値に含まれていない。
+* `ENDS_WITH`：アラート属性値が指定された文字列で終わる。
+* `NOT_ENDS_WITH`：アラート属性値が指定された値文字列で終わっていない。
+* `STARTS_WITH`：アラート属性値が指定された文字列で始まる。
+* `DOES_NOT_STARTS_WITH`：アラート属性値が指定された値文字列で始まっていない。
+* `IS_BLANK`：アラート属性値が空である。null、empty stringなど。
+* `IS_NOT_BLANK`：アラート属性の値が空でない。null、empty stringなど。
+* `IS_ANY`：条件にこの演算子を指定すると、アカウント上のすべてのアラートがミュートされます。
+
+## ミュートルールの挙動 [#overview]
+
+ミュートルールは、デフォルトのライフサイクルの最後に適用され、通知を抑制またはミュートします。ミュートルールは既存のポリシーや条件を無効にするものではありません。例えば、メンテナンス期間やデプロイ時など、想定内のシステム停止期間に通知をミュートできます。システム停止のアラート通知がミュートされていても、システム停止のアラート自体は検出されます。
+
+ミュートルールは、[アラート](/docs/alerts/create-alert/condition-details/alert-event-attributes)の属性に一致する条件のセットを使用します。ミュートルールは以下の方法を定義するものです。
+
+* アラートの作成後、イシューがオープンになる前に、個々のアラートを特定する。
+* デフォルトの条件を上書きして、ミュートするように指示する。
+
+現時点では、アラートをミュートした場合、通常のアラートライフサイクルは引き続き維持されたまま、ミュートされたアラートのみを含むイシューが通知されなくなります。
+
+ミュートルールは、通知のトリガーとなったイシュー内のイベントに応じて判定されます。そのため、最初の通知イベントがミュート状態であったことでミュートされた場合、残りの通知イベントもすべてミュートされます。
+
+ミュートルールは特定のアラートを上書きします。ミュートルールは既存のポリシーや条件を無効にするものではありません。上書きによって、多数のエンティティを対象とするポリシーや条件の範囲に含まれる特定のエンティティからのアラートだけをミュートすることが可能です。これにより、システムの一部分をメンテナンスする際に、監視を過度にミュートする必要がなくなります。
+
+次の表は、アラートのミュートによって、アラートのライフサイクルがどのような影響を受けるかを示しています。
+
+<table>
+<thead>
+<tr>
+<th>
+If
+</th>
+
+<th>
+次に
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td colSpan={3} style={{ backgroundColor: "rgb(238, 238, 238)" }}>
+<DNT>Event</DNT>：イシューが発生した
+</td>
+</tr>
+
+<tr>
+<td>
+ミュートされていないアラートが原因でイシューが発生した場合
+</td>
+
+<td>
+このイシューに関する通知が送信されます。
+</td>
+</tr>
+
+<tr>
+<td>
+ミュートされているアラートが原因でイシューが発生した場合
+</td>
+
+<td>
+このイシューに関する通知は送信されません（ミュートされます）。
+</td>
+</tr>
+</tbody>
+</table>
+
+### ワークフローにおけるミュートの挙動 [#workflow-behavior]
+
+トリガーされたアラートは、イシューと1対1で関連付けられているため、アラートがミュートされると、対応するイシューもミュートされます。ワークフローはイシューによってトリガーされますが、イシューには複数のアラートが含まれる場合があるため、ミュートされたアラートとミュートされていないアラートが混在することがあります。
+
+各イシューは、以下のいずれかのミュート状態になります。
+
+* <DNT>**Fully muted (`FULLY_MUTED`)**</DNT>：イシューに含まれるすべてのオープンなアラートがミュートされている（デフォルト値）。
+* <DNT>**Partially muted (`PARTIALLY_MUTED`)**</DNT>：イシューには、1つ以上のミュートされたオープンなアラートと、1つ以上のミュートされていないオープンなアラートが含まれている。
+* <DNT>**Not muted (`NOT_MUTED`)**</DNT>：イシューにはミュートされたオープンなアラートが含まれていない。
+
+ワークフローの設定方法については、以下のサンプルデモをご覧ください（約2分17秒）：
+
+<Video type="wistia" id="3nf3q2supe" />
+
+### NerdGraphにおけるミュートの挙動 [#manage-with-nerdgraph]
+
+[NerdGraph](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph)では、ミューティングルールで以下のクエリとミューテーションを使用できます。スキーマについては、[APIエクスプローラー](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph#explorer)で確認できます。
+
+* `actor.account.alerts.mutingRule`：IDでミュートルールを取得します。
+* `actor.account.alerts.mutingRules`：アカウントのミュートルールの一覧を取得します。
+* `alertsMutingRuleCreate`：アカウントのミュートルールを作成します。
+* `alertsMutingRuleUpdate`：IDとアカウントIDに基づいてミュートルールを更新します。
+
+[このページ](#examples)には、サンプルクエリとミューテーションの例がいくつか掲載されています。
+
+ミュートルールには、以下のフィールドとコンポーネントがあります。
+
+<table>
+<thead>
+<tr>
+<th style={{ width: "200px" }}>
+ミュートルール
+</th>
+
+<th>
+フィールドとコンポーネント
+</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
+`accountId`
+</td>
+
+<td>
+ミュートルールのアカウントID。ミュートルールは、単一のアカウントで発生したアラートにのみ影響します。複数のアカウントにわたるアラートをミュートするには、アカウントごとにミュートルールを個別に作成する必要があります。
+</td>
+</tr>
+
+<tr>
+<td>
+`actionOnMutingRuleWindowEnded`
+</td>
+
+<td>
+ミュートルールの適用期間の終了時に予定される動作。有効な値は`CLOSE_ISSUES_ON_INACTIVE`または`DO_NOTHING`です。`CLOSE_ISSUES_ON_INACTIVE`を選択した場合、継続中のイシューはすべてクローズされ、アラートが継続する場合は（通知を伴って）再度オープンされます。
+</td>
+</tr>
+
+<tr>
+<td>
+`condition`
+</td>
+
+<td>
+対象となるアラートを定義する式の集合。ミュートルールの条件には以下があります。
+
+* `operator`：条件の組み合わせ方を定義するブール演算子`AND`または`OR`。
+
+* `conditions`：アラート内の対象属性となる式のセット（サブ条件）。これらは`operator`に基づいて一緒に評価されます。1つのミュートルールに対して、最大20個のサブ条件を設定できます。
+
+  サブ条件には以下があります。
+
+  * `attribute`：アラート内の単一の属性。[アラート属性](/docs/alerts/create-alert/condition-details/alert-event-attributes)一覧については、こちらをご覧ください。
+
+  * `operator`：選択されたアラート属性を条件内の値と比較するために使用される比較関数。[サブ条件演算子](#sub-conditions)の一覧については、こちらをご覧ください。
+
+  * `values`選択したアラート属性と比較する文字列値の配列。ミュートルールが条件を評価する際、必要に応じて、文字列から値が強制的に変換されます。複数の値との比較をサポートする演算子（例： `IN`を使用する場合、最大500個の値を使用できます。
+</td>
+</tr>
+
+<tr>
+<td>
+`createdAt`
+</td>
+
+<td>
+ミュートルールが作成されたタイムスタンプ（UTC）。
+</td>
+</tr>
+
+<tr>
+<td>
+`createdBy`
+</td>
+
+<td>
+ミュートルールを作成したユーザーのユーザーID。
+</td>
+</tr>
+
+<tr>
+<td>
+`description`
+</td>
+
+<td>
+これはミュートルールを説明するオプションのテキストフィールドです。ミュートルールにさらなるコンテキストを提供するのに役立つ方法です。このデータは管理上の表示目的のみに使用されます。
+</td>
+</tr>
+
+<tr>
+<td>
+`enabled`
+</td>
+
+<td>
+ミュートルールを有効または無効にします（ブール値）。ミュートルールを手動で有効または無効にできます。
+</td>
+</tr>
+
+<tr>
+<td>
+`id`
+</td>
+
+<td>
+ミュートルールの固有識別子。
+</td>
+</tr>
+
+<tr>
+<td>
+`mutingRuleLifecycleEventPublishedAt`
+</td>
+
+<td>
+ミュートルールの適用期間終了時の動作が最後に適用された日時を示すタイムスタンプ。
+</td>
+</tr>
+
+<tr>
+<td>
+`name` （必須）
+</td>
+
+<td>
+ミュートルールの分かりやすい名前を入力するテキストフィールド。これは、ルールの一覧表示や参照時に使用されます。名前は必ずしも一意である必要はありませんが、一意の名前を付けることが推奨されます。
+</td>
+</tr>
+
+<tr>
+<td>
+`schedule`
+</td>
+
+<td>
+`MutingRule`によるアラートのミュートをアクティブにする期間。
+
+* `startTime`：ミュートルールが開始された日時を示すタイムスタンプ。これはオフセットなしのローカルISO 8601形式です。例： `2020-07-08T14:30:00`
+* `endTime`：ミュートルールが終了した日時を示すタイムスタンプ。これはオフセットなしのローカルISO 8601形式です。例： `2020-07-15T14:30:00`
+* `timeZone`：ミュートルールのスケジュールに適用されるタイムゾーン。例：`America/Los_Angeles`。[Wikipediaのtzデータベースのタイムゾーン一覧](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)を参照してください。
+* `repeat`：ミュートルールのスケジュールを繰り返す頻度。繰り返さない場合は、nullを使用してください。設定可能なオプションは`DAILY`、`WEEKLY`、`MONTHLY`です。
+* `endRepeat`：ミュートルールのスケジュールの繰り返しを停止する日時。これはオフセットなしのローカルISO 8601形式です。例：`2020-07-10T15:00:00`。注：ミュートルールのスケジュールを終了するには、`endRepeat`または`repeatCount`のいずれかを使用する必要があります。両方のフィールドを同時に入力しないでください。
+* `repeatCount`ミュートルールのスケジュールを繰り返す回数。これには初回のスケジュールも含まれます。例えば、`repeatCount`が2の場合、1回繰り返されます。3`repeatCount`が3の場合、2回繰り返されます。注：ミュートルールのスケジュールを終了するには、`repeatCount`または`endRepeat`のいずれかを使用できます。両方のフィールドを同時に入力しないでください。
+* `weeklyRepeatDays`：繰り返しフィールドが`WEEKLY`に設定されている場合に、ミュートルールを繰り返す曜日。例：`['MONDAY', 'WEDNESDAY']`。
+</td>
+</tr>
+
+<tr>
+<td>
+`updatedAt`
+</td>
+
+<td>
+ミュートルールが最後に変更されたタイムスタンプ（UTC）。
+</td>
+</tr>
+
+<tr>
+<td>
+`updatedBy`
+</td>
+
+<td>
+最後にミュートルールを変更したユーザーのユーザーID。
+</td>
+</tr>
+</tbody>
+</table>
+
+#### ミュートの例 [#examples]
+
+NerdGraphへのリクエストの作成については、[GraphQLチュートリアル](/docs/apis/graphql-api/tutorials)など、[NerdGraphのドキュメント](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph)を参照してください。
+
+<CollapserGroup>
+<Collapser id="fetch-list" title="アカウントのミュートルールを取得する">
+アカウントのミュートルール一覧（名前と条件を含む）を取得する方法：
+
+```graphql
+{
+  actor {
+    account(id: YOUR_ACCOUNT_ID) {
+      alerts {
+        mutingRules {
+          name
+          condition {
+            operator
+            conditions {
+              attribute
+              operator
+              values
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+</Collapser>
+
+<Collapser id="create-rule" title="ミュートルールを作成する">
+ホストファセットが`host-1`のNRQL条件からのアラートをミュートするミュートルールを作成し、ミュートルールの`id`を返すには、次のようにします。
+
+```graphql
+mutation {
+  alertsMutingRuleCreate(
+    accountId: YOUR_ACCOUNT_ID
+    rule: {
+      name: "host-1 mute rule"
+      description: "Mute host-1 incidents"
+      enabled: true
+      condition: {
+        operator: AND
+        conditions: [{ 
+          attribute: "tags.host", 
+          operator: EQUALS, 
+          values: ["host-1"] 
+        }]
+      }
+    }
+  ) {
+    id
+  }
+}
+```
+</Collapser>
+
+<Collapser id="rule-product" title="特定のホストまたは製品に対するミュートルールを作成する">
+ターゲットホストが`host-1`であるか、アラートが外形監視または<InlinePopover type="mobile" />からのものであるインフラストラクチャ条件からのアラートをミュートするミュートルールを作成し、ミュートルールの`id`を返すには、次のようにします。
+
+```graphql
+mutation {
+  alertsMutingRuleCreate(accountId: YOUR_ACCOUNT_ID, rule: {
+    name: "host-1 and synthetics/mobile mute rule",
+    description: "Mute host-1 and synthetics/mobile incidents",
+    enabled: true,
+    condition: {
+      operator: OR,
+      conditions: [
+        {
+          attribute: "targetName",
+          operator: EQUALS,
+          values: ["host-1"]
+        },
+        {
+          attribute: "product",
+          operator: IN,
+          values: ["SYNTHETICS", "MOBILE"]
+        }
+      ]
+    }
+  }) {
+    id
+  }
+}
+```
+</Collapser>
+
+<Collapser id="rule-product" title="繰り返しスケジュール付きのミュートルールを作成する">
+以下の条件で繰り返し実行されるミュートルールを作成するには、次のようにします。
+
+* 毎週火曜日と金曜日に実行
+
+* 2021年1月31日に終了
+
+* 次を返す：ミュートルールの`schedule`と `id`
+
+  ```graphql
+  mutation {
+    alertsMutingRuleCreate(
+      accountId: YOUR_ACCOUNT_ID,
+      rule: {
+        condition: {
+          conditions: {
+            attribute: "conditionName", 
+            operator: ANY, 
+            values: "This is a condition"
+          }, 
+          operator: AND
+        }, 
+        enabled: true, 
+        name: "Recur Weekly", 
+        schedule: {
+          startTime: "2020-12-01T12:00:00", 
+          endTime: "2020-12-01T14:00:00", 
+          timeZone: "America/Los_Angeles",
+          repeat: WEEKLY,
+          endRepeat: "2021-01-31T12:00:00", 
+          weeklyRepeatDays: [TUESDAY, FRIDAY]
+        }
+      }
+    ) {
+      id
+      schedule {
+        endTime
+        startTime
+        timeZone
+        repeat
+        repeatCount
+        endRepeat
+        weeklyRepeatDays
+        nextStartTime
+        nextEndTime
+      }
+    }
+  }
+  ```
+</Collapser>
+
+<Collapser id="rename" title="ミュートルールの名前を変更して無効にする">
+名前を変更してミュートルールを無効にし、新しい名前を返すには、次のようにします。
+
+```graphql
+mutation {
+  alertsMutingRuleUpdate(accountId: YOUR_ACCOUNT_ID, id: MUTING_RULE_ID, rule: {
+    name: "updated name",
+    enabled: false
+  }) {
+    name
+  }
+}
+```
+</Collapser>
+
+<Collapser id="delete-rule" title="ミュートルールを削除する">
+ミュートルールを削除するには、次のようにします。
+
+```graphql
+mutation {
+ alertsMutingRuleDelete(accountId: YOUR_ACCOUNT_ID, id: MUTING_RULE_ID) {
+    id
+  }
+}
+```
+</Collapser>
+</CollapserGroup>

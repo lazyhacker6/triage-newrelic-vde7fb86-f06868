@@ -1,0 +1,241 @@
+---
+title: OpenTelemetryを使用して生成AIのトレースをNew Relicに送信する
+metaDescription: 'Learn how to send OpenTelemetry GenAI traces to New Relic so the AI Monitoring view shows every LLM call, tool call, and agent step your service makes.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+アプリケーションがOpenTelemetry（OTel）生成AIトレースをNew Relicに送信し始めると、AIモニタリングビューには次のように表示されます：
+
+* サービスによって行われるすべてのLLM呼び出し — プロンプト、コンプリーション、モデル、レイテンシ、トークン数、終了理由。
+* 完全なリクエストトレースの一部としてのツール呼び出しとエージェントステップ。これにより、モデルが決定を下した理由を確認できます。
+* エラー、レート制限の失敗、および遅い呼び出しが、その他のAPMデータとともに表示されます。
+
+New Relicエージェントは必要ありません。アプリがすでにOpenTelemetryのトレースを出力している場合、準備はほぼ完了しています。
+
+## 始める前に [#before-you-start]
+
+必要なもの：
+
+* New Relicの[Ingestライセンスキー](/docs/apis/intro-apis/new-relic-api-keys/#ingest-license-key)。
+* LLMを呼び出すアプリケーション。OpenAI、Anthropic、LangChain、およびAWS BedrockのPythonの例を以下に示します。OpenTelemetry生成AI計装を備えた他の言語も同じように機能します。
+* ポート443での、アプリからお使いのリージョンのNew Relic OTLPエンドポイントへのネットワークエグレス。リージョン別エンドポイント（US、EU、JP）、サポートされているポート、および圧縮設定の完全なリストについては、[OpenTelemetry Protocol（OTLP）を使用したNew Relicへのデータの送信](/docs/opentelemetry/best-practices/opentelemetry-otlp/)をご覧ください。
+
+<Callout variant="important">
+  OTel生成AI計装は、ユーザーが送受信する実際のプロンプトとコンプリーションをキャプチャできます。これには、PII、認証情報、または規制対象データが含まれる場合があります。コンテンツのキャプチャはデフォルトでオフになっています。オンにする前に、組織のデータ処理ポリシーを確認し、「[送信されるプロンプトとコンプリーションを制御する](#controlling-content)」を参照してください。
+</Callout>
+
+<Steps>
+  <Step>
+    ### OpenTelemetryエクスポーターをNew Relicに向ける [#step-1]
+
+    アプリケーションを実行しているプロセスで、これらの環境変数を設定します：
+
+    ```sh
+    # Replace with your region's OTLP endpoint — see the prerequisites above for the full list
+    export OTEL_EXPORTER_OTLP_ENDPOINT="<<YOUR_OTLP_ENDPOINT>>"
+    export OTEL_EXPORTER_OTLP_HEADERS="api-key=$NEW_RELIC_LICENSE_KEY"
+
+    # Name that will identify this service in New Relic
+    export OTEL_SERVICE_NAME="my-genai-service"
+    ```
+  </Step>
+
+  <Step>
+    ### 適切な計装パッケージを追加する [#step-2]
+
+    アプリケーションが使用するものに一致するセクションを選択します。複数組み合わせることができます — たとえば、Bedrockを呼び出すLangChainアプリは両方をインストールします。
+
+    <Callout variant="tip">
+      OpenTelemetryの生成AIエコシステムでは、正確なパッケージ名とバージョンが急速に変化します。チームが現在サポートしているパッケージについては、常にOpenTelemetry Python contribレジストリとNew Relic AIモニタリングのドキュメントを確認してください。
+    </Callout>
+
+    <CollapserGroup>
+      <Collapser id="openai" title="オープンAI">
+        OpenTelemetryプロジェクトから公式のOpenAIの生成AIの計装をインストールし、`opentelemetry-instrument`を使用してアプリを実行するか、インストルメンターを明示的に呼び出します：
+
+        ```python
+        from opentelemetry.instrumentation.openai_v2 import OpenAIInstrumentor
+        OpenAIInstrumentor().instrument()
+
+        from openai import OpenAI
+        OpenAI().chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": "Hello"}],
+        )
+        ```
+      </Collapser>
+
+      <Collapser id="anthropic" title="Anthropic">
+        OpenTelemetry Anthropic計装をインストールします（OpenTelemetry contribレジストリ、およびOpenLLMetryなどのコミュニティディストリビューションから入手可能）。次に：
+
+        ```python
+        from opentelemetry.instrumentation.anthropic import AnthropicInstrumentor
+        AnthropicInstrumentor().instrument()
+
+        import anthropic
+        anthropic.Anthropic().messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=1024,
+            messages=[{"role": "user", "content": "Hello"}],
+        )
+        ```
+      </Collapser>
+
+      <Collapser id="langchain" title="LangChain">
+        LangChainの計装は、チェーン、すべてのツール呼び出し、および基盤となるモデルクライアントを1つのパッケージでカバーします。任意のコミュニティ版LangChainの計装をインストールし、起動時に有効にします：
+
+        ```python
+        from opentelemetry.instrumentation.langchain import LangchainInstrumentor
+        LangchainInstrumentor().instrument()
+        ```
+
+        既存の`ChatOpenAI`、`ChatAnthropic`、または類似のチェーンは自動的にトレースされます。ツールとエージェントのステップは、親チェーン呼び出しの下に子スパンとして表示されます。
+      </Collapser>
+
+      <Collapser id="aws-bedrock" title="AWS Bedrock">
+        BedrockのトラフィックはAWS SDKを経由します。AWS SDK（botocore）OpenTelemetry計装をインストールして有効にします：
+
+        ```python
+        from opentelemetry.instrumentation.botocore import BotocoreInstrumentor
+        BotocoreInstrumentor().instrument()
+
+        import boto3, json
+        boto3.client("bedrock-runtime", region_name="us-east-1").invoke_model(
+            modelId="anthropic.claude-3-5-sonnet-20241022-v2:0",
+            body=json.dumps({
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": 256,
+                "messages": [{"role": "user", "content": "Hello"}],
+            }),
+        )
+        ```
+
+        インストールしたバージョンがBedrock呼び出しに対して生成AIの属性（`gen_ai.system`、`gen_ai.request.model`、およびトークン使用量）を出力することを確認します — サポートはバージョン全体で段階的に追加されています。
+      </Collapser>
+    </CollapserGroup>
+  </Step>
+
+  <Step>
+    ### データが到着していることを確認する [#step-3]
+
+    1. 新しい環境変数と計装が有効になるように、アプリケーションを再起動します。
+
+    2. 少量の実際のトラフィックをトリガーします — ほんの少しのチャットコンプリーションで十分です。
+
+    3. New Relicで<DNT>**Query Your Data**</DNT>を開き、次を実行します：
+
+       ```sql
+       SELECT count(*) FROM Span
+       WHERE gen_ai.system IS NOT NULL OR gen_ai.provider.name IS NOT NULL
+       SINCE 30 minutes ago
+       FACET service.name, gen_ai.operation.name
+       ```
+
+    4. 数分（2～5分）以内に、サービス名とオペレーションでファセットされた行が表示されます（*例：*`chat`、`completion`、`embeddings`）。
+
+    5. <DNT>**APM &amp; Services &gt; AI Monitoring**</DNT>に移動してサービスを選択し、<DNT>**AI Traces**</DNT>ビューにデータが反映されることを確認します。
+  </Step>
+</Steps>
+
+## 送信されるプロンプトとコンプリーションを制御する [#controlling-content]
+
+デフォルトでは、ほとんどのOpenTelemetry生成AI計装は、プロンプトや補完のテキストをキャプチャしません。スパンにはモデル、トークン数、レイテンシ、およびステータスが含まれますが、メッセージ本文は含まれません。
+
+AIモニタリングでメッセージコンテンツを表示するには、明示的にオプトインします。フラグ名はインストールした計装パッケージによって異なります — その特定のパッケージのドキュメントを確認してください。一般的な例としては次のものがあります。
+
+* `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true` OpenTelemetryが保守する計装の場合。
+* `TRACELOOP_TRACE_CONTENT=true` コミュニティ（OpenLLMetryファミリ）計装用。
+
+本番環境でコンテンツキャプチャを有効にする前に：
+
+* プロンプトに含まれるデータを確認してください。ユーザーがPII、認証情報、または規制対象データを送信する場合は、New Relicに送信される前に、ドロップフィルターまたは属性レベルの難読化を使用して特定のフィールドを削除またはハッシュすることをお勧めします。[New Relicのデータ処理ドキュメント](/docs/ai-monitoring/drop-sensitive-data)をご覧ください。
+* 組織の保持およびコンプライアンス要件（GDPR、HIPAA、PCIなど）を確認してください。
+
+メッセージ本文ではなく — レイテンシ、トークン、およびエラーの可視性のみが必要な場合は — コンテンツのキャプチャを無効のままにしてください。
+
+## トラブルシューティング [#troubleshooting]
+
+<table>
+  <thead>
+    <tr>
+      <th>
+        表示される内容
+      </th>
+
+      <th>
+        試してみること
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        ステップ3のクエリが0行を返す
+      </td>
+
+      <td>
+        OTLPエンドポイントがアカウントのリージョンと一致していること、および`api-key`ヘッダーに有効な取り込みライセンスキー（ユーザーキーではない）が含まれていることを確認します。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        スパンは到着するが、サービスのAIモニタリングビューが空である
+      </td>
+
+      <td>
+        スパンに期待される生成AI属性のタグが付けられていない場合があります。計装パッケージをアップグレードするか、サンプルスパンを添えてNew Relicサポートにお問い合わせください。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        長いプロンプトが途切れる
+      </td>
+
+      <td>
+        アプリケーション側で`OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`と`OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT`を上げます。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        トークン数が欠落している
+      </td>
+
+      <td>
+        LLMプロバイダーはそれらを返しましたが、ご使用の計装バージョンではまだ記録されません。計装パッケージをアップグレードしてください。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        AIモニタリングでトレースは表示されますが、プロンプト/コンプリーションは空白です
+      </td>
+
+      <td>
+        コンテンツキャプチャが無効になっています。[送信されるプロンプトとコンプリーションの制御](#controlling-content)をご覧ください。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        AIモニタリングが利用可能であることを期待しているが、ビューが表示されない
+      </td>
+
+      <td>
+        アカウントでAIモニタリングが有効になっていることを確認するには、New Relicアカウントチームにお問い合わせください。
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## ヘルプを受ける [#getting-help]
+
+上記の手順を実行しても問題が解決しない場合：
+
+* New Relicサポートケースを提出し、サンプルスパンのペイロードとサービス名を含めてください。
+* アカウントレベルの設定に関する質問については、New Relicアカウントチームにお問い合わせください。
+* 一般的なOpenTelemetry生成AIに関する質問については、『[OpenTelemetry生成AIセマンティック規約](https://opentelemetry.io/docs/specs/semconv/gen-ai/)』が公式リファレンスです。

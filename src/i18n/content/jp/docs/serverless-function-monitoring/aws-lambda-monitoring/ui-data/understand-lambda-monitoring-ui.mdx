@@ -1,0 +1,128 @@
+---
+title: LambdaのモニタリングUIを理解する
+tags:
+  - Serverless function monitoring
+  - AWS Lambda monitoring
+  - UI and data
+metaDescription: 'Read about the New Relic UI for monitoring for AWS Lambda functions, including details about the UI pages and charts.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+[Serverless monitoring for AWS Lambda](/docs/introduction-new-relic-monitoring-aws-lambda) では、Lambda関数の詳細なパフォーマンスモニタリングが可能です。このドキュメントでは、以下の方法を説明しています。
+
+* [UIでLambdaのデータを探す](#find-data)
+* [UIコンポーネントの理解](#ui-pages)
+* [チャートデータの把握](#chart-data)
+* [カスタムチャートの作成方法](#chart-data)
+
+## 自分のデータを見る [#find-data]
+
+<img title="new-relic-lambda-entities-screenshot.png" alt="new-relic-lambda-entities-screenshot.png" src="/images/lambda_screenshot-full_all-entities.webp" />
+
+<figcaption>
+  <DNT>**[one.newrelic.com &gt; All capabilities](https://one.newrelic.com/all-capabilities) &gt; All entities &gt; Amazon Web Services &gt; Lambda functions**</DNT>：Lambda関数をクリックして、チャートと詳細を表示します。
+</figcaption>
+
+New RelicでLambdaデータを表示するには：<DNT>**[one.newrelic.com](https://one.newrelic.com/all-capabilities)**</DNT>に移動し、<DNT>**Explorer.**</DNT>をクリックします。左側のナビゲーションで、<DNT>**Amazon Web Services**</DNT>の下にある次をクリックします。 <DNT>**Lambda functions.**</DNT>
+
+UIの詳細について[は、「NewRelicプラットフォームの概要](/docs/project-wanda-early-access-future-new-relic-platform)」を参照してください。
+
+<Callout variant="important">
+  Lambdaのデータが見つからない場合。
+
+  * Lambdaモニタリングを有効にするための [の指示に従っていることを確認してください](/docs/install-enable-new-relics-monitoring-aws-lambda) 。
+  * なお、この機能は、 [インフラ監視のLambda統合](/docs/integrations/amazon-integrations/aws-integrations-list/aws-lambda-monitoring-integration) とは異なります。
+</Callout>
+
+## UIページ
+
+ここでは、Lambdaのモニタリングで利用できるUIページについて説明します。
+
+<table>
+  <thead>
+    <tr>
+      <th style={{ width: "150px" }}>
+        UIページ
+      </th>
+
+      <th>
+        機能性
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>
+        概要
+      </td>
+
+      <td>
+        <DNT>**Summary**</DNT>ページには、最も重要なパフォーマンスデータをすばやく確認できるチャートが表示されます。利用可能な場合、これには[APMエージェントインストゥルメンテーション](/docs/serverless-function-monitoring/aws-lambda-monitoring/get-started/enable-new-relic-monitoring-aws-lambda#instrument-lambda)から収集されたデータが含まれます。OpenTelemetry（ADOTレイヤー）を介してインストゥルメントされたLambda関数は、APMでインストゥルメントされたLambda関数と同じSummaryページエクスペリエンスを表示するようになり、メトリクスはメトリクス合成レイヤーを介して`apm.*`形式に正規化されます。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        CloudWatchメトリクス
+      </td>
+
+      <td>
+        <DNT>**CloudWatch metrics**</DNT>タブには、New Relicのメトリクス合成レイヤーを介してAWS CloudWatchから取得したLambdaパフォーマンスデータが表示されます。チャートには以下が含まれます：呼び出し回数、期間、スロットル、およびエラー数。このタブは、APMでインストゥルメントされたLambda関数とOpenTelemetry（ADOT）でインストゥルメントされたLambda関数の両方で利用できます。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        トランザクション
+      </td>
+
+      <td>
+        <DNT>**Transactions**</DNT>タブには、Lambdaトランザクションが、期間やスループットなどのパフォーマンスデータとともに一覧表示されます。<DNT>**AWS Request ID**</DNT>列は、一意のAWSリクエスト識別子によって各Lambda実行を識別し、特定の呼び出しのAPMトランザクショントレースにドリルダウンできるようにします。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        ディストリビューティッド（分散）トレーシング
+      </td>
+
+      <td>
+        <DNT>**Distributed tracing**</DNT>ページには、モニター対象のLambda関数を含むディストリビューティッド（分散）トレーシングが表示されます。この機能の詳細については、[ディストリビューティッド（分散）トレーシング](/docs/apm/distributed-tracing/getting-started/introduction-distributed-tracing)を参照してください。
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        エラー
+      </td>
+
+      <td>
+        <DNT>**Errors**</DNT>ページにはエラー（`AwsLambdaInvocationError`イベント）が表示されます。エラー率、エラーパーセンテージ、またはエラークラスでフィルタリングできます。エラーをドリルダウンして、[属性](/docs/using-new-relic/welcome-new-relic/getting-started/glossary#attribute)や、利用可能な場合はスタックトレースを確認できます。
+      </td>
+    </tr>
+
+    <tr id="logs">
+      <td>
+        ログ
+      </td>
+
+      <td>
+        <DNT>**Logs**</DNT>ページには、Lambda関数からの最近のログメッセージが表示されます。この機能の詳細については、[ログ](/docs/logs/new-relic-logs/get-started/introduction-new-relic-logs)を参照してください。
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## チャートデータの理解 [#chart-data]
+
+Lambdaのデータチャートは、Lambda関連の[ イベントデータ](/docs/understand-your-lambda-data#data-structure) の[ NRQLクエリ](/docs/insights/nrql-new-relic-query-language/using-nrql/introduction-nrql) を実行することによって生成されます。チャートのNRQLクエリを表示して、以下のことを行うことができます：
+
+* チャートの表示内容を理解するために
+* カスタムNRQLクエリとチャートを作成する方法のアイデアを得るために
+
+関連ドキュメント：
+
+* [グラフのクエリを表示する方法を学びます](/docs/new-relic-solutions/new-relic-one/introduction-new-relic-platform#view-query)。
+* [Lambdaのデータ保存と構造について学ぶ](/docs/understand-your-lambda-data).

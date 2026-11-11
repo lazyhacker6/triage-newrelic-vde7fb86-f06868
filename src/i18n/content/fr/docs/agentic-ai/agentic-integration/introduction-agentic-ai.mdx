@@ -1,0 +1,55 @@
+---
+title: Aperçu de l'intégration de New Relic AI
+metaDescription: Overview of New Relic's AI integration approaches including Model Context Protocol (MCP) for broad compatibility and ServiceNow integration for operations teams.
+freshnessValidatedDate: never
+translationType: machine
+---
+
+New Relic propose des solutions d&apos;intégration d&apos;IA qui contribuent à automatiser et à optimiser les workflows d&apos;observabilité. Ces intégrations contribuent à faciliter les opérations en automatisant partiellement les tâches répétitives grâce à des agents d&apos;IA, en réduisant l&apos;intervention manuelle et en fournissant des connexions pour contribuer à permettre une réponse aux incidents plus rapide. New Relic propose deux approches principales : le Model Context Protocol (MCP) pour l&apos;accessibilité des outils, et une intégration directe avec ServiceNow pour les équipes opérationnelles.
+
+## approches d&apos;intégration de l&apos;IA [#integration-approaches]
+
+### Protocole de contexte modèle (MCP) [#mcp]
+
+Il s&apos;agit de New Relic Infrastructure qui permet à un outil d&apos;IA compatible de se connecter à New Relic :
+
+* **Protocole standardisé**: peut être utilisé avec les clients MCP pris en charge.
+* **Ensemble d&apos;outils d&apos;observabilité**: outils spécialisés pour accéder aux données d&apos;observabilité
+
+Pour la plupart des utilisateurs, **MCP est l&apos;approche recommandée** car elle offre une compatibilité plus large et des fonctionnalités plus complètes. Apprenez-en davantage sur [New Relic MCP](/docs/agentic-ai/mcp/overview).
+
+### Intégration ServiceNow [#servicenow]
+
+Les informations détaillées sur New Relic AI sont désormais directement intégrées à Now Assist de ServiceNow. Cette intégration aide vos équipes opérationnelles, telles que les premiers intervenants et les agents de support, à comprendre rapidement la gravité incident , à identifier les causes profondes probables et à rationaliser la collaboration, le tout sans quitter leur espace de travail ServiceNow.
+
+Pour plus d&apos;informations, reportez-vous à [Prise en main de l&apos;agent New Relic pour ServiceNow Now Assist](/docs/agentic-ai/agentic-integration/servicenow-integration).
+
+## Fonctionnalité clé [#features]
+
+* **Automatisation intelligente :** exploitez l’IA pour aider à automatiser et rationaliser les workflows complexes, réduisant ainsi le besoin de changement manuel d’outils et améliorant la productivité, tout en gardant un humain dans la boucle.
+* **Observabilité améliorée :** obtenez des informations complètes et détaillées sur votre système, permettant une détection, une analyse et une résolution plus rapides des incidents.
+* **Intégration transparente :** connectez-vous à ServiceNow Now Assist pour intégrer des analyses puissantes et des informations détaillées directement dans votre flux de travail existant.
+
+## Accès et gestion des données [#access-data-mgmt]
+
+Nos partenaires d’intégration géreront les applications clientes et maintiendront les jetons d’utilisateur lorsque vous ou l’un de vos utilisateurs vous authentifiez auprès de New Relic via l’intégration du partenaire. Le partenaire tiers aura le même niveau d’accès à New Relic que l’utilisateur qui s’est authentifié pour la durée configurée dans les paramètres de l’utilisateur, car les jetons sont utilisés en son nom. Pour plus d’informations, vous pouvez consulter la documentation du partenaire.
+
+### Contrôle d&apos;accès basé sur les rôles (RBAC)
+
+Les capacités d’intégration de l’IA de New Relic sont accordées via des rôles au niveau de l’organisation dans le système RBAC de New Relic. Les utilisateurs obtiennent l’accès en appartenant à un groupe avec un rôle organisationnel attribué qui inclut ces capacités.
+
+Actuellement, RBAC est accessible via des interfaces API. Si vous êtes intéressé par l&apos;utilisation de RBAC via API, n&apos;hésitez pas à nous contacter à [agenticai@newrelic.com](mailto:agenticai@newrelic.com). Pour obtenir des conseils détaillés sur la configuration de RBAC, reportez-vous à notre [didacticiel de gestion des utilisateurs de compte](/docs/accounts/accounts-billing/new-relic-one-user-management/account-user-mgmt-tutorial).
+
+## Outils [#tools]
+
+Chaque intégration est livrée avec divers outils permettant d&apos;utiliser les capacités de la plateforme New Relic et de fournir des informations d&apos;observabilité détaillées, des alertes et des prédictions.
+
+Pour en savoir plus, consultez [les outils New Relic AI](/docs/agentic-ai/tools).
+
+## Tarification et utilisation
+
+L&apos;intégration de l&apos;IA est disponible pour les comptes New Relic bénéficiant du tarif Advanced Compute. Pour obtenir des informations détaillées sur les prix, veuillez contacter notre équipe commerciale ou vous référer à votre commande.
+
+## Restez informé [#stay-updated]
+
+Cette page peut être mise à jour avec des développements et des ressources supplémentaires à mesure que nous améliorons continuellement notre technologie d&apos;observabilité. Restez à l’écoute des derniers développements et opportunités.

@@ -1,0 +1,1985 @@
+---
+title: 'Tutorial do NerdGraph: transmita seus dados para um AWS Kinesis Firehose, Azure Event Hub ou GCP Pub/Sub'
+tags:
+  - APIs
+  - NerdGraph
+metaDescription: 'With the New Relic streaming export feature, you can send your data as it''s ingested to New Relic to AWS Kinesis Firehose, Azure Event Hub or GCP Pub/Sub.'
+freshnessValidatedDate: never
+translationType: machine
+---
+
+Com o recurso de exportação de streaming disponível por meio do [Data Plus](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/data-ingest-billing/#data-plus), você pode enviar seus dados para o AWS Kinesis Firehose, Azure Event Hub ou GCP Pub/Sub criando regras personalizadas usando [NRQL](/docs/query-your-data/nrql-new-relic-query-language/get-started/introduction-nrql-new-relics-query-language) para especificar quais dados devem ser exportados. Este guia explica como criar e atualizar regras de streaming usando o [NerdGraph](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph) e visualizar as regras existentes. Você pode usar o [explorador do NerdGraph](/docs/apis/nerdgraph/get-started/nerdgraph-explorer) para fazer essas chamadas. Além disso, você tem a opção de compactar os dados antes de exportar com o recurso [Export Compression](#compression).
+
+Aqui estão alguns exemplos de como você pode usar o recurso de exportação de streaming:
+
+* Para preencher um data lake
+* Aprimore o treinamento de IA/ML
+* Garanta a retenção de longo prazo por motivos de conformidade, legais ou de segurança
+
+Você pode ativar ou desativar as regras de exportação de streaming a qualquer momento. No entanto, esteja ciente de que a exportação de streaming processa apenas os dados ingeridos no momento. Se você desativar e reativar o recurso posteriormente, quaisquer dados ingeridos enquanto ele estava desativado não serão exportados. Para exportar dados passados, você deve usar o recurso de [exportação de dados históricos](/docs/apis/nerdgraph/examples/nerdgraph-historical-data-export).
+
+## Requisitos e limites [#requirements]
+
+Limites de dados transmitidos: a quantidade de dados que você pode transmitir por mês é limitada pelo total [de dados ingeridos](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/data-ingest-billing/#usage-calculation) por mês. Se a quantidade de dados de streaming exceder a quantidade de dados ingeridos, poderemos suspender seu acesso e uso da exportação de streaming.
+
+Requisitos relacionados às permissões:
+
+* Pro ou edição Enterprise com opção [Data Plus](/docs/accounts/accounts-billing/new-relic-one-pricing-billing/data-ingest-billing/#data-plus)
+* Tipo de usuário: [usuário principal ou usuário de plataforma completa](/docs/accounts/accounts-billing/new-relic-one-user-management/user-type)
+* A [permissão de dados de streaming](/docs/accounts/accounts-billing/new-relic-one-user-management/user-permissions#data-platform)
+
+Você deve ter um AWS Kinesis Firehose, Azure Event Hub ou GCP Pub/Sub configurado para receber dados do New Relic. Se ainda não fez isso, você pode seguir nossas etapas abaixo para [AWS](#firehose-setup), [Azure](#event-hub-setup) ou [GCP Pub/Sub](#gcp-pubsub-setup).
+
+Requisitos NRQL:
+
+* Deve ser consulta plana, sem agregação. Por exemplo, formulários `SELECT *` ou `SELECT column1, column2` são suportados.
+* Aplicável a qualquer coisa na cláusula `WHERE` , exceto subconsultas.
+* A consulta não pode ter uma cláusula `FACET` , `COMPARE WITH` ou `LOOKUP`.
+* Consultas aninhadas não são suportadas.
+* Suporta [tipos de dados armazenados em NRDB](/docs/data-apis/understand-data/new-relic-data-types/#timeslice-data) e não [dados métricos de fração de tempo](/docs/data-apis/understand-data/new-relic-data-types/#timeslice-data).
+
+## Pré-requisitos
+
+* Uma [conta da New Relic](https://newrelic.com/signup), e com essa conta, você pode acessar sua chave de usuário da API que precisa incluir nas [consultas e mutações](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph/).
+* O tipo de usuário e as funções atribuídas podem afetar suas permissões do NerdGraph. Para mais detalhes, consulte [Fatores que afetam o acesso](/docs/accounts/accounts-billing/account-structure/factors-affecting-access-features-data/#user-permissions).
+
+## Configurar um AWS Kinesis Firehose [#firehose-setup]
+
+Para configurar a exportação de dados de streaming para a AWS, primeiro você deve configurar o Amazon Kinesis Firehose. Siga estas etapas:
+
+<Steps>
+  <Step>
+    ### Crie um Firehose para exportação de streaming [#create-firehose]
+
+    Crie um Firehose dedicado para transmitir seus dados do New Relic para:
+
+    1. Vá para o [Amazon Kinesis Data Firehose](https://aws.amazon.com/firehose/).
+    2. Crie um fluxo de entrega.
+    3. Nomeie o stream. Você usará esse nome mais tarde ao registrar a regra.
+    4. Use <DNT>**Direct PUT or other sources**</DNT> e especifique um destino compatível com o formato de evento JSON do New Relic (por exemplo, S3, Redshift ou OpenSearch).
+  </Step>
+
+  <Step>
+    ### Criar política de acesso de gravação do IAM Firehose [#create-policy]
+
+    1. Acesse o console do IAM e faça login com seu usuário.
+    2. Na navegação à esquerda, clique em **Policies** e depois clique em **Create policy**.
+    3. Selecione o serviço Firehose e selecione `PutRecord` e `PutRecordBatch`.
+    4. Para `Resources`, selecione o fluxo de entrega, adicione ARN e selecione a região do seu fluxo.
+    5. Insira o número da sua conta da AWS e, em seguida, insira o nome do fluxo de entrega desejado na caixa de nome.
+    6. Crie a política.
+  </Step>
+
+  <Step>
+    ### Crie uma função do IAM para conceder acesso de gravação ao New Relic [#iam-role]
+
+    Para configurar a função do IAM:
+
+    1. Navegue até o IAM e clique em <DNT>**Roles**</DNT>.
+    2. Crie uma função para uma conta da AWS e selecione <DNT>**for another AWS account**</DNT>.
+    3. Insira o ID da conta de exportação do New Relic: `888632727556`.
+    4. Selecione <DNT>**Require external ID**</DNT> e insira o [ID](/docs/accounts/accounts-billing/account-structure/account-id) da conta New Relic da qual você deseja exportar.
+    5. Clique em <DNT>**Permissions**</DNT> e selecione a política que você criou acima.
+    6. Adicione um nome de função, que será usado durante o registro da exportação, e forneça uma descrição.
+    7. Crie a função.
+  </Step>
+</Steps>
+
+Quando terminar estas etapas, você poderá configurar suas regras de exportação usando o [NerdGraph](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph/).
+
+<CollapserGroup>
+  <Collapser id="create-stream-AWS Kinesis" title="Crie um fluxo">
+    Esta API permite que você crie uma regra de exportação de streaming para enviar dados para o AWS Kinesis Firehose.
+
+    #### Parâmetro de entrada
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            Parâmetro
+          </th>
+
+          <th>
+            Tipo de dados
+          </th>
+
+          <th>
+            É obrigatório?
+          </th>
+
+          <th>
+            Descrição
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `accountId`
+          </td>
+
+          <td>
+            Inteiro
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Seu 
+
+            [ID da conta New Relic](/docs/accounts/accounts-billing/account-structure/account-id/)
+
+            .
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.description`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Não
+          </td>
+
+          <td>
+            Uma breve descrição da regra. Use isso para fornecer qualquer informação adicional ou contexto sobre a regra de exportação.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.name`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            O nome da regra de exportação.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.nrql`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Um NRQL para selecionar os dados de telemetria para exportar.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.payloadCompression`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Não
+          </td>
+
+          <td>
+            [payloadCompression](#compression) aceita dois valores:
+
+            * `DISABLED`: por padrão, as cargas não serão compactadas antes de serem exportadas.
+            * `GZIP`: selecione isso para compactar as cargas antes de serem exportadas.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `awsParameters.awsAccountId`
+          </td>
+
+          <td>
+            EU IA
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Especifica a 
+
+            [conta da AWS](https://docs.aws.amazon.com/IAM/latest/UserGuide/console-account-alias.html)
+
+             que possui o stream de entrega do Firehose de destino. Por exemplo: 
+
+            `10000000000`
+
+            .
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `awsParameters.deliveryStreamName`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Especifica o 
+
+            [nome do stream do Kinesis](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_CreateStream.html)
+
+             usado para a entrega de dados. Por exemplo: 
+
+            `firehose-test-stream`
+
+            .
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `awsParameters.region`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Especifica a 
+
+            [região da AWS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html)
+
+             onde os recursos são implantados. Por exemplo: 
+
+            `us-east-1`
+
+            .
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `awsParameters.role`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Especifica a 
+
+            [função do AWS IAM](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html)
+
+             configurada para a New Relic. Isso sempre será 
+
+            `firehose-role`
+
+            .
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    #### Solicitação de amostra
+
+    ```graphql
+    mutation {
+      streamingExportCreateRule(
+        accountId: YOUR_NR_ACCOUNT_ID,
+        ruleParameters: {
+          description: "ADD_RULE_DESCRIPTION",
+          name: "PROVIDE_RULE_NAME",
+          nrql: "SELECT * FROM NodeStatus",
+          payloadCompression: DISABLED
+        },
+        awsParameters: {
+          awsAccountId: "YOUR_AWS_ACCOUNT_ID",
+          deliveryStreamName: "FIREHOSE_STREAM_NAME",
+          region: "SPECIFY_AWS_REGION",
+          role: "firehose-role"
+        }
+      ) {
+        id
+        status
+      }
+    }
+    ```
+
+    **Resposta**: você recebe uma resposta com o ID da regra e o status. O status será `CREATION_IN_PROGRESS` inicialmente, e pode levar até seis minutos para que a regra conclua a criação. <br />**Pontos a observar**: antes que a regra termine de ser registrada, você não pode iniciar outra ação de mutação (como `Enable`, `Disable` ou `Update`) porque a regra está bloqueada para o processo de criação. Se você tentar outra ação de mutação antes que a regra conclua o processo de registro, receberá uma mensagem como: “A regra de exportação está sendo atualizada no momento por outra solicitação, aguarde e tente novamente mais tarde.”
+
+    Você pode usar `Delete` a qualquer momento.
+
+    A criação pode ser concluída e o status alterado a qualquer momento dentro dos cerca de seis minutos necessários para a criação da regra. O status mudará para `ENABLED`, `DISABLED` ou `CREATION_FAILED`.
+
+    Veja estes detalhes sobre os valores:
+
+    * `ENABLED` significa que a regra foi criada com sucesso e os dados começaram a ser transmitidos.
+    * `CREATION_FAILED` significa que a regra falhou na criação. Isso pode acontecer por vários motivos, mas geralmente ocorre devido à falha na política da AWS ou na validação do Azure SAS.
+    * `DISABLED` significa que a regra foi criada, mas ainda não está habilitada devido a motivos como limite de fluxo de filtro atingido ou falha na criação da regra de fluxo de filtro. Se o status ainda permanecer como `CREATION_IN_PROGRESS` após seis minutos, isso significa que a criação da regra falhou devido a um erro de sistema em nosso serviço. Você pode excluir a regra e tentar criar uma nova novamente.
+  </Collapser>
+
+  <Collapser id="list-all-streams" title="Listar todos os streams">
+    Esta API permite que você recupere uma lista abrangente de todas as regras de stream associadas ao seu [ID da conta](/docs/accounts/accounts-billing/account-structure/account-id/).
+
+    #### Solicitação de amostra
+
+    ```graphql
+    {
+      actor {
+        account(id: YOUR_NR_ACCOUNT_ID) {
+          streamingExport {
+            streamingRules {
+              aws {
+                awsAccountId
+                region
+                deliveryStreamName
+                role
+              }
+              createdAt
+              description
+              id
+              message
+              name
+              nrql
+              status
+              updatedAt
+              payloadCompression
+            }
+          }
+        }
+      }
+    }
+    ```
+  </Collapser>
+
+  <Collapser id="view-stream-rule-details" title="Ver detalhes da regra de stream">
+    Esta API permite consultar informações sobre uma regra de fluxo específica fornecendo o ID da conta e o ID da regra.
+
+    #### Solicitação de amostra
+
+    ```graphql
+    {
+      actor {
+        account(id: YOUR_NR_ACCOUNT_ID) {
+          streamingExport {
+            streamingRule(id: "RULE_ID") {
+              aws {
+                awsAccountId
+                deliveryStreamName
+                region
+                role
+              }
+              createdAt
+              description
+              id
+              message
+              name
+              nrql
+              status
+              updatedAt
+              payloadCompression
+            }
+          }
+        }
+      }
+    }
+    ```
+  </Collapser>
+
+  <Collapser id="update-stream-AWS Kinesis" title="Atualizar um fluxo">
+    Esta API permite que você modifique uma regra de exportação de streaming existente.
+
+    #### Parâmetro de entrada
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            Parâmetro
+          </th>
+
+          <th>
+            Tipo de dados
+          </th>
+
+          <th>
+            É obrigatório?
+          </th>
+
+          <th>
+            Descrição
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `id`
+          </td>
+
+          <td>
+            EU IA
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            O ID da regra de streaming a ser atualizada.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.description`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Não
+          </td>
+
+          <td>
+            Uma breve descrição da regra. Use isso para fornecer qualquer informação adicional ou contexto sobre a regra de exportação.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.name`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            O nome da regra de exportação.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.nrql`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Um NRQL para selecionar os dados de telemetria para exportar.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.payloadCompression`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Não
+          </td>
+
+          <td>
+            [payloadCompression](#compression) aceita dois valores:
+
+            * `DISABLED`: por padrão, as cargas não serão compactadas antes de serem exportadas.
+            * `GZIP`: selecione isso para compactar as cargas antes de serem exportadas.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `awsParameters.awsAccountId`
+          </td>
+
+          <td>
+            EU IA
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Especifica a 
+
+            [conta da AWS](https://docs.aws.amazon.com/IAM/latest/UserGuide/console-account-alias.html)
+
+             que possui o stream de entrega do Firehose de destino. Por exemplo: 
+
+            `10000000000`
+
+            .
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `awsParameters.deliveryStreamName`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Especifica o 
+
+            [nome do stream do Kinesis](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_CreateStream.html)
+
+             usado para a entrega de dados. Por exemplo: 
+
+            `firehose-test-stream`
+
+            .
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `awsParameters.region`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Especifica a 
+
+            [região da AWS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html)
+
+             onde os recursos são implantados. Por exemplo: 
+
+            `us-east-1`
+
+            .
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `awsParameters.role`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Especifica a 
+
+            [função do AWS IAM](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html)
+
+             configurada para a New Relic. Isso sempre será 
+
+            `firehose-role`
+
+            .
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    #### Solicitação de amostra
+
+    ```graphql
+    mutation {
+      streamingExportUpdateRule(
+        id: RULE_ID,
+        ruleParameters: {
+          description: "ADD_RULE_DESCRIPTION",
+          name: "PROVIDE_RULE_NAME",
+          nrql: "YOUR_NRQL_QUERY",
+          payloadCompression: DISABLED
+        },
+        awsParameters: {
+          awsAccountId: "YOUR_AWS_ACCOUNT_ID",
+          deliveryStreamName: "FIREHOSE_STREAM_NAME",
+          region: "SPECIFY_AWS_REGION",
+          role: "firehose-role"
+        }
+      ) {
+        id
+        status
+      }
+    }
+    ```
+
+    **Resposta**: você recebe uma resposta com o ID e o status da regra. <br />**Pontos a observar**: ao atualizar, você receberá uma mensagem no campo de mensagem: “A regra de exportação está sendo atualizada e o processo pode levar alguns minutos para ser concluído. Verifique novamente mais tarde.” Pode levar até seis minutos para ser totalmente atualizada.
+
+    Você pode verificar se a regra foi atualizada chamando [streamingRule](view-stream-rule-details) para recuperar a regra. Durante o período em que a regra está sendo atualizada, ela fica bloqueada e nenhuma outra ação de mutação pode atuar sobre a regra. Se você estiver tentando executar outra ação de mutação na mesma regra, receberá uma mensagem dizendo: “A regra de exportação está sendo atualizada no momento por outra solicitação, aguarde e tente novamente mais tarde.” Um usuário pode atualizar uma regra de qualquer status, exceto uma regra excluída.
+  </Collapser>
+
+  <Collapser id="enable-stream" title="Habilitar um fluxo">
+    Esta API permite que você ative uma regra de streaming existente, facilitando a exportação contínua de dados para processamento em tempo real e integração com outros serviços.
+
+    #### Parâmetro de entrada
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            Parâmetro
+          </th>
+
+          <th>
+            Tipo de dados
+          </th>
+
+          <th>
+            É obrigatório?
+          </th>
+
+          <th>
+            Descrição
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `id`
+          </td>
+
+          <td>
+            EU IA
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            O ID da regra de streaming a ser habilitada.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    #### Solicitação de amostra
+
+    ```graphql
+    mutation {
+      streamingExportEnableRule(id: RULE_ID) {
+        id
+        status
+        message
+      }
+    }
+    ```
+
+    **Resposta**: se você estiver tentando habilitar uma regra que está em outro estado, ela retornará uma mensagem de erro como: “A regra de exportação não pode ser habilitada ou desabilitada devido ao status não ser permitido.” Você não pode habilitar a regra se ela estiver bloqueada devido a outra mutação em andamento.
+
+    <Callout variant="important">
+      Você só pode ativar a regra quando ela tiver um status de DISABLED.
+    </Callout>
+  </Collapser>
+
+  <Collapser id="disable-stream" title="Desabilitar um stream">
+    Esta API permite que você desative uma regra de streaming existente, interrompendo a exportação contínua de dados.
+
+    #### Parâmetro de entrada
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            Parâmetro
+          </th>
+
+          <th>
+            Tipo de dados
+          </th>
+
+          <th>
+            É obrigatório?
+          </th>
+
+          <th>
+            Descrição
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `id`
+          </td>
+
+          <td>
+            EU IA
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            O ID da regra de streaming a ser desativada.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    #### Solicitação de amostra
+
+    ```graphql
+    mutation {
+      streamingExportDisableRule(id: RULE_ID) {
+        id
+        status
+        message
+      }
+    }
+    ```
+
+    **Resposta**: ao tentar desativar uma regra que está em outro estado, é retornada uma mensagem de erro como: “The export rule can&apos;t be enabled or disabled due to status not being allowed.” Não é possível desativar a regra se ela estiver bloqueada devido à realização de outra mutação.
+
+    <Callout variant="important">
+      Você só pode desativar a regra quando ela tiver um status de ENABLED.
+    </Callout>
+  </Collapser>
+
+  <Collapser id="delete-stream" title="Excluir um fluxo">
+    Esta API permite que você exclua uma regra de streaming e interrompa toda a exportação de dados relacionada a essa regra.
+
+    #### Parâmetro de entrada
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            Parâmetro
+          </th>
+
+          <th>
+            Tipo de dados
+          </th>
+
+          <th>
+            É obrigatório?
+          </th>
+
+          <th>
+            Descrição
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `id`
+          </td>
+
+          <td>
+            EU IA
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            O ID da regra de streaming a ser excluído.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    #### Solicitação de amostra
+
+    ```graphql
+    mutation {
+      streamingExportDeleteRule(id: RULE_ID) {
+        id
+      }
+    }
+    ```
+
+    <Callout variant="important">
+      A exclusão pode ser executada em uma regra de qualquer status, a menos que ela já esteja excluída. Depois que uma regra é excluída, ela não pode ser reativada. A regra ainda pode ser visualizada nas primeiras 24 horas após a exclusão chamando a API [steamingRule](#view-stream-rule-details) com o ID da regra. Após 24 horas, a regra não poderá mais ser pesquisada por meio do NerdGraph.
+    </Callout>
+  </Collapser>
+</CollapserGroup>
+
+## Configurar um Azure Event Hub [#event-hub-setup]
+
+Para configurar a exportação de dados de streaming para o Azure, primeiro você deve configurar um Event Hub. Siga estas etapas:
+
+Alternativamente, você pode seguir o guia do Azure [aqui](https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-create).
+
+<Steps>
+  <Step>
+    ### Crie um namespace de Event Hubs [#create-event-hubs-namespace]
+
+    1. A partir da sua conta do Microsoft Azure, navegue até os Hubs de Eventos.
+    2. Siga as etapas para criar um namespace de Event Hubs. Recomendamos ativar o aumento automático para garantir que você receba todos os seus dados.
+    3. Certifique-se de que o acesso público esteja habilitado, pois usaremos uma Política de Acesso Compartilhado para autenticar com segurança em seu Event Hub.
+    4. Depois que seu namespace de Event Hubs for implantado, clique em <DNT>**Go to resource**</DNT>.
+  </Step>
+
+  <Step>
+    ### Crie um Event Hubs [#create-event-hub]
+
+    1. Na coluna da esquerda, clique em <DNT>**Event Hubs**</DNT>.
+
+    2. Para criar um Event Hub, clique em <DNT>**+Event Hub**</DNT>.
+
+    3. Insira o Event Hub Name desejado. Salve-o, pois você precisará dele mais tarde para criar a regra de exportação de streaming.
+
+    4. Para <DNT>**Retention**</DNT>, selecione <DNT>**Delete**</DNT> `Cleanup policy` e o `Retention time (hrs)` desejado.
+
+       <Callout variant="important">
+         A exportação de streaming não é suportada atualmente para Hubs de eventos com política de retenção <DNT>**Compact**</DNT> .
+       </Callout>
+
+    5. Após a criação do Event Hub, clique em **Event Hub**.
+  </Step>
+
+  <Step>
+    ### Crie e anexe uma política de acesso compartilhado [#event-hub-policy]
+
+    1. Na coluna da esquerda, vá para <DNT>**Shared access policies**</DNT>.
+    2. Clique em <DNT>**+Add**</DNT> próximo ao topo da página.
+    3. Escolha um nome para sua política de acesso compartilhado.
+    4. Marque <DNT>**Send**</DNT> e clique em <DNT>**Create**</DNT>.
+    5. Clique na política criada e copie o <DNT>**Connection string–primary key**</DNT>. Salve isto, pois você precisará dele mais tarde para autenticar e enviar dados para o seu Event Hub.
+  </Step>
+</Steps>
+
+Quando terminar estas etapas, você poderá configurar suas regras de exportação usando o [NerdGraph](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph/).
+
+<CollapserGroup>
+  <Collapser id="create-stream-Azure Event Hub" title="Crie um fluxo">
+    Esta API permite criar uma regra de exportação de streaming para enviar dados para um Hub de Eventos do Azure.
+
+    #### Parâmetro de entrada
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            Parâmetro
+          </th>
+
+          <th>
+            Tipo de dados
+          </th>
+
+          <th>
+            É obrigatório?
+          </th>
+
+          <th>
+            Descrição
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `accountId`
+          </td>
+
+          <td>
+            Inteiro
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Seu 
+
+            [ID da conta New Relic](/docs/accounts/accounts-billing/account-structure/account-id/)
+
+            .
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.description`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Não
+          </td>
+
+          <td>
+            Uma breve descrição da regra. Use isso para fornecer qualquer informação adicional ou contexto sobre a regra de exportação.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.name`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            O nome da regra de exportação.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.nrql`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Um NRQL para selecionar os dados de telemetria para exportar.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.payloadCompression`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Não
+          </td>
+
+          <td>
+            [payloadCompression](#compression) aceita dois valores:
+
+            * `DISABLED`: por padrão, as cargas não serão compactadas antes de serem exportadas.
+            * `GZIP`: selecione isso para compactar as cargas antes de serem exportadas.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `azureParameters.eventHubConnectionString`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Este parâmetro é a 
+
+            [string de conexão](https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-get-connection-string)
+
+             que fornece acesso a um Event Hub específico. É semelhante a: 
+
+            `Endpoint=sb://<NamespaceName>.servicebus.windows.net/;SharedAccessKeyName=<KeyName>;SharedAccessKey=<KeyValue>;EntityPath=<EventHubName>`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `azureParameters.eventHubName`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Este parâmetro especifica o nome do Event Hub para onde os eventos serão enviados e processados. Por exemplo: 
+
+            `my-event-hub.`
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    #### Solicitação de amostra
+
+    ```graphql
+    mutation {
+      streamingExportCreateRule(
+        accountId: YOUR_NR_ACCOUNT_ID,
+        ruleParameters: {
+          description: "ADD_RULE_DESCRIPTION",
+          name: "PROVIDE_RULE_NAME",
+          nrql: "SELECT * FROM NodeStatus",
+          payloadCompression: DISABLED
+        },
+        azureParameters: {
+          eventHubConnectionString: "YOUR_EVENT_HUB_SAS_CONNECTION_STRING",
+          eventHubName: "YOUR_EVENT_HUB_NAME"
+        }
+      ) {
+        id
+        status
+      }
+    }
+    ```
+
+    **Resposta**: você recebe uma resposta com o ID da regra e o status. O status será `CREATION_IN_PROGRESS` inicialmente e pode levar até seis minutos para que a regra conclua a criação.
+  </Collapser>
+
+  <Collapser id="list-all-streams-azureeventhub" title="Listar todos os streams">
+    Esta API permite que você recupere uma lista abrangente de todas as regras de stream associadas ao seu [ID da conta](/docs/accounts/accounts-billing/account-structure/account-id/).
+
+    #### Solicitação de amostra
+
+    ```graphql
+    {
+      actor {
+        account(id: YOUR_NR_ACCOUNT_ID) {
+          streamingExport {
+            streamingRules {
+              azure {
+                eventHubConnectionString
+                eventHubName
+              }
+              createdAt
+              description
+              id
+              message
+              name
+              nrql
+              status
+              updatedAt
+              payloadCompression
+            }
+          }
+        }
+      }
+    }
+    ```
+  </Collapser>
+
+  <Collapser id="view-stream-rule-details-azureeventhub" title="Ver detalhes da regra de stream">
+    Esta API permite consultar informações sobre uma regra de fluxo específica fornecendo o ID da conta e o ID da regra.
+
+    #### Solicitação de amostra
+
+    ```graphql
+    {
+      actor {
+        account(id: YOUR_NR_ACCOUNT_ID) {
+          streamingExport {
+            streamingRule(id: "RULE_ID") {
+              azure {
+                eventHubConnectionString
+                eventHubName
+              }
+              createdAt
+              description
+              id
+              message
+              name
+              nrql
+              status
+              updatedAt
+              payloadCompression
+            }
+          }
+        }
+      }
+    }
+    ```
+  </Collapser>
+
+  <Collapser id="update-stream-Azure Event Hub" title="Atualizar um fluxo">
+    Esta API permite que você modifique uma regra de exportação de streaming existente.
+
+    #### Parâmetro de entrada
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            Parâmetro
+          </th>
+
+          <th>
+            Tipo de dados
+          </th>
+
+          <th>
+            É obrigatório?
+          </th>
+
+          <th>
+            Descrição
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `id`
+          </td>
+
+          <td>
+            EU IA
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            O ID da regra de streaming a ser atualizada.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.description`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Não
+          </td>
+
+          <td>
+            Uma breve descrição da regra. Use isso para fornecer qualquer informação adicional ou contexto sobre a regra de exportação.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.name`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            O nome da regra de exportação.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.nrql`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Um NRQL para selecionar os dados de telemetria para exportar.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.payloadCompression`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Não
+          </td>
+
+          <td>
+            [payloadCompression](#compression) aceita dois valores:
+
+            * `DISABLED`: por padrão, as cargas não serão compactadas antes de serem exportadas.
+            * `GZIP`: selecione isso para compactar as cargas antes de serem exportadas.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `azureParameters.eventHubConnectionString`
+          </td>
+
+          <td>
+            EU IA
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Este parâmetro é a string de conexão que fornece acesso a um Event Hub específico. É semelhante a: 
+
+            `Endpoint=sb://<NamespaceName>.servicebus.windows.net/;SharedAccessKeyName=<KeyName>;SharedAccessKey=<KeyValue>;EntityPath=<EventHubName>`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `azureParameters.eventHubName`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Este parâmetro especifica o nome do Event Hub para onde os eventos serão enviados e processados. Por exemplo: 
+
+            `my-event-hub.`
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    #### Solicitação de amostra
+
+    ```graphql
+    mutation {
+      streamingExportUpdateRule(
+        id: RULE_ID,
+        ruleParameters: {
+          description: "ADD_RULE_DESCRIPTION",
+          name: "PROVIDE_RULE_NAME",
+          nrql: "YOUR_NRQL_QUERY",
+          payloadCompression: DISABLED
+        },
+        azureParameters: {
+          eventHubConnectionString: "YOUR_EVENT_HUB_SAS_CONNECTION_STRING",
+          eventHubName: "YOUR_EVENT_HUB_NAME"
+        }
+      ) {
+        id
+        status
+      }
+    }
+    ```
+
+    **Resposta**: Você recebe uma resposta com o ID e o status da regra.
+  </Collapser>
+
+  <Collapser id="enable-stream-azureeventhub" title="Habilitar um fluxo">
+    Para ativar uma regra de streaming existente, facilitando a exportação contínua de dados para processamento em tempo real e integração com outros serviços, consulte [aqui](#enable-stream).
+  </Collapser>
+
+  <Collapser id="disable-stream-azureeventhub" title="Desabilitar um stream">
+    Para desabilitar uma regra de streaming existente, interrompendo a exportação contínua de dados, consulte [aqui](#disable-stream).
+  </Collapser>
+
+  <Collapser id="delete-stream-azureeventhub" title="Excluir um fluxo">
+    Para excluir uma regra de streaming e interromper toda a exportação de dados relacionada a essa regra, consulte [aqui](#delete-stream).
+  </Collapser>
+</CollapserGroup>
+
+## Configurar um GCP Pub/Sub [#gcp-pubsub-setup]
+
+Para configurar a exportação de dados de streaming para o GCP, primeiro você deve configurar um Pub/Sub. Siga estas etapas:
+
+<Steps>
+  <Step>
+    ### Crie um tópico do Pub/Sub [#create-pubsub-topic]
+
+    1. Do seu console do GCP, navegue até a página do Pub/Sub.
+    2. Clique em **Create topic**.
+    3. Insira um ID de tópico e clique em **Create**.
+  </Step>
+
+  <Step>
+    ### Configurar permissões no Pub/Sub [#setup-permissions-pubsub]
+
+    1. Na coluna direita do tópico criado, clique em **More actions**.
+
+    2. Selecione **View permissions**.
+
+    3. Clique em **Add Principal** e, na caixa de novos principais, insira o e-mail da conta de serviço fornecido por nós:
+
+       * Região dos EUA (padrão): `us-prod-uds-streaming-export@h0c17c65df9291b526b433650e6a0a.iam.gserviceaccount.com`
+       * Região da UE: `eu-prod-uds-streaming-export@h0c17c65df9291b526b433650e6a0a.iam.gserviceaccount.com`
+       * Região do JP: `uds-jp-production@unifieddatastreams.iam.gserviceaccount.com`
+
+    4. Na seção **Assign roles**, pesquise por Pub/Sub Publisher e clique em **Save**.
+  </Step>
+</Steps>
+
+Quando terminar estas etapas, você poderá configurar suas regras de exportação usando o [NerdGraph](/docs/apis/nerdgraph/get-started/introduction-new-relic-nerdgraph/).
+
+<CollapserGroup>
+  <Collapser id="create-stream-GCP-Pub-Sub" title="Crie um fluxo">
+    Esta API permite que você crie uma regra de exportação de streaming para enviar dados para o GCP Pub/Sub.
+
+    #### Parâmetro de entrada
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            Parâmetro
+          </th>
+
+          <th>
+            Tipo de dados
+          </th>
+
+          <th>
+            É obrigatório?
+          </th>
+
+          <th>
+            Descrição
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `accountId`
+          </td>
+
+          <td>
+            Inteiro
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Seu 
+
+            [ID da conta New Relic](/docs/accounts/accounts-billing/account-structure/account-id/)
+
+            .
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.description`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Não
+          </td>
+
+          <td>
+            Uma breve descrição da regra. Use isso para fornecer qualquer informação adicional ou contexto sobre a regra de exportação.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.name`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            O nome da regra de exportação.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.nrql`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Um NRQL para selecionar os dados de telemetria para exportar.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.payloadCompression`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Não
+          </td>
+
+          <td>
+            [payloadCompression](#compression) aceita dois valores:
+
+            * `DISABLED`: por padrão, as cargas não serão compactadas antes de serem exportadas.
+            * `GZIP`: selecione isso para compactar as cargas antes de serem exportadas.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `gcpParameters.gcpProjectId`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Este parâmetro representa o identificador exclusivo do seu projeto do GCP. Por exemplo: 
+
+            `google-project-id`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `gcpParameters.pubsubTopicId`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Este parâmetro especifica o tópico no GCP Pub/Sub, usado para enviar e receber mensagens em seus aplicativos de cloud. Por exemplo: 
+
+            `pub-sub-topic-id.`
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    #### Solicitação de amostra
+
+    ```graphql
+    mutation {
+      streamingExportCreateRule(
+        accountId: YOUR_NR_ACCOUNT_ID,
+        ruleParameters: {
+          description: "ADD_RULE_DESCRIPTION",
+          name: "PROVIDE_RULE_NAME",
+          nrql: "SELECT * FROM NodeStatus",
+          payloadCompression: DISABLED
+        },
+        gcpParameters: {
+          gcpProjectId: "project-id",
+          pubsubTopicId: "pub-sub-topic-id"
+        }
+      ) {
+        id
+        status
+      }
+    }
+    ```
+
+    **Resposta**: você recebe uma resposta com o ID da regra e o status. O status será `CREATION_IN_PROGRESS` inicialmente e pode levar até seis minutos para que a regra conclua a criação.
+  </Collapser>
+
+  <Collapser id="list-all-streams-gcppubsub" title="Listar todos os streams">
+    Esta API permite que você recupere uma lista abrangente de todas as regras de stream associadas ao seu [ID da conta](/docs/accounts/accounts-billing/account-structure/account-id/).
+
+    #### Solicitação de amostra
+
+    ```graphql
+    {
+      actor {
+        account(id: YOUR_NR_ACCOUNT_ID) {
+          streamingExport {
+            streamingRules {
+              gcp {
+                gcpProjectId
+                pubsubTopicId
+              }
+              createdAt
+              description
+              id
+              message
+              name
+              nrql
+              status
+              updatedAt
+              payloadCompression
+            }
+          }
+        }
+      }
+    }
+    ```
+  </Collapser>
+
+  <Collapser id="view-stream-rule-details-gcppubsub" title="Ver detalhes da regra de stream">
+    Esta API permite consultar informações sobre uma regra de fluxo específica fornecendo o ID da conta e o ID da regra.
+
+    #### Solicitação de amostra
+
+    ```graphql
+    {
+      actor {
+        account(id: YOUR_NR_ACCOUNT_ID) {
+          streamingExport {
+            streamingRule(id: "RULE_ID") {
+              gcp {
+                gcpProjectId
+                pubsubTopicId
+              }
+              createdAt
+              description
+              id
+              message
+              name
+              nrql
+              status
+              updatedAt
+              payloadCompression
+            }
+          }
+        }
+      }
+    }
+    ```
+  </Collapser>
+
+  <Collapser id="update-stream-GCP Pub Sub" title="Atualizar um fluxo">
+    Esta API permite que você modifique uma regra de exportação de streaming existente.
+
+    #### Parâmetro de entrada
+
+    <table>
+      <thead>
+        <tr>
+          <th>
+            Parâmetro
+          </th>
+
+          <th>
+            Tipo de dados
+          </th>
+
+          <th>
+            É obrigatório?
+          </th>
+
+          <th>
+            Descrição
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>
+            `id`
+          </td>
+
+          <td>
+            EU IA
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            O ID da regra de streaming a ser atualizada.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.description`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Não
+          </td>
+
+          <td>
+            Uma breve descrição da regra. Use isso para fornecer qualquer informação adicional ou contexto sobre a regra de exportação.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.name`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            O nome da regra de exportação.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.nrql`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Um NRQL para selecionar os dados de telemetria para exportar.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `ruleParameters.payloadCompression`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Não
+          </td>
+
+          <td>
+            [payloadCompression](#compression) aceita dois valores:
+
+            * `DISABLED`: por padrão, as cargas não serão compactadas antes de serem exportadas.
+            * `GZIP`: selecione isso para compactar as cargas antes de serem exportadas.
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `gcpParameters.gcpProjectId`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Este parâmetro representa o identificador exclusivo do seu projeto do Google Cloud Platform (GCP). Por exemplo: 
+
+            `google-project-id`
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            `gcpParameters.pubsubTopicId`
+          </td>
+
+          <td>
+            Corda
+          </td>
+
+          <td>
+            Sim
+          </td>
+
+          <td>
+            Este parâmetro especifica o tópico no Google Cloud Pub/Sub, usado para enviar e receber mensagens em seus aplicativos de cloud. Por exemplo: 
+
+            `pub-sub-topic-id.`
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    #### Solicitação de amostra
+
+    ```graphql
+    mutation {
+      streamingExportUpdateRule(
+        id: RULE_ID,
+        ruleParameters: {
+          description: "ADD_RULE_DESCRIPTION",
+          name: "PROVIDE_RULE_NAME",
+          nrql: "YOUR_NRQL_QUERY",
+          payloadCompression: DISABLED
+        },
+        gcpParameters: {
+          gcpProjectId: "project-id",
+          pubsubTopicId: "pub-sub-topic-id"
+        }
+      ) {
+        id
+        status
+      }
+    }
+    ```
+
+    **Resposta**: Você recebe uma resposta com o ID e o status da regra.
+  </Collapser>
+
+  <Collapser id="enable-stream-gcppubsub" title="Habilitar um fluxo">
+    Para ativar uma regra de streaming existente, facilitando a exportação contínua de dados para processamento em tempo real e integração com outros serviços, consulte [aqui](#enable-stream).
+  </Collapser>
+
+  <Collapser id="disable-stream-gcppubsub" title="Desabilitar um stream">
+    Para desabilitar uma regra de streaming existente, interrompendo a exportação contínua de dados, consulte [aqui](#disable-stream).
+  </Collapser>
+
+  <Collapser id="delete-stream-gcppubsub" title="Excluir um fluxo">
+    Para excluir uma regra de streaming e interromper toda a exportação de dados relacionada a essa regra, consulte [aqui](#delete-stream).
+  </Collapser>
+</CollapserGroup>
+
+## Entenda a compressão de exportação [#compression]
+
+Você pode optar por compactar os dados antes de exportá-los. Este recurso está desativado por padrão. A compactação pode ajudar a evitar exceder seu limite de dados e reduzir os custos de dados de saída.
+
+Você pode ativar a compactação usando o campo `payloadCompression` em `ruleParameters`. Este campo pode ter qualquer um dos seguintes valores:
+
+* `DISABLED`: a carga não será compactada antes de ser exportada. Se não for especificado, `payloadCompression` assumirá esse valor como padrão.
+* `GZIP`: Compacte a carga com o formato GZIP antes de exportar.
+
+GZIP é o único formato de compactação disponível atualmente, embora possamos optar por disponibilizar mais formatos no futuro.
+
+Quando a compactação está habilitada em uma regra de exportação existente da AWS, a próxima mensagem do Kinesis Firehose pode conter dados compactados e descompactados. Isso se deve ao buffer no Kinesis Firehose. Para evitar isso, você pode desativar temporariamente a regra de exportação antes de ativar a compactação ou criar um novo fluxo do Kinesis Firehose para que apenas os dados compactados possam fluir.
+
+Se você encontrar esse problema e estiver exportando para S3 ou outro sistema de armazenamento de arquivos, poderá visualizar a parte compactada dos dados seguindo estas etapas:
+
+1. Baixe manualmente o objeto.
+2. Separe o objeto em dois arquivos separados, copiando os dados compactados em um novo arquivo.
+3. Descompacte o novo arquivo de dados somente compactado.
+
+Depois de ter os dados compactados, você pode carregá-los novamente para o S3 (ou qualquer outro serviço que esteja usando) e excluir o arquivo antigo.
+
+Esteja ciente de que no S3 ou outro sistema de armazenamento de arquivos, os objetos podem consistir em vários carregamentos codificados em GZIP que são anexados consecutivamente. Portanto, sua biblioteca de descompactação deve ter a capacidade de lidar com essa carga GZIP concatenada.
+
+### Descompressão automática na AWS
+
+Assim que seus dados chegarem à AWS, você pode querer opções para descompactá-los automaticamente. Se você estiver transmitindo esses dados para um bucket S3, há duas maneiras de habilitar a descompactação automática:
+
+<CollapserGroup>
+  <Collapser id="collapser-1" title="Ponto de acesso do Object Lambda">
+    Os pontos de acesso funcionam como métodos separados pelos quais os objetos nos buckets S3 podem ser acessados e baixados. A AWS fornece um recurso chamado [Object Lambda access points](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingMetadata.html), que executa uma função do Lambda em cada objeto S3 acessado através do access point. Siga estas etapas para ativar esse ponto de acesso:
+
+    1. Navegue até [esta página](https://docs.aws.amazon.com/AmazonS3/latest/userguide/olap-examples.html#olap-examples-3) e clique no link para o repositório sem servidor.
+
+    2. Clique em <DNT>**Deploy**</DNT>.
+
+    3. [Configure um ponto de acesso em seu bucket S3](https://docs.aws.amazon.com/AmazonS3/latest/userguide/create-access-points.html).
+
+    4. [Crie um ponto de acesso do Object Lambda](https://docs.aws.amazon.com/AmazonS3/latest/userguide/olap-create.html). Este ponto de acesso deve ter estas configurações:
+
+       * O <DNT>**Supporting Access Point**</DNT> neste ponto de acesso Lambda precisará ser definido para o ponto de acesso que você configurou no bucket S3.
+       * Em <DNT>**Transformation Configuration**</DNT>:
+       * Selecione <DNT>**GetObject**</DNT>.
+       * Especifique a função do Lambda DecompressGZFunction, ou outra função necessária se estiver usando um formato de compactação diferente.
+  </Collapser>
+
+  <Collapser id="collapser-2" title="Função de configuração de metadados do Lambda">
+    A AWS descompactará automaticamente os objetos baixados do S3, se esses objetos tiverem o conjunto de metadados correto. Escrevemos uma função que aplica automaticamente esses metadados a cada novo objeto baixado para um objeto S3 definido. Veja como configurá-lo:
+
+    1. Navegue [aqui](https://github.com/newrelic/metadata-setting-lambda-function), clone o repositório localmente e siga as etapas fornecidas no arquivo README para gerar um arquivo ZIP contendo a função do Lambda.
+    2. Crie uma [função do IAM](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html) para a função.
+
+    * Ao [criar a função](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-service.html#roles-creatingrole-service-console), certifique-se de definir o tipo de entidade confiável como &quot;serviços da AWS&quot;, com &quot;Lambda&quot; como seu caso de uso.
+    * Esta função deve ter uma política com estas permissões: `s3:PutObject` e `s3:GetObject`.
+
+    3. Na AWS, navegue até a [página Função do Lambda](https://console.aws.amazon.com/lambda/home#/functions).
+
+    4. Clique em <DNT>**Create function**</DNT>.
+
+    5. Selecione o ambiente de tempo de execução Java 11.
+
+    6. Clique em <DNT>**Change default execution role &gt; Use an existing role**</DNT>. Insira aqui a função que você criou na etapa 2.
+
+    7. Role para baixo e clique em <DNT>**Create function**</DNT>.
+
+    8. Depois que a função for criada, clique em <DNT>**Upload from**</DNT> e selecione <DNT>**.zip or .jar file**</DNT> no dropdown.
+
+    9. Clique em <DNT>**Upload**</DNT> na caixa exibida e selecione o arquivo ZIP criado na etapa 1.
+
+    10. Quando o upload terminar, clique em <DNT>**Save**</DNT> para sair da caixa pop-up.
+
+    11. Edite <DNT>**Runtime settings**</DNT> adicionando o manipulador. Em nossa função fornecida, o manipulador é <DNT>`metadatasetter.App::handleRequest`</DNT>.
+
+    12. Tudo o que resta fazer agora é habilitar esta função do Lambda para ser acionada na criação do objeto S3. Clique em <DNT>**Add trigger**</DNT> para começar a configurar isso.
+
+    13. No dropdown, selecione <DNT>**S3**</DNT> como sua fonte.
+
+    14. Insira o nome do bucket S3 ao qual você deseja aplicar os metadados no campo <DNT>**Bucket**</DNT> .
+
+    15. Remova o <DNT>**All object create events**</DNT> padrão dos tipos de eventos. Na dropdown de tipos de eventos, selecione <DNT>**PUT**</DNT>.
+
+    16. Marque a caixa <DNT>**Recursive invocation**</DNT> e clique em <DNT>**Add**</DNT> no canto inferior direito.
+
+        A função do Lambda agora começará a adicionar automaticamente os metadados de compactação a todos os objetos S3 recém-adicionados.
+  </Collapser>
+</CollapserGroup>
+
+### Descompressão automática no Azure
+
+Se você estiver exportando dados para o Azure, será possível visualizar versões descompactadas dos objetos armazenados no hub de eventos usando um [Stream Analytics Job](https://learn.microsoft.com/en-us/azure/event-hubs/process-data-azure-stream-analytics). Para fazer isso, siga estas etapas:
+
+1. Siga [este guia](https://learn.microsoft.com/en-us/azure/event-hubs/process-data-azure-stream-analytics) até a etapa 16.
+
+   * Na etapa 13, é possível optar por usar o mesmo hub de evento como saída sem causar problemas, mas isso não é recomendado caso pretenda prosseguir para a etapa 17 e iniciar o trabalho, pois essa abordagem não foi testada.
+
+2. No painel esquerdo do seu trabalho de streaming analytics, clique em <DNT>**Inputs**</DNT> e, em seguida, clique na entrada que você configurou.
+
+3. Role para baixo até a parte inferior do painel que aparece à direita e configure a entrada com estas configurações:
+
+   * formato de serialização de eventos: JSON
+   * Codificação: UTF-8
+   * Tipo de compactação de evento: GZip
+
+4. Clique em <DNT>**Save**</DNT> na parte inferior do painel.
+
+5. Clique em <DNT>**Query**</DNT> na lateral da tela. Usando a guia <DNT>**Input preview**</DNT> , agora você poderá consultar o hub de eventos nesta tela.
+
+### Descompressão automática no GCP
+
+No GCP Cloud Storage, os objetos serão descompactados automaticamente quando baixados se os metadados estiverem definidos como Content-Encoding: gzip. Para mais detalhes, consulte a [documentação do GCP](https://cloud.google.com/storage/docs/transcoding).
